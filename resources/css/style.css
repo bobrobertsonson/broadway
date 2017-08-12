@@ -18,6 +18,18 @@ h1 {
   color: white;
 }
 
+h2 {
+  font-family: helvetica;
+  font-size: 32px;
+  font-weight: bold;
+}
+
+h3 {
+  font-family: helvetica;
+  font-size: 23px;
+  font-weight: bold;
+}
+
 h4 {
   position: absolute;
   top: 70px;
@@ -28,6 +40,18 @@ h4 {
   color: white;
 }
 
+h5 {
+  font-family: helvetica;
+  font-weight: bold;
+  font-size: 23px;
+  color: white;
+  }
+
 a {
     color: white;
+}
+
+p {
+  font-family: helvetica;
+  font-size: 14px;
 }
