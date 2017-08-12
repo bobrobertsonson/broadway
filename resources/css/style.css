@@ -9,12 +9,25 @@ body {
 
 h1 {
   position: absolute;
-  top: 0px;
+  top: -50px;
   left: 0;
   width: 100%;
   font-family: helvetica;
   font-size: 70px;
   font-weight: bold;
   color: white;
+}
 
+h4 {
+  position: absolute;
+  top: 70px;
+  left: 0;
+  width: 100%;
+  font-family: helvetica;
+  font-size: 18px;
+  color: white;
+}
+
+a {
+    color: white;
 }
