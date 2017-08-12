@@ -1,5 +1,6 @@
 body {
      text-align: center;
+     font-family: helvetica;
  }
 
 .image {
@@ -46,6 +47,13 @@ h5 {
   font-size: 23px;
   color: white;
   }
+
+h6 {
+  font-family: helvetica;
+  font-size: 11px;
+  color: white;
+  text-align: left;
+}
 
 a {
     color: white;
