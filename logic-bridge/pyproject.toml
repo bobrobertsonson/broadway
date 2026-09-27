@@ -1,0 +1,19 @@
+[project]
+name = "logic-bridge"
+version = "0.1.0"
+description = "MCP server that lets Claude Code drive Logic Pro on macOS"
+requires-python = ">=3.10"
+dependencies = ["mcp>=1.2,<2"]
+
+[project.scripts]
+logic-bridge = "logic_bridge.server:main"
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["logic_bridge"]
+
+[tool.setuptools.package-data]
+logic_bridge = ["keymap.json"]

@@ -1,0 +1,23 @@
+{
+  "_readme": "Maps actions to Logic Pro key commands. 'logic_name' is the command's name in Logic > Key Commands > Edit Assignments. Entries with \"assign\": true are NOT assigned by default in Logic: assign them yourself to the listed keys (or change 'keys' here to match what you chose). Override any entry in ~/LogicBridge/keymap.json.",
+  "commands": {
+    "play_stop":          {"keys": "space",          "logic_name": "Play or Stop"},
+    "record":             {"keys": "r",              "logic_name": "Record"},
+    "go_to_beginning":    {"keys": "return",         "logic_name": "Go to Beginning"},
+    "toggle_cycle":       {"keys": "c",              "logic_name": "Cycle Mode"},
+    "toggle_metronome":   {"keys": "k",              "logic_name": "Metronome Click"},
+    "toggle_mixer":       {"keys": "x",              "logic_name": "Show/Hide Mixer"},
+    "save":               {"keys": "cmd+s",          "logic_name": "Save"},
+    "undo":               {"keys": "cmd+z",          "logic_name": "Undo"},
+    "redo":               {"keys": "cmd+shift+z",    "logic_name": "Redo"},
+    "select_previous_track": {"keys": "up",          "logic_name": "Select Previous Track"},
+    "select_next_track":  {"keys": "down",           "logic_name": "Select Next Track"},
+    "mute_track":         {"keys": "ctrl+m",         "logic_name": "Toggle Track Mute"},
+    "solo_track":         {"keys": "ctrl+s",         "logic_name": "Toggle Track Solo"},
+    "new_software_instrument_track": {"keys": "opt+cmd+s", "logic_name": "New Software Instrument Track"},
+    "new_audio_track":    {"keys": "opt+cmd+a",      "logic_name": "New Audio Track"},
+    "go_to_position":     {"keys": "/",              "logic_name": "Go to Position…"},
+    "set_left_locator":   {"keys": "ctrl+opt+cmd+1", "logic_name": "Set Left Locator by Playhead Position",  "assign": true},
+    "set_right_locator":  {"keys": "ctrl+opt+cmd+2", "logic_name": "Set Right Locator by Playhead Position", "assign": true}
+  }
+}

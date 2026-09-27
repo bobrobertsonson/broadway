@@ -1,0 +1,6 @@
+{
+  "enabledMcpjsonServers": ["logic"],
+  "permissions": {
+    "allow": ["mcp__logic"]
+  }
+}

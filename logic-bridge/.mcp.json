@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "logic": {
+      "command": "./.venv/bin/logic-bridge"
+    }
+  }
+}
