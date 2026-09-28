@@ -34,7 +34,9 @@ when a specific tool fails.
    ```bash
    cd logic-bridge && ./setup.sh
    ```
-3. **Permissions** — System Settings › Privacy & Security, for the terminal app you'll run it from
+   Needs Python 3.10+ (macOS's built-in one is 3.9); the script tells you how to get it if missing.
+3. **Permissions** — run `./check.sh`: it triggers each macOS prompt and reports what's missing.
+   Grant these in System Settings › Privacy & Security, for the terminal app you'll run it from
    (Terminal, iTerm…):
    - **Accessibility**: on (menu clicks, keys, faders)
    - **Screen & System Audio Recording**: on (screenshots)
