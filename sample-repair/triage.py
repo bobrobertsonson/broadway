@@ -160,7 +160,7 @@ def _worker(args):
 
 
 COLUMNS = [
-    "severity", "file", "tier", "notes", "source_guess", "rx_chain",
+    "severity", "set", "file", "tier", "notes", "source_guess", "rx_chain",
     "segments", "first_audio", "lufs_integrated", "gain_to_target_db",
     "lufs_short_term_max", "lufs_momentary_max", "segment_gain_spread_db",
     "sample_peak_dbfs", "true_peak_dbtp", "clip_runs",
@@ -189,6 +189,26 @@ def write_html(rows, out, folder, target):
         counts[r.get("source_guess", "error")] = counts.get(r.get("source_guess", "error"), 0) + 1
     summary = "".join(f"<li>{html.escape(k)}: {v}</li>" for k, v in sorted(counts.items(), key=lambda x: -x[1]))
 
+    ok_rows = [r for r in rows if not r.get("error")]
+    def names(rs):
+        return ", ".join(html.escape(f"{r.get('set', '')}/{r['file']}") for r in rs) or "none"
+    manual = [r for r in ok_rows if r["severity"] >= 7]
+    listen = [r for r in ok_rows if 4 <= r["severity"] < 7]
+    music = [r for r in ok_rows if "Music Rebalance" in r["rx_chain"]]
+    groups = {}
+    for r in ok_rows:
+        if r["severity"] < 7:
+            groups.setdefault(r["source_guess"], []).append(r)
+    group_html = "".join(f"<li><b>{html.escape(k)}</b> ({len(v)}): {names(v)}</li>" for k, v in sorted(groups.items()))
+    errors = [r for r in rows if r.get("error")]
+    steps = f"""<h2>Next steps</h2><ol>
+<li><b>Listen to the music-bed candidates</b> ({len(music)}) and confirm which really have music or FX under the voice: {names(music)}</li>
+<li><b>Manual RX pass</b>, one file at a time ({len(manual)}): {names(manual)}</li>
+<li><b>Check by ear, then batch</b> ({len(listen)}): {names(listen)}</li>
+<li><b>Batch groups</b>: one RX Module Chain per group, run with Batch Processor (files not already in step 2):<ul>{group_html}</ul></li>
+<li><b>Fix or re-export</b> ({len(errors)}): {names(errors)}</li>
+</ol>"""
+
     body = []
     for r in rows:
         if r.get("error"):
@@ -198,7 +218,7 @@ def write_html(rows, out, folder, target):
         segs = html.escape(r["segment_list"]).replace("; ", "<br>")
         body.append(
             f"<tr class='{cls(r)}'><td class='n'>{r['severity']}</td>"
-            f"<td><b>{html.escape(r['file'])}</b><br><span class='dim'>{html.escape(r['source_guess'])} · "
+            f"<td><b>{html.escape(r['file'])}</b><br><span class='dim'>{html.escape(r.get('set', ''))}</span><br><span class='dim'>{html.escape(r['source_guess'])} · "
             f"{r['channels']}ch {r['sample_rate']} Hz · {html.escape(r['stereo'])}</span></td>"
             f"<td class='n'>{r['lufs_integrated']}<br><span class='dim'>{r['gain_to_target_db']:+} dB</span></td>"
             f"<td class='n'>{r['bandwidth_low_hz']}–{r['bandwidth_high_hz']} Hz</td>"
@@ -224,6 +244,8 @@ th{{position:sticky;top:0;background:var(--bg)}}.n{{text-align:right;white-space
 <p>Numbers are estimates to decide listening order. <b>Source guess and bed</b> are heuristics: confirm by ear.
 Severity: 7+ = full manual RX pass, 4–6 = check by ear, 0–3 = batch is probably fine.</p>
 <ul>{summary}</ul>
+{steps}
+<h2>All files</h2>
 <table><thead><tr><th>Sev</th><th>File</th><th>LUFS / gain</th><th>Bandwidth</th><th>SNR / bed</th>
 <th>Clip runs</th><th>Hum</th><th>Suggested RX chain</th><th>Segments (start–end)</th></tr></thead>
 <tbody>{''.join(body)}</tbody></table></body></html>"""
@@ -232,39 +254,54 @@ Severity: 7+ = full manual RX pass, 4–6 = check by ear, 0–3 = batch is proba
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("folder")
+    ap.add_argument("folders", nargs="+", help="one or more export folders (sets)")
     ap.add_argument("--bpm", type=float, help="song tempo, to show bar positions (constant tempo only)")
     ap.add_argument("--sig", type=int, default=4, help="beats per bar (default 4)")
     ap.add_argument("--start-bar", type=int, default=1, help="bar at file start (default 1)")
     ap.add_argument("--target", type=float, default=-20.0, help="loudness target LUFS (default -20)")
     ap.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     ap.add_argument("--recursive", action="store_true", help="include sub-folders")
+    ap.add_argument("--out", help="output folder (default: <folder>/_triage, or <parent>/_triage_combined for several)")
     a = ap.parse_args()
 
-    folder = Path(a.folder).expanduser()
-    if not folder.is_dir():
-        sys.exit(f"Not a folder: {folder}")
+    folders = [Path(f).expanduser() for f in a.folders]
+    for folder in folders:
+        if not folder.is_dir():
+            sys.exit(f"Not a folder: {folder}")
     pattern = "**/*" if a.recursive else "*"
-    files = sorted(p for p in folder.glob(pattern)
-                   if p.suffix.lower() in am.AUDIO_EXTS and "_triage" not in p.parts
-                   and not p.name.startswith("._"))
-    if not files:
-        sys.exit(f"No audio files found in {folder}")
+    jobs = []
+    for folder in folders:
+        found = sorted(p for p in folder.glob(pattern)
+                       if p.suffix.lower() in am.AUDIO_EXTS and not any(x.startswith("_triage") for x in p.parts)
+                       and not p.name.startswith("._"))
+        if not found:
+            print(f"Warning: no audio files in {folder}")
+        jobs += [(p, folder.name) for p in found]
+    if not jobs:
+        sys.exit("No audio files found.")
 
-    out_dir = folder / "_triage"
-    out_dir.mkdir(exist_ok=True)
+    if a.out:
+        out_dir = Path(a.out).expanduser()
+    elif len(folders) == 1:
+        out_dir = folders[0] / "_triage"
+    else:
+        out_dir = Path(os.path.commonpath([str(f) for f in folders])) / "_triage_combined"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    files = [p for p, _ in jobs]
+    set_of = {p: name for p, name in jobs}
     kw = dict(bpm=a.bpm, sig=a.sig, start_bar=a.start_bar, target=a.target)
     print(f"Analyzing {len(files)} files with {a.jobs} workers...")
     rows = []
     with ProcessPoolExecutor(max_workers=a.jobs) as ex:
         for i, r in enumerate(ex.map(_worker, [(p, kw) for p in files]), 1):
+            r["set"] = set_of[files[i - 1]]
             rows.append(r)
             flag = r.get("error") or f"sev {r.get('severity')} · {r.get('source_guess')}"
             print(f"  [{i}/{len(files)}] {r['file']}: {flag}")
 
     rows.sort(key=lambda r: (0 if r.get("error") else 1, -r.get("severity", 0), r["file"]))
     write_csv(rows, out_dir / "triage.csv")
-    write_html(rows, out_dir / "triage_report.html", folder, a.target)
+    write_html(rows, out_dir / "triage_report.html", ", ".join(str(f) for f in folders), a.target)
     print(f"\nDone. Open:\n  {out_dir / 'triage_report.html'}\n  {out_dir / 'triage.csv'}")
 
 

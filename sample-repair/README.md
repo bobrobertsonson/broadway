@@ -11,6 +11,16 @@ modifies your source files; every output goes into a new sub-folder.
 # optional: --bpm 140 --sig 4 adds bar positions to each clip's location (constant tempo only)
 ```
 
+Several sets in one combined report (the first set's files sit directly in the export folder, set 2 in its sub-folder):
+
+```bash
+E="/Users/notsch/Music/Studio_Notsch/_ACTIVE/_Manipulator-Argent-Sample-Repair-Export"
+./run_triage.sh "$E" "$E/*Live Set Samples" --out "$E/_triage_combined"
+```
+
+The combined report has a `set` column and a **Next steps** section: music-bed files to confirm by ear,
+the manual-RX list, the check-by-ear list, batch groups per source type, and files to re-export.
+
 The first run creates a local Python environment (needs `python3`; macOS offers to
 install the Command Line Tools if it's missing). Output:
 
