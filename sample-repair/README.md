@@ -64,3 +64,33 @@ Save results to `Samples_RX/` with the same file names (adding `_RX` is fine).
 1. Export: **File -> Export -> All Tracks as Audio Files**, WAV, 24-bit or 32-bit float, Normalize off, Bypass Effect Plug-ins on, Include Volume/Pan Automation off. Every file starts at bar 1.
 2. Triage (above), then RX.
 3. Re-import the RX files at bar 1 onto new tracks inside the sample Summing Stack. Keep the originals in a muted `RAW` stack.
+
+## Phases 4-6: prepare, RX, finish (no re-aligning in Logic)
+
+```bash
+E="/Users/notsch/Music/Studio_Notsch/_ACTIVE/_Manipulator-Argent-Sample-Repair-Export"
+./run.sh prepare "$E"     # before RX
+# ... RX work ...
+./run.sh finish "$E"      # after RX; re-run any time, it picks up whatever is done
+```
+
+**prepare** (groups come from `plan.json`, so edit that file if the listening pass changes a group):
+- `_work/duplicates.txt`: waveform check of the suspected copies (IDENTICAL / SAME AUDIO / SAME SOURCE / DIFFERENT)
+- `_work/listen/`: short excerpts plus `LISTEN.txt`, the 10-minute listening pass
+- `_work/RX_in/<group>/`: each file to repair, trimmed to its audio plus 1 s. RX processes seconds of audio instead of a 29-minute file
+- `_work/RX_out/<group>/`: empty folders. Save RX results here with the same file names (an `_RX` suffix is fine)
+
+**finish**:
+- Puts every repaired file back at its exact original sample position, at full length. Verified sample-accurate in testing
+- Folds repaired files to mono (use `--keep-stereo` to keep stereo). No-repair files stay as they were
+- Applies one gain change per file to reach -20 LUFS, or -28 LUFS for collage layers. Output is 32-bit float, so nothing clips
+- Writes `Samples_READY/` with the same folder layout as the export, plus `finish_report.csv`. The report flags noise cuts over 12 dB (listen for artifacts) and level drops over 6 dB (the voice may have been removed)
+
+**Into Logic:** set the playhead to bar 1 (the point your export started from) and drag the `Samples_READY` files in. Each clip lands where the original was. The project must stay at 44.1 kHz.
+
+## RX: building the chains (about 10 min, once)
+
+1. Open **Module Chain** (Window menu). Add the modules for group A: Music Rebalance, Dialogue De-reverb, De-plosive. Set each one, then save the chain as `A music bed`.
+2. Repeat for B (Dialogue Isolate, Dialogue De-reverb, De-plosive), C (De-hum, Dialogue Isolate, De-plosive) and D (Spectral De-noise).
+3. Open **Batch Processor**. Add the files from `_work/RX_in/2_A_music_bed`, choose the `A music bed` chain, set output to `_work/RX_out/2_A_music_bed`, format WAV 24-bit, keep the file names. Process.
+4. Repeat for B, C and D. Do the heroes (`1_Heroes_manual`) one at a time in the main window, saving each into `_work/RX_out/1_Heroes_manual`.
