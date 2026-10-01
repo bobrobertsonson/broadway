@@ -1,60 +1,195 @@
 {
-  "_comment": "Groups from the Sample Repair Plan doc. H = hero (manual RX), A-D = batch chains, N = no repair (level only), copy = covered by another file. Edit groups here if the listening pass changes them.",
-  "targets": {"default": -20, "collage": -28},
+  "_comment": "Groups from the Sample Repair Plan doc. H = hero (manual RX), A-D = batch chains, N = no repair (level only), copy = covered by another file (none: all copies are processed, each with its source's chain).",
+  "targets": {
+    "default": -20,
+    "collage": -28
+  },
   "collage": [
-    "drawing secet circles 1", "drawing secet circles 1_1", "drawing secet circles 3",
-    "drawing secet circles echo 1", "drawing secet circles echo 2", "drawing secet circles pitchshift",
-    "big ECHO", "abstract_hell", "abstract_technoise", "very abstract",
-    "Loud_for_quietclips 1", "Loud_for_quietclips 2"
+    "drawing secet circles 1",
+    "drawing secet circles 1_1",
+    "drawing secet circles 3",
+    "drawing secet circles echo 1",
+    "drawing secet circles echo 2",
+    "drawing secet circles pitchshift",
+    "big ECHO",
+    "abstract_hell",
+    "abstract_technoise",
+    "very abstract",
+    "Loud_for_quietclips 1",
+    "Loud_for_quietclips 2"
   ],
   "groups": {
-    "H": ["Kill me! - Hero", "kill me 1", "We're Not Humans - Hero", "Wtinessing Pain - Hero",
-          "You're the Product - Hero", "Dont Feel Anything 1", "Sean Penn - Clean", "Anxiety 1"],
-    "A": ["Dinner Table", "People are People 1", "Violence - Depravity", "Monster", "This is hell",
-          "True detective screams", "True detective screams_1", "piles of dead chikdren",
-          "Whats Real Anymore", "scared immediately", "Shoulder Meat - Sample 2",
-          "drawing secet circles 1_1", "drawing secet circles 3"],
-    "B": ["Cut it off 1", "Cut it off 2", "This is Hell_1", "drawing secet circles 1",
-          "There is no Hope", "no hope for any of us"],
-    "C": ["Shoulder Meat - Sample 1", "one eyed man is king", "IMMEDIATELY - center"],
-    "D": ["FEAR left", "IMMEDIATELY - right"],
-    "N": ["drawing secet circles echo 1", "drawing secet circles echo 2", "drawing secet circles pitchshift",
-          "big ECHO", "abstract_hell", "abstract_technoise", "very abstract",
-          "Loud_for_quietclips 1", "Loud_for_quietclips 2", "Section 2 Samples",
-          "Prestige Annihilated - Vocal Backing", "SATAAAAAn"],
-    "copy": ["anxiety 2", "Anxiety Definition - Hero", "People are People 2", "kill me 2",
-             "Dont Feel Anything - Hero", "Sean Penn - Hero", "Sean Penn - Delay", "Sean Penn - Transformed"]
+    "H": [
+      "Kill me! - Hero",
+      "kill me 1",
+      "We're Not Humans - Hero",
+      "Wtinessing Pain - Hero",
+      "You're the Product - Hero",
+      "Dont Feel Anything 1",
+      "Sean Penn - Clean",
+      "Anxiety 1"
+    ],
+    "A": [
+      "Dinner Table",
+      "People are People 1",
+      "Violence - Depravity",
+      "Monster",
+      "This is hell",
+      "True detective screams",
+      "True detective screams_1",
+      "piles of dead chikdren",
+      "Whats Real Anymore",
+      "scared immediately",
+      "Shoulder Meat - Sample 2",
+      "drawing secet circles 1_1",
+      "drawing secet circles 3",
+      "People are People 2"
+    ],
+    "B": [
+      "Cut it off 1",
+      "Cut it off 2",
+      "This is Hell_1",
+      "drawing secet circles 1",
+      "There is no Hope",
+      "no hope for any of us",
+      "Dont Feel Anything - Hero",
+      "Sean Penn - Hero"
+    ],
+    "C": [
+      "Shoulder Meat - Sample 1",
+      "one eyed man is king",
+      "IMMEDIATELY - center"
+    ],
+    "D": [
+      "FEAR left",
+      "IMMEDIATELY - right",
+      "anxiety 2",
+      "Anxiety Definition - Hero",
+      "kill me 2",
+      "Sean Penn - Delay",
+      "Sean Penn - Transformed"
+    ],
+    "N": [
+      "drawing secet circles echo 1",
+      "drawing secet circles echo 2",
+      "drawing secet circles pitchshift",
+      "big ECHO",
+      "abstract_hell",
+      "abstract_technoise",
+      "very abstract",
+      "Loud_for_quietclips 1",
+      "Loud_for_quietclips 2",
+      "Section 2 Samples",
+      "Prestige Annihilated - Vocal Backing",
+      "SATAAAAAn"
+    ],
+    "copy": []
   },
   "group_folders": {
-    "H": "1_Heroes_manual", "A": "2_A_music_bed", "B": "3_B_busy_bed",
-    "C": "4_C_hum", "D": "5_D_clean"
+    "H": "1_Heroes_manual",
+    "A": "2_A_music_bed",
+    "B": "3_B_busy_bed",
+    "C": "4_C_hum",
+    "D": "5_D_clean"
   },
   "compare": [
-    ["Anxiety 1", "anxiety 2"],
-    ["Anxiety 1", "Anxiety Definition - Hero"],
-    ["People are People 2", "People are People 1"],
-    ["kill me 1", "Kill me! - Hero"],
-    ["kill me 2", "Kill me! - Hero"],
-    ["Dont Feel Anything 1", "Dont Feel Anything - Hero"],
-    ["Violence - Depravity", "Dont Feel Anything - Hero"],
-    ["Monster", "We're Not Humans - Hero"],
-    ["Sean Penn - Clean", "Sean Penn - Hero"],
-    ["Sean Penn - Clean", "Sean Penn - Transformed"],
-    ["This is hell", "This is Hell_1"],
-    ["True detective screams_1", "True detective screams"],
-    ["FEAR left", "IMMEDIATELY - right"]
+    [
+      "Anxiety 1",
+      "anxiety 2"
+    ],
+    [
+      "Anxiety 1",
+      "Anxiety Definition - Hero"
+    ],
+    [
+      "People are People 2",
+      "People are People 1"
+    ],
+    [
+      "kill me 1",
+      "Kill me! - Hero"
+    ],
+    [
+      "kill me 2",
+      "Kill me! - Hero"
+    ],
+    [
+      "Dont Feel Anything 1",
+      "Dont Feel Anything - Hero"
+    ],
+    [
+      "Violence - Depravity",
+      "Dont Feel Anything - Hero"
+    ],
+    [
+      "Monster",
+      "We're Not Humans - Hero"
+    ],
+    [
+      "Sean Penn - Clean",
+      "Sean Penn - Hero"
+    ],
+    [
+      "Sean Penn - Clean",
+      "Sean Penn - Transformed"
+    ],
+    [
+      "This is hell",
+      "This is Hell_1"
+    ],
+    [
+      "True detective screams_1",
+      "True detective screams"
+    ],
+    [
+      "FEAR left",
+      "IMMEDIATELY - right"
+    ]
   ],
   "listen": [
-    ["kill me 1", "Clean enough to use as the Kill me! hero?"],
-    ["Kill me! - Hero", "Compare with kill me 1"],
-    ["Monster", "Same line as We're Not Humans?"],
-    ["We're Not Humans - Hero", "Compare with Monster"],
-    ["Dinner Table", "Music under the voice? (group A)"],
-    ["Violence - Depravity", "Music under the voice? (group A)"],
-    ["Whats Real Anymore", "Music under the voice? (group A)"],
-    ["scared immediately", "Music under the voice? (group A)"],
-    ["SATAAAAAn", "Effect layer or dry source?"],
-    ["Section 2 Samples", "Bounce of other clips, or its own source?"],
-    ["one eyed man is king", "Audible 60 Hz hum?"]
+    [
+      "kill me 1",
+      "Clean enough to use as the Kill me! hero?"
+    ],
+    [
+      "Kill me! - Hero",
+      "Compare with kill me 1"
+    ],
+    [
+      "Monster",
+      "Same line as We're Not Humans?"
+    ],
+    [
+      "We're Not Humans - Hero",
+      "Compare with Monster"
+    ],
+    [
+      "Dinner Table",
+      "Music under the voice? (group A)"
+    ],
+    [
+      "Violence - Depravity",
+      "Music under the voice? (group A)"
+    ],
+    [
+      "Whats Real Anymore",
+      "Music under the voice? (group A)"
+    ],
+    [
+      "scared immediately",
+      "Music under the voice? (group A)"
+    ],
+    [
+      "SATAAAAAn",
+      "Effect layer or dry source?"
+    ],
+    [
+      "Section 2 Samples",
+      "Bounce of other clips, or its own source?"
+    ],
+    [
+      "one eyed man is king",
+      "Audible 60 Hz hum?"
+    ]
   ]
 }
