@@ -1,5 +1,5 @@
 {
-  "_comment": "Groups from the Sample Repair Plan doc. H = hero (manual RX), A-D = batch chains, N = no repair (level only), copy = covered by another file (none: all copies are processed, each with its source's chain).",
+  "_comment": "Groups after the listening pass (2026-10-01). H = hero (manual RX), A-E = batch chains, N = no repair (level only). The tonal-bed detector mistook sustained yelling for music, so only files with music heard by ear are in A.",
   "targets": {
     "default": -20,
     "collage": -28
@@ -20,7 +20,6 @@
   ],
   "groups": {
     "H": [
-      "Kill me! - Hero",
       "kill me 1",
       "We're Not Humans - Hero",
       "Wtinessing Pain - Hero",
@@ -30,20 +29,7 @@
       "Anxiety 1"
     ],
     "A": [
-      "Dinner Table",
-      "People are People 1",
-      "Violence - Depravity",
-      "Monster",
-      "This is hell",
-      "True detective screams",
-      "True detective screams_1",
-      "piles of dead chikdren",
-      "Whats Real Anymore",
-      "scared immediately",
-      "Shoulder Meat - Sample 2",
-      "drawing secet circles 1_1",
-      "drawing secet circles 3",
-      "People are People 2"
+      "scared immediately"
     ],
     "B": [
       "Cut it off 1",
@@ -53,7 +39,19 @@
       "There is no Hope",
       "no hope for any of us",
       "Dont Feel Anything - Hero",
-      "Sean Penn - Hero"
+      "Sean Penn - Hero",
+      "Kill me! - Hero",
+      "People are People 1",
+      "People are People 2",
+      "Violence - Depravity",
+      "Monster",
+      "This is hell",
+      "True detective screams",
+      "True detective screams_1",
+      "piles of dead chikdren",
+      "Shoulder Meat - Sample 2",
+      "drawing secet circles 1_1",
+      "drawing secet circles 3"
     ],
     "C": [
       "Shoulder Meat - Sample 1",
@@ -67,7 +65,12 @@
       "Anxiety Definition - Hero",
       "kill me 2",
       "Sean Penn - Delay",
-      "Sean Penn - Transformed"
+      "Sean Penn - Transformed",
+      "SATAAAAAn"
+    ],
+    "E": [
+      "Dinner Table",
+      "Whats Real Anymore"
     ],
     "N": [
       "drawing secet circles echo 1",
@@ -80,17 +83,17 @@
       "Loud_for_quietclips 1",
       "Loud_for_quietclips 2",
       "Section 2 Samples",
-      "Prestige Annihilated - Vocal Backing",
-      "SATAAAAAn"
+      "Prestige Annihilated - Vocal Backing"
     ],
     "copy": []
   },
   "group_folders": {
     "H": "1_Heroes_manual",
     "A": "2_A_music_bed",
-    "B": "3_B_busy_bed",
-    "C": "4_C_hum",
-    "D": "5_D_clean"
+    "B": "3_B_dialogue_isolate",
+    "C": "4_C_hum_rain",
+    "D": "5_D_light_denoise",
+    "E": "6_E_pops_static"
   },
   "compare": [
     [

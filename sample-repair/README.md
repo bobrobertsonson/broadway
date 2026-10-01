@@ -90,7 +90,18 @@ E="/Users/notsch/Music/Studio_Notsch/_ACTIVE/_Manipulator-Argent-Sample-Repair-E
 
 ## RX: building the chains (about 10 min, once)
 
-1. Open **Module Chain** (Window menu). Add the modules for group A: Music Rebalance, Dialogue De-reverb, De-plosive. Set each one, then save the chain as `A music bed`.
-2. Repeat for B (Dialogue Isolate, Dialogue De-reverb, De-plosive), C (De-hum, Dialogue Isolate, De-plosive) and D (Spectral De-noise).
-3. Open **Batch Processor**. Add the files from `_work/RX_in/2_A_music_bed`, choose the `A music bed` chain, set output to `_work/RX_out/2_A_music_bed`, format WAV 24-bit, keep the file names. Process.
-4. Repeat for B, C and D. Do the heroes (`1_Heroes_manual`) one at a time in the main window, saving each into `_work/RX_out/1_Heroes_manual`.
+Open **Module Chain**, add the modules for a group, set each one, and save the chain under the group's name. Batch can't learn a noise profile per file, so set every noise module to **adaptive**.
+
+| Folder | Chain |
+|---|---|
+| `2_A_music_bed` | Music Rebalance (Voice 0 dB; Bass, Percussion, Other -15 dB) -> Dialogue De-reverb (low) -> De-plosive |
+| `3_B_dialogue_isolate` | Dialogue Isolate (~50%) -> Dialogue De-reverb (low) -> De-plosive |
+| `4_C_hum_rain` | De-hum (60 Hz, 3-4 harmonics, adaptive) -> Dialogue Isolate (~60%, which also takes most of the rain) -> De-plosive |
+| `5_D_light_denoise` | Spectral De-noise (adaptive, about 6 dB) |
+| `6_E_pops_static` | De-click (medium) -> De-crackle (for static) -> Dialogue Isolate (~60%) -> De-plosive |
+
+Then open **Batch Processor**. For each folder: add the files from `_work/RX_in/<folder>`, choose that folder's chain, and set output to `_work/RX_out/<folder>` as WAV 24-bit with the same file names. Process.
+
+Do the heroes (`1_Heroes_manual`) one at a time in the main window, saving each into `_work/RX_out/1_Heroes_manual`.
+
+If a group B file still has music under it after processing, run that one file again with chain A.
