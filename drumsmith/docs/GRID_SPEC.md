@@ -191,9 +191,9 @@ they degrade to `g` and the reader emits a warning.
 
 | Glyph (normal / accent) | Variant | Valid lanes | Notes |
 |---|---|---|---|
-| `h` / `H` | half-open hi-hat | H | GP8 "Hi-Hat (half)" [VERIFY] |
-| `c` / `C` | choke (hit, then choked) | C1 C2 X SP (R1 R2 if GP8 has ride choke [VERIFY]) | GP8 "(choke)" articulations |
-| `r` / `R` | rimshot | S1 S2 | GP8 "Snare (rim shot)" [VERIFY] |
+| `h` / `H` | half-open hi-hat | H | GP8 "Hi-Hat (half)" |
+| `c` / `C` | choke (hit, then choked) | C1 C2 X SP R1 R2 | GP8 "(choke)" articulations; R1/R2 both use "Ride (choke)" |
+| `r` / `R` | rimshot | S1 S2 | GP8 "Snare (rim shot)"; GP8 has one rimshot articulation, so S2 rimshots read back as S1 [see §13] |
 | `f` / `F` | flam (grace stroke + main stroke, same lane) | SS S1 S2 T1–T6 | Counts as one hand for playability |
 | `z` / `Z` | roll / buzz for the slot's duration | SS S1 S2 T1–T6 C1 C2 X SP R1 R2 | Consecutive `z` slots = one continuous roll. GP tremolo [VERIFY] |
 
@@ -328,32 +328,59 @@ meters and section labels.
   assignment) are not preserved by the grid. Phase 4 keeps them by copying
   untouched bars verbatim from the source file.
 
-## 13. Guitar Pro 8 articulation table (to be filled from the test file)
+## 13. Guitar Pro 8 articulation table
 
-| Lane / glyph | Expected GP8 articulation name | Expected output MIDI | Verified |
-|---|---|---|---|
-| K1 | Kick (hit) | 36 | no |
-| K2 | Kick (hit), second kick | 35 | no |
-| S1 | Snare (hit) | 38 | no |
-| S1 `r/R` | Snare (rim shot) | 91? | no |
-| S2 | Snare 2 / Electric snare | 40 | no |
-| SS | Snare (side stick) | 37 | no |
-| H | Hi-Hat (closed) | 42 | no |
-| H `h/H` | Hi-Hat (half) | 92? | no |
-| O | Hi-Hat (open) | 46 | no |
-| P | Pedal Hi-Hat (hit) | 44 | no |
-| R1 | Ride (middle) | 51 | no |
-| R2 | Ride 2 | 59 | no |
-| B | Ride (bell) | 53 | no |
-| C1 / C2 | Crash high / medium (hit) | 49 / 57 | no |
-| C1/C2 `c/C` | Crash (choke) | 97? / 98? | no |
-| X | China (hit) | 52 | no |
-| X `c/C` | China (choke) | 96? | no |
-| SP | Splash (hit) | 55 | no |
-| SP `c/C` | Splash (choke) | 95? | no |
-| T1–T6 | Tom very high … floor low | 50 48 47 45 43 41 | no |
+Names and numbers verified from the GP8 Drumkit dialog (screenshot, 2026-10-08).
+Still [VERIFY] with the exported test file: how `score.gpif` references
+articulations, and how ghost, accent, flam and roll are stored.
 
-Numbers with `?` are from memory and are guesses. The test file settles them.
+| Lane / glyph | GP8 articulation | GP8 MIDI | Grid → GP writes | GP → grid reads |
+|---|---|---|---|---|
+| K1 | Kick (hit) | 36 | 36 | 36 |
+| K2 | Kick (hit) | 35 | 35 | 35 |
+| S1 | Snare (hit) | 38 | 38 | 38 |
+| S1/S2 `r/R` | Snare (rim shot) | 91 | 91 | 91 → S1 `r/R` |
+| S2 | Electric Snare (hit) | 40 | 40 | 40 |
+| SS | Snare (side stick) | 37 (also 31) | 37 | 37, 31 |
+| H | Hi-Hat (closed) | 42 | 42 | 42 |
+| H `h/H` | Hi-Hat (half) | 92 | 92 | 92 |
+| O | Hi-Hat (open) | 46 | 46 | 46 |
+| P | Pedal Hi-Hat (hit) | 44 | 44 | 44 |
+| R1 | Ride (middle) | 51 (also 126) | 51 | 51, 126 |
+| R2 | Ride (edge) | 59 (also 93) | 59 | 59, 93 |
+| B | Ride (bell) | 53 (also 127) | 53 | 53, 127 |
+| R1/R2 `c/C` | Ride (choke) | 94 (also 29) | 94 | 94, 29 → R1 `c/C` |
+| C1 | Crash high (hit) | 49 | 49 | 49 |
+| C1 `c/C` | Crash high (choke) | 97 | 97 | 97 |
+| C2 | Crash medium (hit) | 57 | 57 | 57 |
+| C2 `c/C` | Crash medium (choke) | 98 | 98 | 98 |
+| X | China (hit) | 52 | 52 | 52 |
+| X `c/C` | China (choke) | 96 | 96 | 96 |
+| SP | Splash (hit) | 55 | 55 | 55 |
+| SP `c/C` | Splash (choke) | 95 | 95 | 95 |
+| T1 | High Floor Tom (hit) | 50 | 50 | 50 |
+| T2 | High Tom (hit) | 48 | 48 | 48 |
+| T3 | Mid Tom (hit) | 47 | 47 | 47 |
+| T4 | Low Tom (hit) | 45 | 45 | 45 |
+| T5 | Very Low Tom (hit) | 43 | 43 | 43 |
+| T6 | Low Floor Tom (hit) | 41 | 41 | 41 |
+
+Notes:
+- GP8 tom names don't match GM names (GP calls 50 "High Floor Tom"). The
+  numbers match GM, and lanes follow the numbers.
+- **R2 is a second ride in GM but "Ride (edge)" in Guitar Pro 8.** GP8 has one
+  ride with middle, edge, bell and choke strokes. The lane keeps GM note 59 so it
+  works both ways; the GP8 score shows it as ride edge.
+- GP8 has a single rimshot and a single ride choke, so on read they come back on
+  S1 and R1. A grid that rimshots S2 or chokes R2 loses that detail through GP
+  (a reader warning, not silent).
+- The default GP8 drum track contains only some articulations (5 toms, no 41, 40,
+  59 or chokes). The writer adds missing articulations to the track's drumkit
+  when a grid uses them [VERIFY in Phase 1.8].
+- Articulations outside the lane map (cowbells 56/99/102, percussion, metronome,
+  reverse cymbal 30, hand clap 39) are reported and dropped on read, never
+  silently mapped. The default GP8 kit includes three cowbells, so expect these
+  warnings on real files.
 
 ## 14. Validation errors (parser)
 
