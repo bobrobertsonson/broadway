@@ -19,6 +19,9 @@ Companion to `docs/GRID_SPEC.md`. Nothing here is implemented yet.
    undocumented. Adding a track likely touches `PartConfiguration` and
    `LayoutConfiguration` inside the `.gp` zip as well as `score.gpif`. The
    template-file approach and your manual open-in-GP8 checks are the safety net.
+2a. **Your genres make the data gap worse.** Slam and grind are close to absent
+   from Lakh and GigaMIDI. Your own library and official transcriptions will
+   carry most of the genre signal for both Track A retrieval and Track B.
 4. **This repo is a website (`broadway`).** Drumsmith should live in its own
    repository. The drafts sit in `drumsmith/docs/` here, uncommitted, until you
    decide.
@@ -134,7 +137,7 @@ Goal: every format converts to and from the grid deterministically, with tests.
 | 1.8 GP8 drum-note emitter | grid → gpif Bars/Voices/Beats/Notes/Rhythms for one drum track, written into a copy of a file | `.gp` drums→grid→`.gp` drums is event-identical; output re-reads cleanly |
 | 1.9 Remap profiles | loader, validation (range, duplicates, unmentioned lanes), per-glyph and per-variant remap, velocity overrides, sidecar | every lane in a sample profile lands on its note; no profile = standard GM byte-identical |
 | 1.10 Playability | limb model, checker, configurable speed limits | fixture suite of legal and illegal patterns |
-| 1.11 Audition | grid/MIDI → WAV via FluidSynth, standard map | WAV produced; missing soundfont gives a clear error |
+| 1.11 Audition | grid/MIDI → WAV. Backend `fluidsynth` (any `.sf2`, standard map, works everywhere) and backend `plugin` (DawDreamer hosting your own AU/VST3 drum plugin on macOS, with its remap profile) | WAV produced by both backends on your Mac; missing soundfont or plugin gives a clear error |
 | 1.12 grid-format skill | teaches Claude to read and write the grid, with examples and error codes | Claude writes 10 valid grids from prompts with no parse errors |
 
 Phase 1 CLI:
@@ -186,7 +189,9 @@ lanes:
       R: { note: 40 }
   H:
     note: 42
-    glyphs: { h: { note: 23 } }  # half-open hat to a plugin-specific note
+    glyphs:
+      h: { note: 42, cc: { 4: 70 } }   # half-open via hi-hat openness CC (Toontrack style)
+      # or a plugin-specific note: h: { note: 23 }
   C2: { note: 57, channel: 10 }
   T6: { note: 52 }               # repurpose low floor tom as second china
 velocity:                        # optional; overrides config/velocity.yaml
@@ -198,8 +203,11 @@ import:                          # optional inverse map for Phase 5 pattern pack
 ```
 
 Validation on load (errors stop export; warnings print):
-- error: note outside 0–127, channel outside 1–16, unknown lane, unknown glyph
-  for a lane
+- error: note outside 0–127, channel outside 1–16, CC number outside 0–119 or
+  value outside 0–127, unknown lane, unknown glyph for a lane
+- `cc:` entries are sent just before the note on the same channel. This covers
+  plugins that control hi-hat openness with a controller (usually CC4) instead
+  of separate notes.
 - error: two lanes or glyphs mapped to the same (note, channel) unless listed in
   `allow_shared_notes`
 - warning: each lane not mentioned (falls back to standard)
@@ -364,7 +372,10 @@ estimate token cost and ask before running it.
   machine or a mid-range NVIDIA card, more slowly [Guessing].
 - Stage 1: drum-only pretraining. Stage 2: paired fine-tuning. Final pass
   weighted toward metal and your library.
-- The recommendation for local versus rented depends on your machine.
+- Your machine is an M1 MacBook with 32 GB RAM. Option 2 trains locally with
+  PyTorch MPS. Option 1 runs locally with MLX LoRA for a 1B model; a 3B model is
+  possible but slow. Rent a GPU only if local runs take more than about a day.
+  Spending cap: $100. Every run still needs your approval first.
 
 ### B4. Integration
 If a model beats the baseline on alignment and closeness without losing
@@ -376,6 +387,9 @@ before you see anything.
 
 - **Unit:** grid parser/serializer, error codes, lanes, profiles, playability
   rules, transforms, metrics.
+- **Genre fixtures:** gravity blasts, bomb blasts, hammer and traditional blasts
+  at 230–280 bpm, 32nd-note double bass, tech-death odd meters and tuplets, slam
+  half-time grooves at 60–90 bpm. Playability defaults to the `extreme` preset.
 - **Property (hypothesis):** random valid grids → serialize/parse identity;
   grid→MIDI→grid identity; grid→GP→grid identity; profile=none → standard GM
   bytes.
@@ -398,20 +412,22 @@ before you see anything.
   and send it back with specific defects if it fails. Nothing merges on the
   agent's own report.
 
-## 14. Answers needed before implementation
+## 14. Decisions so far
 
-1. Genres to prioritise (ordered).
-2. Is your tab and pattern library ready? Rough count of `.gp`, `.gp5` and MIDI
-   files.
-3. OS, machine, RAM, GPU or Apple Silicon model.
-4. Open to renting GPU time? Budget ceiling?
-5. Drum plugins you want MIDI profiles for (e.g. EZdrummer 3, Superior Drummer 3,
-   GetGood Drums, Addictive Drums 2, Steven Slate). Include the kit or preset if the
-   map differs per kit.
-6. Test file: a short GP8 file with one labelled bar per lane you use (all 21 if
-   possible), plus bars for each variant you use (half-open hat, chokes, rimshot,
-   flam, roll), plus three bars of snare: ghost, normal, accent.
-7. Where should drumsmith live: a new GitHub repo (I can't create one without
-   your go-ahead), or a branch here?
-8. SS = side stick and rimshot = S1/S2 variant: OK?
-9. A drum `.sf2` for audition, or should I suggest a freely licensed one?
+| Topic | Answer |
+|---|---|
+| Genres | death metal, technical death metal, grind, slam (in that order) |
+| Library | a few thousand MIDI files; few GP files so far, being gathered |
+| Machine | macOS, M1 MacBook, 32 GB RAM |
+| GPU rental | possible, up to $100, after approval per run |
+| MIDI profiles | Middletone Divine Destruction Drums (first), Modern and Massive 2 |
+| Repo | new repo `drumsmith` (user creates it; the integration can't) |
+| SS / rimshot | explained, awaiting decision |
+| Audition | GeneralUser GS `.sf2` for quick checks, plus the plugin backend |
+
+Still needed:
+- The GP8 test file (lane chart, variants, three snare bars).
+- The MIDI note chart for each drum plugin (manual page or mapping screenshot),
+  and which host Modern and Massive 2 runs in.
+- What the few thousand MIDI files are: groove packs (which vendor), full songs,
+  or a mix.
