@@ -79,6 +79,12 @@ int main (int argc, char* argv[])
         engine.process (in, numIn, output.getWritePointer (0, pos), output.getWritePointer (1, pos), n);
     }
 
+    // The WAV is fixed-point, so anything over full scale clips. Say so rather than clip silently.
+    const float peak = juce::jmax (output.getMagnitude (0, latency, len + tail), output.getMagnitude (1, latency, len + tail));
+    if (peak > 1.0f)
+        std::cerr << "warning: output peaks at +" << juce::Decibels::gainToDecibels (peak)
+                  << " dBFS and will clip. Lower the input or the Mix.\n";
+
     outFile.deleteFile();
     std::unique_ptr<juce::OutputStream> stream (outFile.createOutputStream());
     juce::WavAudioFormat wav;
