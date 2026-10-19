@@ -20,7 +20,7 @@ public:
     bool acceptsMidi() const override { return false; }
     bool producesMidi() const override { return false; }
     bool isMidiEffect() const override { return false; }
-    double getTailLengthSeconds() const override { return 0.05; }
+    double getTailLengthSeconds() const override { return 0.1; }
 
     int getNumPrograms() override { return 1; }
     int getCurrentProgram() override { return 0; }
@@ -40,9 +40,16 @@ private:
     StackEngine engine;
     std::atomic<float>* takesParam = nullptr;
     std::atomic<float>* tightnessParam = nullptr;
-    std::atomic<float>* variationParam = nullptr;
+    std::atomic<float>* characterParam = nullptr;
+    std::atomic<float>* textureParam = nullptr;
+    std::atomic<float>* raspParam = nullptr;
+    std::atomic<float>* dynamicsParam = nullptr;
+    std::atomic<float>* pitchDriftParam = nullptr;
+    std::atomic<float>* roomParam = nullptr;
     std::atomic<float>* widthParam = nullptr;
     std::atomic<float>* mixParam = nullptr;
+    std::atomic<float>* outputParam = nullptr;
+    std::atomic<float>* seedParam = nullptr;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StackFXProcessor)
 };

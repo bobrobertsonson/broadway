@@ -3,24 +3,32 @@
 #include <array>
 #include <vector>
 
-// All values normalised: percentages are 0..1.
+// All amounts normalised 0..1 unless noted.
 struct StackParams
 {
-    int   takes     = 2;     // 2..4
-    float tightness = 0.7f;
-    float variation = 0.5f;
-    float width     = 0.8f;
-    float mix       = 0.5f;
+    int   takes      = 2;     // 2..4
+    float tightness  = 0.4f;  // timing warp: 1 = locked to the lead, 0 = +-40 ms
+    float character  = 0.0f;  // 0 = you, 1 = someone else (vocal-tract size + register)
+    float texture    = 1.0f;  // fresh noise grain per take
+    float rasp       = 0.5f;  // how differently raspy/clean the takes are
+    float dynamics   = 0.5f;  // how differently each take leans into syllables
+    float pitchDrift = 0.3f;  // how much each take's pitch wanders
+    float room       = 0.5f;  // each take's own early reflections
+    float width      = 1.0f;
+    float mix        = 0.5f;  // 0..0.5 fades the stack in under the lead, 0.5..1 fades the lead out
+    float outputDb   = 0.0f;  // dB
+    int   seed       = 1;     // re-roll the random performance
 };
 
-// Slow smoothed random signal in [-1, 1]: picks a new random target every
-// few seconds and glides to it through two one-pole lowpasses (well under 1 Hz).
+// Slow smoothed random signal in [-1, 1]: picks a new random target every few
+// hold-times and glides to it through two one-pole lowpasses. Clocked at whatever
+// rate prepare() is given (per sample or per STFT frame).
 class SmoothRandom
 {
 public:
-    void prepare (double sampleRate, juce::int64 seed, float minHoldSec, float maxHoldSec, float smoothSec);
+    void prepare (double rate, juce::int64 seed, float minHoldSec, float maxHoldSec, float smoothSec);
+    void reseed (juce::int64 seed) { rng.setSeed (seed); samplesLeft = 0; }   // keeps gliding, no jump
     float next();
-    float current() const { return y2; }
 
 private:
     juce::Random rng;
@@ -30,7 +38,11 @@ private:
     int samplesLeft = 0;
 };
 
-// The full doubler. Used by both the plugin and stackfx_render so they sound identical.
+// The full engine, shared by the plugin and stackfx_render.
+//
+// Each take is resynthesised from the lead's STFT: it reads the spectrum at its own warped time
+// (syllable-rate timing, pitch kept by a phase vocoder), with its own vocal-tract size and register,
+// fresh noise grain between the tonal peaks, its own rasp balance, dynamics and room.
 class StackEngine
 {
 public:
@@ -39,6 +51,7 @@ public:
     static constexpr int fftSize  = 1 << fftOrder;   // 1024
     static constexpr int hopSize  = fftSize / 4;     // 256
     static constexpr int numBins  = fftSize / 2 + 1;
+    static constexpr float maxWarpMs = 40.0f;
 
     StackEngine();
 
@@ -49,83 +62,76 @@ public:
     // in: 1 or 2 channels (summed to mono). outL/outR may alias in[0]/in[1].
     void process (const float* const* in, int numIn, float* outL, float* outR, int numSamples);
 
-    static constexpr int getLatencySamples() { return fftSize; }
-
-    // How many times the takes were re-timed between phrases (for stackfx_render's report).
-    int getPhraseChangeCount() const { return phraseChanges; }
+    // Valid after prepare(): STFT + lookahead so takes can land ahead of the lead.
+    int getLatencySamples() const { return fftSize + lookaheadFrames * hopSize; }
 
 private:
-    void processFrame();
-    float detectOnset (float x);
-    void detectGap (float x);
-    void startNewPhrase();
+    using Spectrum = std::array<float, numBins>;
+
+    struct Frame                      // one analysed input frame, kept in a ring
+    {
+        Spectrum env {}, fine {}, phase {};   // log envelope, log fine structure, phase
+        bool onset = false;
+    };
 
     struct Take
     {
-        juce::Random phaseRng;
-        // Per-bin phase offset as a unit phasor, gliding toward a target that is re-drawn now and then.
-        // Moving slowly (instead of a fresh random phase every frame) is what avoids the warble.
-        std::array<float, numBins> offRe {}, offIm {}, tgtRe {}, tgtIm {};
-        std::array<float, fftSize> ola {};      // overlap-add accumulator
-        std::array<float, hopSize> ready {};    // finished output for the current hop
-        juce::SmoothedValue<float> active;      // 0/1 fade when Takes changes
+        juce::Random rng;
+        SmoothRandom warp, gain, dyn, formant, pitch;
+        float warpFrames = 0.0f;              // current (speed-limited) warp; + = late
+        Spectrum phi {}, phaseOff {}, phaseTgt {}, tilt {};
+        bool phaseValid = false;
+        float raspUnit = 0.0f;                // -1..1, scaled by Rasp
 
-        juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Lagrange3rd> delay { 4096 };
-        SmoothRandom drift;
-        float phrasePos = 0.5f;                 // where in the timing range this take sits; re-picked per phrase
-        float delaySamples = 0.0f;              // current (slew-limited) delay
-        float oldDelay = 0.0f;                  // previous phrase's delay, while crossfading away from it
-        float xfade = 1.0f;                     // 0..1 crossfade old -> new delay tap (1 = done)
-        juce::SmoothedValue<float> phraseGain;  // per-phrase level offset
+        std::array<float, fftSize> ola {};
+        std::array<float, hopSize> ready {};
 
-        juce::dsp::IIR::Filter<float> shelf;    // fixed random tilt
-        float drive = 1.5f;                     // tanh saturation drive
+        float powFollow = 0.0f;               // slow power of this take, for level matching to the lead
 
-        SmoothRandom wobble;                    // slow +-1.5 dB level ride
-        juce::SmoothedValue<float> pan;         // -1..1 before Width, glides when Takes changes
+        std::vector<float> roomBuf;           // early reflections
+        int roomPos = 0;
+        std::array<int, 4> tapDelay {};
+        std::array<float, 4> tapGain {};
+
+        juce::SmoothedValue<float> active, pan;
     };
 
-    float targetDelaySamples (const Take& t, float tight) const;
+    void analyseFrame();
+    void synthesiseFrame (Take& t, int takeIndex, int frameIndex);
+    void seedTakes (bool resetState);
+    bool detectOnset (const Spectrum& logMag);
     static float panPosition (int take, int numTakes);
+    Frame& frameAt (int index) { return ring[(size_t) (((index % ringSize) + ringSize) % ringSize)]; }
 
     double sampleRate = 44100.0;
     StackParams target;
+    int currentSeed = 1;
 
-    juce::SmoothedValue<float> tightness, variation, width, mix, stackNorm;
+    // Frame-rate parameter smoothing (one-pole, ~50 ms)
+    float frameSmooth = 0.0f;
+    float sTight = 0.4f, sChar = 0.0f, sTexture = 1.0f, sRasp = 0.5f, sDyn = 0.5f, sPitch = 0.3f, sRoom = 0.5f;
+    juce::SmoothedValue<float> width, mix, outGain, stackNorm;
 
-    // STFT
+    // Analysis
     juce::dsp::FFT fft { fftOrder };
     std::array<float, fftSize> window {};
-    std::array<float, 101> variationGain {};        // level make-up for partly incoherent overlap-add
-    std::array<float, fftSize> inFrame {};          // last fftSize input samples
-    std::array<float, 2 * fftSize> spectrum {};
+    std::array<float, fftSize> inFrame {};
     std::array<float, 2 * fftSize> work {};
+    Spectrum omega {};                        // expected phase advance per hop, per bin
+    int lifterLen = 60;
+    std::vector<Frame> ring;
+    int ringSize = 0, lookaheadFrames = 0, newestFrame = -1;
+    float maxWarpFrames = 0.0f, warpSpeedLimit = 0.15f;
+    float fluxMean = 0.0f, fluxVar = 0.0f, fluxCoef = 0.0f;
+    Spectrum prevLogMag {};
     int hopCounter = 0;
-    float frameVariation = 0.0f;                    // Variation sampled at the hop
 
     std::array<Take, maxTakes> takes;
 
-    // Transient protection: onset detector on the input
-    float envFast = 0.0f, envSlow = 0.0f;
-    float fastAtt = 0.0f, fastRel = 0.0f, slowAtt = 0.0f, slowRel = 0.0f, protectRel = 0.0f;
-    float protect = 0.0f;                           // 1 right after an onset, decays to 0
-    int protectHold = 0, protectHoldLen = 0;
-    float hopProtectMax = 0.0f;
-    std::array<float, fftSize / hopSize> hopProtect {};   // per-hop max over the frame span
-    int hopProtectPos = 0;
-    float frameProtect = 0.0f;                      // protection for the frame now being output
+    // Lead level followers: slow (level matching) and fast (saturation ceiling)
+    float dryPowSlow = 0.0f, dryPowFast = 0.0f, slowCoef = 0.0f, fastCoef = 0.0f;
 
-    float maxDelaySlew = 0.0f;                      // samples of delay change per sample
-
-    // Phrase gaps: when the input has been quiet long enough that every delay tap reads silence,
-    // each take gets a new timing offset and level, like a separate take would.
-    juce::Random phraseRng;
-    float gapEnv = 0.0f, gapPeak = 0.0f, gapEnvCoef = 0.0f, gapPeakRel = 0.0f;
-    int quietCount = 0, quietNeeded = 0;
-    float xfadeStep = 0.0f;
-    int phraseChanges = 0;
-
-    // Dry lead delayed by the STFT latency so it stays aligned with the stack
-    std::array<float, fftSize> dryDelay {};
+    // Dry lead delayed by the full latency
+    std::vector<float> dryDelay;
     int dryPos = 0;
 };

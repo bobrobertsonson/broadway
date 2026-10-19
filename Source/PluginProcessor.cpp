@@ -12,10 +12,19 @@ juce::AudioProcessorValueTreeState::ParameterLayout StackFXProcessor::createLayo
 
     AudioProcessorValueTreeState::ParameterLayout layout;
     layout.add (std::make_unique<AudioParameterInt> (ParameterID { "takes", 1 }, "Takes", 2, 4, 2));
-    layout.add (pct ("tightness", "Tightness", 70.0f));
-    layout.add (pct ("variation", "Variation", 50.0f));
-    layout.add (pct ("width",     "Width",     80.0f));
-    layout.add (pct ("mix",       "Mix",       50.0f));
+    layout.add (pct ("tightness",  "Tightness",   40.0f));
+    layout.add (pct ("character",  "Character",    0.0f));
+    layout.add (pct ("texture",    "Texture",    100.0f));
+    layout.add (pct ("rasp",       "Rasp",        50.0f));
+    layout.add (pct ("dynamics",   "Dynamics",    50.0f));
+    layout.add (pct ("pitchdrift", "Pitch Drift", 30.0f));
+    layout.add (pct ("room",       "Room",        50.0f));
+    layout.add (pct ("width",      "Width",      100.0f));
+    layout.add (pct ("mix",        "Mix",         50.0f));
+    layout.add (std::make_unique<AudioParameterFloat> (ParameterID { "output", 1 }, "Output",
+                                                       NormalisableRange<float> (-24.0f, 12.0f, 0.1f), 0.0f,
+                                                       AudioParameterFloatAttributes().withLabel ("dB")));
+    layout.add (std::make_unique<AudioParameterInt> (ParameterID { "seed", 1 }, "Seed", 1, 100, 1));
     return layout;
 }
 
@@ -25,11 +34,18 @@ StackFXProcessor::StackFXProcessor()
                           .withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
       apvts (*this, nullptr, "StackFX", createLayout())
 {
-    takesParam     = apvts.getRawParameterValue ("takes");
-    tightnessParam = apvts.getRawParameterValue ("tightness");
-    variationParam = apvts.getRawParameterValue ("variation");
-    widthParam     = apvts.getRawParameterValue ("width");
-    mixParam       = apvts.getRawParameterValue ("mix");
+    takesParam      = apvts.getRawParameterValue ("takes");
+    tightnessParam  = apvts.getRawParameterValue ("tightness");
+    characterParam  = apvts.getRawParameterValue ("character");
+    textureParam    = apvts.getRawParameterValue ("texture");
+    raspParam       = apvts.getRawParameterValue ("rasp");
+    dynamicsParam   = apvts.getRawParameterValue ("dynamics");
+    pitchDriftParam = apvts.getRawParameterValue ("pitchdrift");
+    roomParam       = apvts.getRawParameterValue ("room");
+    widthParam      = apvts.getRawParameterValue ("width");
+    mixParam        = apvts.getRawParameterValue ("mix");
+    outputParam     = apvts.getRawParameterValue ("output");
+    seedParam       = apvts.getRawParameterValue ("seed");
 }
 
 bool StackFXProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
@@ -43,11 +59,18 @@ bool StackFXProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 void StackFXProcessor::pushParameters()
 {
     StackParams p;
-    p.takes     = juce::roundToInt (takesParam->load());
-    p.tightness = tightnessParam->load() * 0.01f;
-    p.variation = variationParam->load() * 0.01f;
-    p.width     = widthParam->load() * 0.01f;
-    p.mix       = mixParam->load() * 0.01f;
+    p.takes      = juce::roundToInt (takesParam->load());
+    p.tightness  = tightnessParam->load() * 0.01f;
+    p.character  = characterParam->load() * 0.01f;
+    p.texture    = textureParam->load() * 0.01f;
+    p.rasp       = raspParam->load() * 0.01f;
+    p.dynamics   = dynamicsParam->load() * 0.01f;
+    p.pitchDrift = pitchDriftParam->load() * 0.01f;
+    p.room       = roomParam->load() * 0.01f;
+    p.width      = widthParam->load() * 0.01f;
+    p.mix        = mixParam->load() * 0.01f;
+    p.outputDb   = outputParam->load();
+    p.seed       = juce::roundToInt (seedParam->load());
     engine.setParameters (p);
 }
 
@@ -55,7 +78,7 @@ void StackFXProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     pushParameters();
     engine.prepare (sampleRate, samplesPerBlock);
-    setLatencySamples (StackEngine::getLatencySamples());
+    setLatencySamples (engine.getLatencySamples());
 }
 
 void StackFXProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
