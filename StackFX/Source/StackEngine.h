@@ -51,21 +51,32 @@ public:
 
     static constexpr int getLatencySamples() { return fftSize; }
 
+    // How many times the takes were re-timed between phrases (for stackfx_render's report).
+    int getPhraseChangeCount() const { return phraseChanges; }
+
 private:
     void processFrame();
     float detectOnset (float x);
+    void detectGap (float x);
+    void startNewPhrase();
 
     struct Take
     {
         juce::Random phaseRng;
+        // Per-bin phase offset as a unit phasor, gliding toward a target that is re-drawn now and then.
+        // Moving slowly (instead of a fresh random phase every frame) is what avoids the warble.
+        std::array<float, numBins> offRe {}, offIm {}, tgtRe {}, tgtIm {};
         std::array<float, fftSize> ola {};      // overlap-add accumulator
         std::array<float, hopSize> ready {};    // finished output for the current hop
         juce::SmoothedValue<float> active;      // 0/1 fade when Takes changes
 
         juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Lagrange3rd> delay { 4096 };
         SmoothRandom drift;
-        float basePos = 0.5f;                   // where in the timing range this take sits
+        float phrasePos = 0.5f;                 // where in the timing range this take sits; re-picked per phrase
         float delaySamples = 0.0f;              // current (slew-limited) delay
+        float oldDelay = 0.0f;                  // previous phrase's delay, while crossfading away from it
+        float xfade = 1.0f;                     // 0..1 crossfade old -> new delay tap (1 = done)
+        juce::SmoothedValue<float> phraseGain;  // per-phrase level offset
 
         juce::dsp::IIR::Filter<float> shelf;    // fixed random tilt
         float drive = 1.5f;                     // tanh saturation drive
@@ -85,7 +96,7 @@ private:
     // STFT
     juce::dsp::FFT fft { fftOrder };
     std::array<float, fftSize> window {};
-    std::array<float, 101> variationGain {};        // level make-up for incoherent overlap-add
+    std::array<float, 101> variationGain {};        // level make-up for partly incoherent overlap-add
     std::array<float, fftSize> inFrame {};          // last fftSize input samples
     std::array<float, 2 * fftSize> spectrum {};
     std::array<float, 2 * fftSize> work {};
@@ -105,6 +116,14 @@ private:
     float frameProtect = 0.0f;                      // protection for the frame now being output
 
     float maxDelaySlew = 0.0f;                      // samples of delay change per sample
+
+    // Phrase gaps: when the input has been quiet long enough that every delay tap reads silence,
+    // each take gets a new timing offset and level, like a separate take would.
+    juce::Random phraseRng;
+    float gapEnv = 0.0f, gapPeak = 0.0f, gapEnvCoef = 0.0f, gapPeakRel = 0.0f;
+    int quietCount = 0, quietNeeded = 0;
+    float xfadeStep = 0.0f;
+    int phraseChanges = 0;
 
     // Dry lead delayed by the STFT latency so it stays aligned with the stack
     std::array<float, fftSize> dryDelay {};
