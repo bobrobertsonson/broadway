@@ -40,7 +40,7 @@ $R test_scream.wav out_var100.wav --variation 100
 # all flags: --takes 2-4 --tightness 0-100 --variation 0-100 --width 0-100 --mix 0-100
 ```
 
-Output is stereo 24-bit WAV, latency-compensated so it lines up with the input. Renders are
+Output is stereo 32-bit float WAV, latency-compensated so it lines up with the input. Renders are
 deterministic: each take has a fixed seed.
 
 ## Parameters
@@ -48,7 +48,7 @@ deterministic: each take has a fixed seed.
 | Param     | Range   | Default | What it does |
 |-----------|---------|---------|--------------|
 | Takes     | 2-4     | 2       | Number of doubled takes |
-| Tightness | 0-100 % | 70      | Shrinks the 5-25 ms timing range (100 % = all takes at 5 ms) |
+| Tightness | 0-100 % | 70      | Shrinks the 5-25 ms timing range (100 % = all takes at 5 ms). Try ~30 for a looser stack |
 | Variation | 0-100 % | 50      | Blends each bin's phase toward random (noise-texture difference) |
 | Width     | 0-100 % | 80      | Stereo spread of the takes. The dry lead stays centered |
 | Mix       | 0-100 % | 50      | 0-50 %: stack fades in under a full-level lead. 50-100 %: lead fades out |
@@ -57,5 +57,13 @@ deterministic: each take has a fixed seed.
 
 STFT phase decorrelation (1024 / hop 256, Hann analysis + synthesis, level-compensated)
 -> drifting interpolated delay -> fixed shelf tilt -> tanh saturation -> gain wobble -> pan.
-An onset detector on the input cuts phase randomization by 85 % and freezes timing drift
-around attacks. Latency: 1024 samples, reported to the host.
+
+- Phase: each bin's phase is rotated by a random offset that glides to a new target roughly
+  every 60 ms (a fresh random phase every frame sounded warbly).
+- Phrases: when the input goes quiet long enough (about 61 ms at 48 kHz), every take picks a
+  new timing offset within the Tightness range and a new +-2 dB level, crossfading the delay
+  tap during the silence. This is what makes the takes land differently phrase to phrase.
+- Attacks: an onset detector on the input cuts phase randomization by 85 % and freezes timing
+  drift around attacks.
+
+Latency: 1024 samples, reported to the host.

@@ -1,7 +1,7 @@
 // stackfx_render: run the StackFX DSP offline on a WAV file.
 //   stackfx_render input.wav output.wav [--takes 2-4] [--tightness 0-100]
 //                  [--variation 0-100] [--width 0-100] [--mix 0-100]
-// Output is stereo 24-bit WAV, latency-compensated (aligned with the input).
+// Output is stereo 32-bit float WAV (never clips), latency-compensated (aligned with the input).
 
 #include <juce_audio_formats/juce_audio_formats.h>
 #include "StackEngine.h"
@@ -79,17 +79,17 @@ int main (int argc, char* argv[])
         engine.process (in, numIn, output.getWritePointer (0, pos), output.getWritePointer (1, pos), n);
     }
 
-    // The WAV is fixed-point, so anything over full scale clips. Say so rather than clip silently.
+    // The float WAV keeps peaks over 0 dBFS intact, but flag them: a fixed-point bounce would clip.
     const float peak = juce::jmax (output.getMagnitude (0, latency, len + tail), output.getMagnitude (1, latency, len + tail));
     if (peak > 1.0f)
         std::cerr << "warning: output peaks at +" << juce::Decibels::gainToDecibels (peak)
-                  << " dBFS and will clip. Lower the input or the Mix.\n";
+                  << " dBFS (kept intact in the float WAV; lower the input or Mix before a fixed-point bounce)\n";
 
     outFile.deleteFile();
     std::unique_ptr<juce::OutputStream> stream (outFile.createOutputStream());
     juce::WavAudioFormat wav;
     std::unique_ptr<juce::AudioFormatWriter> writer (stream == nullptr ? nullptr
-        : wav.createWriterFor (stream.get(), sr, 2, 24, {}, 0));
+        : wav.createWriterFor (stream.get(), sr, 2, 32, {}, 0));
     if (writer == nullptr)
     {
         std::cerr << "cannot write " << outFile.getFullPathName() << "\n";
@@ -104,6 +104,7 @@ int main (int argc, char* argv[])
     std::cout << "rendered " << outFile.getFileName() << "  takes=" << p.takes
               << " tightness=" << p.tightness * 100 << " variation=" << p.variation * 100
               << " width=" << p.width * 100 << " mix=" << p.mix * 100
-              << "  (" << len << " samples @ " << sr << " Hz)\n";
+              << "  (" << len << " samples @ " << sr << " Hz, "
+              << engine.getPhraseChangeCount() << " phrase re-timings)\n";
     return 0;
 }
