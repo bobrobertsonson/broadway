@@ -207,8 +207,11 @@ void StackEngine::reset()
     gateGain = gateOpen ? 1.0f : 0.0f;
     reverb.reset();
 
+    sLock = target.imageLock;
+    lastPairSeed = target.seed;
     for (int k = 0; k < maxTakes; ++k)
         seedTake (k, true);
+    seedPairs (true);
     updateTakeTargets();
     for (auto& t : takes)
     {
@@ -279,6 +282,27 @@ void StackEngine::seedTake (int k, bool resetState)
         t.vColorDb = *color;
         std::fill (t.roomBuf.begin(), t.roomBuf.end(), 0.0f);
         t.roomPos = 0;
+    }
+}
+
+void StackEngine::seedPairs (bool resetState)
+{
+    // Seeded from the global Seed only, so re-rolling one take's seed changes only that take
+    const double frameRate = sampleRate / normalHop;
+    for (int pIdx = 0; pIdx < 2; ++pIdx)
+    {
+        auto& pc = pairs[(size_t) pIdx];
+        const juce::int64 base = takeSeed (target.seed * 1009, 10 + pIdx, 0);
+        if (resetState)
+        {
+            pc.dyn.prepare  (frameRate, base + 1, 0.10f, 0.30f, 0.022f);   // same timescales as the per-take ones
+            pc.gain.prepare (frameRate, base + 2, 0.21f, 0.64f, 0.12f);
+        }
+        else
+        {
+            pc.dyn.reseed (base + 1);
+            pc.gain.reseed (base + 2);
+        }
     }
 }
 
@@ -421,8 +445,12 @@ void StackEngine::synthesiseFrame (Take& t, int k, int m, bool controlTick)
     const float fScale = (1.0f + vowelDrift * t.cFormant) * (1.0f + ch * (t.vScale - 1.0f));
     const float cents = youCents[k] + ch * (t.vCents - youCents[k]) + maxPitchDriftCents * sPitch * t.cPitch;
     const float beta = std::pow (2.0f, cents / 1200.0f);
-    const float gainLin = juce::Decibels::decibelsToGain (1.5f * t.cGain);
-    const float dynDb = maxDynDb * sDyn * t.cDyn;
+    // Image Lock: mix this take's own level movement with its pair's shared one (variance-preserving),
+    // so the two sides of the stack don't push against each other
+    const auto& pc = pairs[(size_t) (k / 2)];
+    const float wOwn = 1.0f - sLock, wPair = sLock, wNorm = 1.0f / std::sqrt (wOwn * wOwn + wPair * wPair);
+    const float gainLin = juce::Decibels::decibelsToGain (1.5f * (wOwn * t.cGain + wPair * pc.cGain) * wNorm);
+    const float dynDb = maxDynDb * sDyn * (wOwn * t.cDyn + wPair * pc.cDyn) * wNorm;
     const float raspDb = maxRaspDb * sRasp * t.raspUnit + ch * t.vNoiseDb;
 
     Spectrum envI, fineI, advI, phI;
@@ -663,6 +691,12 @@ void StackEngine::processChunk (const float* const* in, int numIn, float* outL, 
             sPitch   += frameSmooth * (target.pitchDrift - sPitch);
             sRoom    += frameSmooth * (target.room       - sRoom);
             sDeEss   += frameSmooth * (target.deEss      - sDeEss);
+            sLock    += frameSmooth * (target.imageLock  - sLock);
+            if (target.seed != lastPairSeed)
+            {
+                lastPairSeed = target.seed;
+                seedPairs (false);
+            }
             for (int k = 0; k < maxTakes; ++k)
             {
                 auto& t = takes[(size_t) k];
@@ -680,6 +714,12 @@ void StackEngine::processChunk (const float* const* in, int numIn, float* outL, 
             analyseFrame();
             const int outFrame = newestFrame - lookaheadFrames;
             const bool controlTick = (frameCounter++ % framesPerControl) == 0;
+            if (controlTick)
+                for (auto& pc : pairs)
+                {
+                    pc.cDyn = pc.dyn.next();
+                    pc.cGain = pc.gain.next();
+                }
             for (int k = 0; k < maxTakes; ++k)
                 synthesiseFrame (takes[(size_t) k], k, outFrame, controlTick);
         }

@@ -68,6 +68,7 @@ mix. The renderer warns when peaks exceed 0 dBFS.
 | Dynamics    | 50 %    | How differently each take leans into syllables, with effort brightness |
 | Pitch Drift | 30 %    | Slow pitch wander per take (up to +-20 cents) |
 | Room        | 50 %    | Each take's own early reflections, like a different mic position |
+| Image Lock  | 75 %    | How much paired takes (A/B, C/D) share their level movement. Higher = steadier stereo image; 0 = fully independent sides (wobbles left-right) |
 | Width       | 100 %   | Scales every take's pan. The lead stays centred |
 | Mix         | 50 %    | 0-50 %: stack fades in under a full-level lead. 50-100 %: lead fades out |
 | Seed (all)  | 1       | Re-roll every take |

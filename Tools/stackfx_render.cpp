@@ -31,7 +31,7 @@ static void usage()
 {
     std::cerr <<
         "usage: stackfx_render input.wav output.wav [flags]\n"
-        "  global (0-100): --tightness --texture --rasp --dynamics --pitchdrift --room --width --mix\n"
+        "  global (0-100): --tightness --texture --rasp --dynamics --pitchdrift --room --imagelock --width --mix\n"
         "                  --deess --space --character (sets every take)\n"
         "  --takes 2-4  --seed 1-100  --lowcut Hz  --highcut Hz  --gate dB  --input dB  --output dB\n"
         "  per take (N = 1-4 for A-D): --takeN-level dB --takeN-pan -100..100 --takeN-char 0-100\n"
@@ -176,6 +176,7 @@ int main (int argc, char* argv[])
         else if (flag == "--dynamics")   p.dynamics   = pct;
         else if (flag == "--pitchdrift") p.pitchDrift = pct;
         else if (flag == "--room")       p.room       = pct;
+        else if (flag == "--imagelock")  p.imageLock  = pct;
         else if (flag == "--width")      p.width      = pct;
         else if (flag == "--mix")        p.mix        = pct;
         else if (flag == "--deess")      p.deEss      = pct;

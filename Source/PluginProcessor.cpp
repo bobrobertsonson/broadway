@@ -76,6 +76,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout StackFXProcessor::createLayo
     layout.add (pct ("dynamics",   "Dynamics",    50.0f));
     layout.add (pct ("pitchdrift", "Pitch Drift", 30.0f));
     layout.add (pct ("room",       "Room",        50.0f));
+    layout.add (pct ("imagelock",  "Image Lock",  75.0f));
     layout.add (pct ("width",      "Width",      100.0f));
     layout.add (pct ("mix",        "Mix",         50.0f));
     layout.add (std::make_unique<AudioParameterInt> (ParameterID { "seed", 1 }, "Seed (all takes)", 1, 100, 1));
@@ -137,6 +138,7 @@ StackParams StackFXProcessor::readParameters() const
     p.dynamics   = value ("dynamics") * 0.01f;
     p.pitchDrift = value ("pitchdrift") * 0.01f;
     p.room       = value ("room") * 0.01f;
+    p.imageLock  = value ("imagelock") * 0.01f;
     p.width      = value ("width") * 0.01f;
     p.mix        = value ("mix") * 0.01f;
     p.seed       = juce::roundToInt (value ("seed"));

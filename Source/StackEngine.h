@@ -23,6 +23,7 @@ struct StackParams
     float dynamics   = 0.5f;  // how differently each take leans into syllables
     float pitchDrift = 0.3f;  // how much each take's pitch wanders
     float room       = 0.5f;  // each take's own early reflections
+    float imageLock  = 0.75f; // how much paired takes (A/B, C/D) share their level movement, so the image holds still
     float width      = 1.0f;
     float mix        = 0.5f;  // 0..0.5 fades the stack in under the lead, 0.5..1 fades the lead out
     float inputDb    = 0.0f;
@@ -184,6 +185,12 @@ private:
     int hopCounter = 0;
 
     std::array<Take, maxTakes> takes;
+    // Shared level movement per pair (A/B, C/D); mixed into each take by Image Lock
+    struct PairContours { SmoothRandom dyn, gain; float cDyn = 0.0f, cGain = 0.0f; };
+    std::array<PairContours, 2> pairs;
+    float sLock = 0.75f;
+    int lastPairSeed = 1;
+    void seedPairs (bool resetState);
     std::vector<Spectrum> voiceColorDb;       // per voice, per bin (depends on sample rate)
 
     // Lead level followers: slow (level matching) and fast (saturation ceiling)
