@@ -37,6 +37,7 @@ public:
 private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
     StackParams readParameters() const;
+    bool wantHighQuality() const;
     float value (const juce::String& id) const { return apvts.getRawParameterValue (id)->load(); }
 
     StackEngine engine;

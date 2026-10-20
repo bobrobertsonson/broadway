@@ -117,6 +117,37 @@ int main()
                "preset " + p->getProgramName (i) + " runs (peak " + juce::String (peak, 3) + ")");
     }
 
+    std::cout << "quality\n";
+    p->setCurrentProgram (0);
+    const int normalLatency = p->getLatencySamples();
+    setPlain (*p, "quality", 1.0f);   // High
+    check (runAudio (*p, 2, peak) && peak > 0.05f && peak < 4.0f, "High quality runs (peak " + juce::String (peak, 3) + ")");
+    check (p->getLatencySamples() == normalLatency, "High reports the same latency as Normal");
+    {
+        // Switch Normal -> High -> Normal while audio is running
+        setPlain (*p, "quality", 0.0f);
+        p->setPlayConfigDetails (2, 2, 48000.0, 512);
+        p->prepareToPlay (48000.0, 512);
+        juce::MidiBuffer midi;
+        bool finite = true;
+        for (int b = 0; b < 300; ++b)
+        {
+            if (b == 100) setPlain (*p, "quality", 1.0f);
+            if (b == 200) setPlain (*p, "quality", 0.0f);
+            juce::AudioBuffer<float> buf (2, 512);
+            for (int ch = 0; ch < 2; ++ch)
+                for (int s = 0; s < 512; ++s)
+                    buf.setSample (ch, s, 0.2f * (float) std::sin (0.05 * (b * 512 + s)));
+            p->processBlock (buf, midi);
+            for (int ch = 0; ch < 2; ++ch)
+                for (int s = 0; s < 512; ++s)
+                    finite = finite && std::isfinite (buf.getSample (ch, s));
+        }
+        check (finite, "switching Quality during playback stays finite");
+        check (p->getLatencySamples() == normalLatency, "latency unchanged after switching");
+    }
+    setPlain (*p, "quality", 0.0f);
+
     std::cout << (failures == 0 ? "ALL PASSED\n" : juce::String (failures) + " FAILED\n");
     return failures == 0 ? 0 : 1;
 }

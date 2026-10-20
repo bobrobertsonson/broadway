@@ -17,15 +17,18 @@ static void usage()
         "  --takes 2-4  --seed 1-100  --lowcut Hz  --highcut Hz  --gate dB  --input dB  --output dB\n"
         "  per take (N = 1-4 for A-D): --takeN-level dB --takeN-pan -100..100 --takeN-char 0-100\n"
         "                              --takeN-seed 1-999 --takeN-mute 0/1 --takeN-solo 0/1\n"
-        "  --lead-mute 0/1  --lead-solo 0/1  --link 0/1\n"
+        "  --lead-mute 0/1  --lead-solo 0/1  --link 0/1  --quality 0/1 (Normal/High)\n"
         "  --stems   also write the lead and each take to separate files\n"
         "  --sweep   stress test: every control moves during the render\n";
 }
+
+static bool highQuality = false;
 
 static bool render (const juce::AudioBuffer<float>& input, int numIn, int len, double sr, const StackParams& p,
                     bool sweep, const juce::File& outFile, int& latencyOut)
 {
     StackEngine engine;
+    engine.setHighQuality (highQuality);
     engine.setParameters (p);
     engine.prepare (sr, 512);
     const int latency = engine.getLatencySamples();
@@ -160,6 +163,7 @@ int main (int argc, char* argv[])
         else if (flag == "--lead-mute")  p.leadMute   = v > 0.5f;
         else if (flag == "--lead-solo")  p.leadSolo   = v > 0.5f;
         else if (flag == "--link")       p.link       = v > 0.5f;
+        else if (flag == "--quality")    highQuality  = v > 0.5f;
         else { std::cerr << "unknown flag " << flag << "\n"; usage(); return 1; }
     }
     p.applyLink();

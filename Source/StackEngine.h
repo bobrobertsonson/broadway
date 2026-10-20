@@ -80,11 +80,16 @@ public:
     static constexpr int maxTakes = 4;
     static constexpr int fftOrder = 10;
     static constexpr int fftSize  = 1 << fftOrder;   // 1024
-    static constexpr int hopSize  = fftSize / 4;     // 256
+    static constexpr int normalHop = fftSize / 4;    // 256 (Normal); High uses 128
     static constexpr int numBins  = fftSize / 2 + 1;
     static constexpr float maxWarpMs = 40.0f;
 
     StackEngine();
+
+    // High quality: hop 128 instead of 256 (8x overlap). Takes effect at the next prepare().
+    // Latency and the random performance (timing, dynamics, pitch, formant) are the same in both.
+    void setHighQuality (bool high) { highQuality = high; }
+    bool isHighQuality() const { return hop < normalHop; }
 
     void prepare (double sampleRate, int maxBlockSize);
     void reset();
@@ -94,7 +99,7 @@ public:
     void process (const float* const* in, int numIn, float* outL, float* outR, int numSamples);
 
     // Valid after prepare(): STFT + lookahead so takes can land ahead of the lead.
-    int getLatencySamples() const { return fftSize + lookaheadFrames * hopSize; }
+    int getLatencySamples() const { return fftSize + lookaheadFrames * hop; }
 
 private:
     using Spectrum = std::array<float, numBins>;
@@ -116,9 +121,10 @@ private:
         float sChar = 0.0f;                   // smoothed Character
         int seedUsed = 0;                     // (global seed, take seed) combination in use
         float sibMean = 0.0f, dsDb = 0.0f;    // de-esser state
+        float cWarp = 0.0f, cGain = 0.0f, cDyn = 0.0f, cFormant = 0.0f, cPitch = 0.0f;   // control-rate values
 
         std::array<float, fftSize> ola {};
-        std::array<float, hopSize> ready {};
+        std::array<float, normalHop> ready {};
 
         float powFollow = 0.0f;               // slow power of this take, for level matching to the lead
 
@@ -132,7 +138,7 @@ private:
 
     void analyseFrame();
     void updateCuts();
-    void synthesiseFrame (Take& t, int takeIndex, int frameIndex);
+    void synthesiseFrame (Take& t, int takeIndex, int frameIndex, bool controlTick);
     void seedTake (int takeIndex, bool resetState);
     void updateTakeTargets();
     bool detectOnset (const Spectrum& logMag);
@@ -142,6 +148,9 @@ private:
 
     double sampleRate = 44100.0;
     int maxBlock = 512;
+    bool highQuality = false;
+    int hop = normalHop, framesPerControl = 1, frameCounter = 0;
+    float redrawProb = 0.09f, glide = 0.15f, dsRelease = 0.85f, freshComp = 1.41421356f, olaGain = 1.0f / 1.5f;
     StackParams target;
 
     // Frame-rate parameter smoothing (one-pole, ~50 ms)

@@ -90,6 +90,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout StackFXProcessor::createLayo
     layout.add (hz ("highcut", "Takes High Cut", 2000.0f, 20000.0f, 20000.0f));
     layout.add (pct ("space", "Takes Space", 0.0f));
     layout.add (db ("gate", "Takes Gate", -80.0f, 0.0f, -80.0f));
+    layout.add (std::make_unique<AudioParameterChoice> (ParameterID { "quality", 1 }, "Quality",
+                                                        StringArray { "Normal", "High", "Auto (High when bouncing)" }, 0));
     layout.add (db ("input", "Input", -24.0f, 12.0f, 0.0f));
     layout.add (db ("output", "Output", -24.0f, 12.0f, 0.0f));
     return layout;
@@ -148,9 +150,16 @@ StackParams StackFXProcessor::readParameters() const
     return p;
 }
 
+bool StackFXProcessor::wantHighQuality() const
+{
+    const int q = juce::roundToInt (value ("quality"));
+    return q == 1 || (q == 2 && isNonRealtime());
+}
+
 void StackFXProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     engine.setParameters (readParameters());
+    engine.setHighQuality (wantHighQuality());
     engine.prepare (sampleRate, samplesPerBlock);
     setLatencySamples (engine.getLatencySamples());
 }
@@ -169,6 +178,14 @@ void StackFXProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mid
     }
 
     engine.setParameters (readParameters());
+
+    // Quality changed (by the user, or Auto seeing an offline bounce): restart the engine at the new
+    // frame size. Latency is identical in both modes, so the host's compensation stays valid.
+    if (wantHighQuality() != engine.isHighQuality())
+    {
+        engine.setHighQuality (wantHighQuality());
+        engine.prepare (getSampleRate(), juce::jmax (n, getBlockSize()));
+    }
 
     // The engine reads a whole chunk of input before writing that chunk's output, so in-place is safe.
     const float* in[2] = { buffer.getReadPointer (0), buffer.getReadPointer (numIn > 1 ? 1 : 0) };

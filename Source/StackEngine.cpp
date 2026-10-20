@@ -38,7 +38,7 @@ namespace
     constexpr float otherScale[StackEngine::maxTakes] = { 0.88f, 1.12f, 0.94f, 1.06f };   // formant scale
 
     constexpr float phaseVariation = 0.3f;          // weight of the gliding random phase offsets
-    constexpr float phaseRedrawProb = 0.09f, phaseGlide = 0.15f;
+    constexpr float phaseRedrawProb = 0.09f, phaseGlide = 0.15f;   // per 256-sample hop
     constexpr float tonalThreshold = 4.0f / 8.6859f;   // fine structure 4 dB above the envelope = tonal peak
     constexpr float vowelDrift = 0.04f;             // +-4 % formant drift per take
     constexpr float maxRaspDb = 6.0f, maxDynDb = 12.0f, maxPitchDriftCents = 20.0f;   // dyn 50 measures like the approved prototype clips
@@ -69,15 +69,28 @@ StackEngine::StackEngine()
 {
     for (int i = 0; i < fftSize; ++i)
         window[(size_t) i] = 0.5f - 0.5f * std::cos (twoPi * (float) i / (float) fftSize);
-    for (int k = 0; k < numBins; ++k)
-        omega[(size_t) k] = twoPi * (float) k * (float) hopSize / (float) fftSize;
 }
 
 void StackEngine::prepare (double sr, int maxBlockSize)
 {
     sampleRate = sr;
     maxBlock = juce::jmax (1, maxBlockSize);
-    const double frameRate = sr / hopSize;
+
+    // Frame size. Per-frame rates are rescaled so they mean the same in time at either hop.
+    hop = highQuality ? normalHop / 2 : normalHop;
+    framesPerControl = normalHop / hop;
+    const float hs = (float) hop / (float) normalHop;
+    redrawProb = hop == normalHop ? phaseRedrawProb : 1.0f - std::pow (1.0f - phaseRedrawProb, hs);
+    glide      = hop == normalHop ? phaseGlide      : 1.0f - std::pow (1.0f - phaseGlide, hs);
+    dsRelease  = hop == normalHop ? 0.85f           : std::pow (0.85f, hs);
+    // Overlap-add: Hann^2 sums to 0.375 N / hop. Independent-per-frame noise loses power in proportion
+    // to the overlap, so it needs more make-up at the smaller hop.
+    olaGain = (float) hop / (0.375f * (float) fftSize);
+    freshComp = juce::MathConstants<float>::sqrt2 * std::sqrt ((float) normalHop / (float) hop);
+    for (int k = 0; k < numBins; ++k)
+        omega[(size_t) k] = twoPi * (float) k * (float) hop / (float) fftSize;
+
+    const double frameRate = sr / hop;
     frameSmooth = 1.0f - (float) std::exp (-1.0 / (0.05 * frameRate));
 
     for (auto* s : { &width, &mix, &inGain, &outGain, &stackNorm, &leadGain })
@@ -89,8 +102,9 @@ void StackEngine::prepare (double sr, int maxBlockSize)
         t.roomBuf.assign ((size_t) std::ceil (0.02 * sr) + 1, 0.0f);
     }
 
-    maxWarpFrames = (float) (maxWarpMs * 0.001 * sr / hopSize);
-    lookaheadFrames = (int) std::ceil (maxWarpFrames) + 2;
+    maxWarpFrames = (float) (maxWarpMs * 0.001 * sr / hop);
+    // Lookahead sized for the normal hop and kept in time at either hop, so latency never changes
+    lookaheadFrames = ((int) std::ceil (maxWarpMs * 0.001 * sr / normalHop) + 2) * framesPerControl;
     ringSize = 2 * lookaheadFrames + 4;
     ring.assign ((size_t) ringSize, Frame {});
     lifterLen = juce::jlimit (8, fftSize / 2 - 1, (int) std::lround (0.00125 * sr));
@@ -129,6 +143,7 @@ void StackEngine::reset()
 
     inFrame.fill (0.0f);
     hopCounter = 0;
+    frameCounter = 0;
     newestFrame = -1;
     for (auto& f : ring)
     {
@@ -162,7 +177,7 @@ void StackEngine::reset()
 
 void StackEngine::seedTake (int k, bool resetState)
 {
-    const double frameRate = sampleRate / hopSize;
+    const double frameRate = sampleRate / normalHop;   // random contours run on a fixed control clock
     auto& t = takes[(size_t) k];
     const int seed = combinedSeed (k);
     t.seedUsed = seed;
@@ -292,7 +307,7 @@ void StackEngine::analyseFrame()
         work[(size_t) i] = inFrame[(size_t) i] * window[(size_t) i];
     std::fill (work.begin() + fftSize, work.end(), 0.0f);
     fft.performRealOnlyForwardTransform (work.data(), true);
-    std::copy (inFrame.begin() + hopSize, inFrame.end(), inFrame.begin());
+    std::copy (inFrame.begin() + hop, inFrame.end(), inFrame.begin());
 
     Frame& f = frameAt (++newestFrame);
     Spectrum logMag;
@@ -323,10 +338,19 @@ void StackEngine::analyseFrame()
     }
 }
 
-void StackEngine::synthesiseFrame (Take& t, int k, int m)
+void StackEngine::synthesiseFrame (Take& t, int k, int m, bool controlTick)
 {
+    if (controlTick)
+    {
+        t.cWarp = t.warp.next();
+        t.cFormant = t.formant.next();
+        t.cPitch = t.pitch.next();
+        t.cGain = t.gain.next();
+        t.cDyn = t.dyn.next();
+    }
+
     // Timing: read the lead at this take's own warped time, speed-limited to +-15 %
-    const float want = maxWarpFrames * (1.0f - sTight) * t.warp.next();
+    const float want = maxWarpFrames * (1.0f - sTight) * t.cWarp;
     t.warpFrames += juce::jlimit (-warpSpeedLimit, warpSpeedLimit, want - t.warpFrames);
     const float r = juce::jlimit ((float) (newestFrame - ringSize + 2), (float) (newestFrame - 1), (float) m - t.warpFrames);
     const int i = (int) std::floor (r);
@@ -336,11 +360,11 @@ void StackEngine::synthesiseFrame (Take& t, int k, int m)
 
     // Identity: vocal-tract size (formant scale) and register (cents), blended by Character
     const float ch = t.sChar;
-    const float fScale = (1.0f + vowelDrift * t.formant.next()) * (1.0f + ch * (otherScale[k] - 1.0f));
-    const float cents = youCents[k] + ch * (otherCents[k] - youCents[k]) + maxPitchDriftCents * sPitch * t.pitch.next();
+    const float fScale = (1.0f + vowelDrift * t.cFormant) * (1.0f + ch * (otherScale[k] - 1.0f));
+    const float cents = youCents[k] + ch * (otherCents[k] - youCents[k]) + maxPitchDriftCents * sPitch * t.cPitch;
     const float beta = std::pow (2.0f, cents / 1200.0f);
-    const float gainLin = juce::Decibels::decibelsToGain (1.5f * t.gain.next());
-    const float dynDb = maxDynDb * sDyn * t.dyn.next();
+    const float gainLin = juce::Decibels::decibelsToGain (1.5f * t.cGain);
+    const float dynDb = maxDynDb * sDyn * t.cDyn;
     const float raspDb = maxRaspDb * sRasp * t.raspUnit;
 
     Spectrum envI, fineI, advI, phI;
@@ -387,7 +411,7 @@ void StackEngine::synthesiseFrame (Take& t, int k, int m)
     const bool resetPhase = ! t.phaseValid || A.onset || B.onset;   // attacks stay sharp
     t.phaseValid = true;
     const float tex = sTexture;
-    const float keepOrig = std::sqrt (1.0f - tex), useFresh = std::sqrt (tex) * juce::MathConstants<float>::sqrt2;
+    const float keepOrig = std::sqrt (1.0f - tex), useFresh = std::sqrt (tex) * freshComp;
 
     for (int b = 0; b < numBins; ++b)
     {
@@ -397,9 +421,9 @@ void StackEngine::synthesiseFrame (Take& t, int k, int m)
         // by beta and nothing else does
         t.phi[bi] = resetPhase ? sampleAt (phI, src) : princ (t.phi[bi] + beta * sampleAt (advI, src));
 
-        if (t.rng.nextFloat() < phaseRedrawProb)
+        if (t.rng.nextFloat() < redrawProb)
             t.phaseTgt[bi] = (t.rng.nextFloat() * 2.0f - 1.0f) * pi;
-        t.phaseOff[bi] = princ (t.phaseOff[bi] + phaseGlide * princ (t.phaseTgt[bi] - t.phaseOff[bi]));
+        t.phaseOff[bi] = princ (t.phaseOff[bi] + glide * princ (t.phaseTgt[bi] - t.phaseOff[bi]));
         const float P = t.phi[bi] + phaseVariation * t.phaseOff[bi];
 
         float re = std::exp (e[bi] + f[bi]) * std::cos (P);
@@ -446,7 +470,7 @@ void StackEngine::synthesiseFrame (Take& t, int k, int m)
         t.sibMean += (1.0f - fluxCoef) * (sib - t.sibMean);
         const float excess = t.sibMean > 1.0e-6f ? sib / t.sibMean : 1.0f;
         const float wantDb = deEssMaxDb * sDeEss * juce::jlimit (0.0f, 1.0f, (excess - 1.3f) / 1.2f);
-        t.dsDb = juce::jmax (wantDb, t.dsDb * 0.85f);   // 0.85 per hop ~ 30 ms release at 48 kHz
+        t.dsDb = juce::jmax (wantDb, t.dsDb * dsRelease);   // ~30 ms release
         if (t.dsDb > 0.01f)
             for (int b = 1; b < numBins; ++b)
             {
@@ -461,12 +485,11 @@ void StackEngine::synthesiseFrame (Take& t, int k, int m)
     }
 
     fft.performRealOnlyInverseTransform (work.data());
-    constexpr float olaGain = 1.0f / 1.5f;   // Hann^2 at 75 % overlap sums to 1.5
     for (int n = 0; n < fftSize; ++n)
         t.ola[(size_t) n] += work[(size_t) n] * window[(size_t) n] * olaGain;
-    std::copy (t.ola.begin(), t.ola.begin() + hopSize, t.ready.begin());
-    std::copy (t.ola.begin() + hopSize, t.ola.end(), t.ola.begin());
-    std::fill (t.ola.end() - hopSize, t.ola.end(), 0.0f);
+    std::copy (t.ola.begin(), t.ola.begin() + hop, t.ready.begin());
+    std::copy (t.ola.begin() + hop, t.ola.end(), t.ola.begin());
+    std::fill (t.ola.end() - hop, t.ola.end(), 0.0f);
 }
 
 
@@ -503,7 +526,7 @@ void StackEngine::processChunk (const float* const* in, int numIn, float* outL, 
         if (++dryPos == delayLen)
             dryPos = 0;
 
-        inFrame[(size_t) (fftSize - hopSize + hopCounter)] = x;
+        inFrame[(size_t) (fftSize - hop + hopCounter)] = x;
 
         const float w = width.getNextValue();
         const float roomAmt = 2.0f * sRoom;   // 0.5 = the reflections as designed
@@ -571,7 +594,7 @@ void StackEngine::processChunk (const float* const* in, int numIn, float* outL, 
         stackBufR[(size_t) s] = stackR * norm;
         dryBuf[(size_t) s] = dry * leadGain.getNextValue();
 
-        if (++hopCounter == hopSize)
+        if (++hopCounter == hop)
         {
             hopCounter = 0;
 
@@ -598,8 +621,9 @@ void StackEngine::processChunk (const float* const* in, int numIn, float* outL, 
 
             analyseFrame();
             const int outFrame = newestFrame - lookaheadFrames;
+            const bool controlTick = (frameCounter++ % framesPerControl) == 0;
             for (int k = 0; k < maxTakes; ++k)
-                synthesiseFrame (takes[(size_t) k], k, outFrame);
+                synthesiseFrame (takes[(size_t) k], k, outFrame, controlTick);
         }
     }
 
