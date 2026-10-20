@@ -46,6 +46,8 @@ R=build/stackfx_render_artefacts/Release/stackfx_render
 $R vocal.wav out.wav                                   # defaults
 $R vocal.wav out.wav --character 100                   # every take "someone else"
 $R vocal.wav out.wav --takes 4 --take3-char 100 --take4-char 100   # two of you, two others
+$R vocal.wav out.wav --voice "deep growler" --character 100
+$R vocal.wav out.wav --take2-voice gravel --take2-char 80
 $R vocal.wav out.wav --lead-mute 1                     # backing layer only
 $R vocal.wav out.wav --stems                           # also out_lead.wav, out_takeA.wav ...
 $R vocal.wav out.wav --sweep                           # stress test: every control moves
@@ -69,17 +71,35 @@ mix. The renderer warns when peaks exceed 0 dBFS.
 | Width       | 100 %   | Scales every take's pan. The lead stays centred |
 | Mix         | 50 %    | 0-50 %: stack fades in under a full-level lead. 50-100 %: lead fades out |
 | Seed (all)  | 1       | Re-roll every take |
-| Take A-D: Level, Pan, Character, Seed, Mute, Solo | 0 dB; A -100, B 100, C -60, D 60; 0 %; 1/102/203/304 | Per take. Character 0 = you, 100 = someone else (own vocal-tract size and register). Seed re-rolls just that take |
+| Take A-D: Level, Pan, Voice, Character, Seed, Mute, Solo | 0 dB; A -100, B 100, C -60, D 60; Auto; 0 %; 1/102/203/304 | Per take. Voice picks who "someone else" is; Character blends from you (0) to that voice (100). Seed re-rolls just that take |
 | Link        | off     | B follows A and D follows C (same level, mirrored pan) |
 | Lead Mute / Solo | off | Lead mute gives a backing-only layer. Any solo plays only the soloed sources |
 | Takes De-ess | 0 %    | Pulls down 3.5 kHz+ on takes when they turn sibilant (adaptive, fast attack, ~30 ms release) |
 | Takes Low / High Cut | 80 Hz / off | 12 dB/octave filters on the stack |
 | Takes Space | 0 %     | Ambience on the stack only. Subtle: 100 % adds about 1.5 dB |
 | Takes Gate  | off     | Takes play only while the lead's peaks are above this. Set it above breath peaks |
+| Quality     | Normal  | Normal (hop 256), High (hop 128, ~1.7x CPU), Auto (High when bouncing). Same latency and same performance in all three; switching restarts the engine (a short dropout) |
 | Input / Output | 0 dB | Trims. The full stack at Mix 50 can peak a few dB above the lead |
 
+### Voices
+
+| Voice | Vocal tract | Register | Colour |
+|-------|-------------|----------|--------|
+| Auto | per take: A bigger, B smaller, C slightly bigger, D slightly smaller | -1.5 / +1.2 / -0.6 / +0.7 st | - |
+| Bigger | -12 % | -1.5 st | - |
+| Smaller | +12 % | +1.2 st | - |
+| Deep Growler | -20 % | -4 st | darker, more body, raspier |
+| High Shrieker | +18 % | +5 st | brighter, thinner, raspier |
+| Gravel | -3 % | -0.6 st | much raspier |
+| Airy | +6 % | +0.9 st | breathier, brighter, less body |
+| Nasal | +6 % | +0.4 st | nasal resonance around 1.1 kHz |
+| Chesty | -8 % | -0.9 st | more low-mid body, darker |
+| Thin | +10 % | +0.6 st | lean, brighter |
+
+Switching voices glides (~50 ms) instead of jumping.
+
 Factory presets: Default, Tight Double, Wide Quad, Someone Else, You + Someone Else, Gang Vocal,
-Backing Layer Only.
+Growl Section, Shriek Section, Backing Layer Only.
 
 ## How it works
 
@@ -100,4 +120,8 @@ Each take is resynthesised from the lead's STFT (1024, hop 256, Hann):
   ambience (juce::Reverb).
 
 Latency: 1024 + lookahead (about 75 ms at 48 kHz), reported to the host.
-CPU: about 13x real time on one core for 4 takes (measured in a Linux container).
+CPU (4 takes, one core, Linux container): Normal about 15x real time, High about 9x.
+
+Known: Texture fills the gaps between harmonics with noise at the frame's average noise level, so on
+clearly pitched material the takes are noisier than the lead (a 23 dB tone-to-noise test signal comes
+out around 5 dB). On noisy screams this matters little.

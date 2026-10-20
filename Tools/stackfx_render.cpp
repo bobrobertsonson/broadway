@@ -8,6 +8,25 @@
 #include "StackEngine.h"
 #include <iostream>
 
+static juce::String voiceList()
+{
+    juce::StringArray names;
+    for (int v = 0; v < StackEngine::getNumVoices(); ++v)
+        names.add (juce::String (v) + "=" + StackEngine::getVoiceName (v));
+    return names.joinIntoString (", ");
+}
+
+// Voice by number or by name (case and spaces ignored), -1 if unknown
+static int parseVoice (const juce::String& s)
+{
+    if (s.containsOnly ("0123456789"))
+        return juce::isPositiveAndBelow (s.getIntValue(), StackEngine::getNumVoices()) ? s.getIntValue() : -1;
+    for (int v = 0; v < StackEngine::getNumVoices(); ++v)
+        if (juce::String (StackEngine::getVoiceName (v)).removeCharacters (" ").equalsIgnoreCase (s.removeCharacters (" -_")))
+            return v;
+    return -1;
+}
+
 static void usage()
 {
     std::cerr <<
@@ -16,8 +35,10 @@ static void usage()
         "                  --deess --space --character (sets every take)\n"
         "  --takes 2-4  --seed 1-100  --lowcut Hz  --highcut Hz  --gate dB  --input dB  --output dB\n"
         "  per take (N = 1-4 for A-D): --takeN-level dB --takeN-pan -100..100 --takeN-char 0-100\n"
+        "                              --takeN-voice name|number (see --voice)\n"
         "                              --takeN-seed 1-999 --takeN-mute 0/1 --takeN-solo 0/1\n"
         "  --lead-mute 0/1  --lead-solo 0/1  --link 0/1  --quality 0/1 (Normal/High)\n"
+        "  --voice name|number   every take's voice: " << voiceList() << "\n"
         "  --stems   also write the lead and each take to separate files\n"
         "  --sweep   stress test: every control moves during the render\n";
 }
@@ -119,7 +140,8 @@ int main (int argc, char* argv[])
             std::cerr << "missing value for " << flag << "\n";
             return 1;
         }
-        const float v = juce::String (argv[++i]).getFloatValue();
+        const juce::String arg (argv[++i]);
+        const float v = arg.getFloatValue();
         const float pct = juce::jlimit (0.0f, 100.0f, v) * 0.01f;
 
         if (flag.startsWith ("--take") && flag.length() > 7 && flag[7] == '-')
@@ -135,6 +157,11 @@ int main (int argc, char* argv[])
             if      (what == "level") t.levelDb   = juce::jlimit (-24.0f, 6.0f, v);
             else if (what == "pan")   t.pan       = juce::jlimit (-100.0f, 100.0f, v) * 0.01f;
             else if (what == "char")  t.character = pct;
+            else if (what == "voice")
+            {
+                t.voice = parseVoice (arg);
+                if (t.voice < 0) { std::cerr << "unknown voice " << arg << ": " << voiceList() << "\n"; return 1; }
+            }
             else if (what == "seed")  t.seed      = juce::jlimit (1, 999, juce::roundToInt (v));
             else if (what == "mute")  t.mute      = v > 0.5f;
             else if (what == "solo")  t.solo      = v > 0.5f;
@@ -154,6 +181,12 @@ int main (int argc, char* argv[])
         else if (flag == "--deess")      p.deEss      = pct;
         else if (flag == "--space")      p.space      = pct;
         else if (flag == "--character")  p.setAllCharacters (pct);
+        else if (flag == "--voice")
+        {
+            const int vv = parseVoice (arg);
+            if (vv < 0) { std::cerr << "unknown voice " << arg << ": " << voiceList() << "\n"; return 1; }
+            p.setAllVoices (vv);
+        }
         else if (flag == "--seed")       p.seed       = juce::jlimit (1, 100, juce::roundToInt (v));
         else if (flag == "--lowcut")     p.lowCutHz   = juce::jlimit (20.0f, 500.0f, v);
         else if (flag == "--highcut")    p.highCutHz  = juce::jlimit (2000.0f, 20000.0f, v);

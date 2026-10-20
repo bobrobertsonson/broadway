@@ -23,8 +23,18 @@ namespace
             { "Someone Else", { { "takeAcharacter", 100 }, { "takeBcharacter", 100 } } },
             { "You + Someone Else", { { "takes", 4 }, { "takeCcharacter", 100 }, { "takeDcharacter", 100 } } },
             { "Gang Vocal", { { "takes", 4 }, { "tightness", 15 }, { "dynamics", 70 },
-                              { "takeBcharacter", 100 }, { "takeCcharacter", 60 }, { "takeDcharacter", 80 },
+                              { "takeAvoice", 5 }, { "takeAcharacter", 70 },     // Gravel
+                              { "takeBvoice", 3 }, { "takeBcharacter", 100 },    // Deep Growler
+                              { "takeCvoice", 4 }, { "takeCcharacter", 70 },     // High Shrieker
+                              { "takeDvoice", 8 }, { "takeDcharacter", 80 },     // Chesty
                               { "space", 30 }, { "deess", 40 } } },
+            { "Growl Section", { { "takes", 4 }, { "tightness", 30 },
+                                 { "takeAvoice", 3 }, { "takeAcharacter", 100 }, { "takeBvoice", 3 }, { "takeBcharacter", 100 },
+                                 { "takeCvoice", 8 }, { "takeCcharacter", 80 }, { "takeDvoice", 5 }, { "takeDcharacter", 80 } } },
+            { "Shriek Section", { { "takes", 4 }, { "tightness", 35 },
+                                  { "takeAvoice", 4 }, { "takeAcharacter", 100 }, { "takeBvoice", 4 }, { "takeBcharacter", 100 },
+                                  { "takeCvoice", 9 }, { "takeCcharacter", 80 }, { "takeDvoice", 6 }, { "takeDcharacter", 70 },
+                                  { "deess", 50 } } },
             { "Backing Layer Only", { { "leadmute", 1 } } },
         };
         return list;
@@ -77,6 +87,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout StackFXProcessor::createLayo
         layout.add (std::make_unique<AudioParameterFloat> (ParameterID { takeId (k, "pan"), 1 }, n + "Pan",
                                                            NormalisableRange<float> (-100.0f, 100.0f, 1.0f), defaultPans[k]));
         layout.add (pct (takeId (k, "character"), n + "Character", 0.0f));
+        StringArray voiceNames;
+        for (int v = 0; v < StackEngine::getNumVoices(); ++v)
+            voiceNames.add (StackEngine::getVoiceName (v));
+        layout.add (std::make_unique<AudioParameterChoice> (ParameterID { takeId (k, "voice"), 1 }, n + "Voice", voiceNames, 0));
         layout.add (std::make_unique<AudioParameterInt> (ParameterID { takeId (k, "seed"), 1 }, n + "Seed", 1, 999, 1 + k * 101));
         layout.add (toggle (takeId (k, "mute"), n + "Mute"));
         layout.add (toggle (takeId (k, "solo"), n + "Solo"));
@@ -132,6 +146,7 @@ StackParams StackFXProcessor::readParameters() const
         t.levelDb   = value (takeId (k, "level"));
         t.pan       = value (takeId (k, "pan")) * 0.01f;
         t.character = value (takeId (k, "character")) * 0.01f;
+        t.voice     = juce::roundToInt (value (takeId (k, "voice")));
         t.seed      = juce::roundToInt (value (takeId (k, "seed")));
         t.mute      = value (takeId (k, "mute")) > 0.5f;
         t.solo      = value (takeId (k, "solo")) > 0.5f;

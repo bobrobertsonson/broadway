@@ -61,8 +61,39 @@ namespace
         return (juce::int64) seed * 1000003 + take * 7919 + stream * 104729 + 0x51A7C0;
     }
 
+    // "Someone else" voices. Character blends from you (0) to the voice (1).
+    //   scale: vocal-tract size as a formant scale (>1 = smaller); cents: register;
+    //   noiseDb: extra rasp/breath (level-neutral); tilt: dB at 8 kHz vs 1 kHz (mirrored below);
+    //   body: low-mid chest resonance around 220 Hz; nasal: resonance around 1.1 kHz.
+    struct Voice { const char* name; float scale, cents, noiseDb, tiltDb, bodyDb, nasalDb; };
+    constexpr Voice voices[] = {
+        { "Auto",          0.0f,    0.0f, 0.0f,  0.0f,  0.0f, 0.0f },   // per-take mix, see otherScale/otherCents
+        { "Bigger",        0.88f, -150.0f, 0.0f,  0.0f,  0.0f, 0.0f },
+        { "Smaller",       1.12f,  120.0f, 0.0f,  0.0f,  0.0f, 0.0f },
+        { "Deep Growler",  0.80f, -400.0f, 4.0f, -4.0f,  3.0f, 0.0f },
+        { "High Shrieker", 1.18f,  500.0f, 2.0f,  4.0f, -2.0f, 0.0f },
+        { "Gravel",        0.97f,  -60.0f, 7.0f,  1.0f,  0.0f, 0.0f },
+        { "Airy",          1.06f,   90.0f, 5.0f,  3.0f, -3.0f, 0.0f },
+        { "Nasal",         1.06f,   40.0f, 0.0f,  0.0f, -2.0f, 7.0f },
+        { "Chesty",        0.92f,  -90.0f, 0.0f, -2.0f,  4.0f, 0.0f },
+        { "Thin",          1.10f,   60.0f, 0.0f,  2.0f, -5.0f, 0.0f },
+    };
+    constexpr int numVoices = (int) (sizeof (voices) / sizeof (voices[0]));
+
     // De-esser: frames whose 5 kHz+ share jumps well above this take's own running average
     constexpr float deEssMaxDb = 12.0f, deEssFromHz = 3500.0f, deEssFullHz = 5000.0f, deEssSplitHz = 4500.0f;
+}
+
+int StackEngine::getNumVoices() { return numVoices; }
+const char* StackEngine::getVoiceName (int v) { return voices[juce::jlimit (0, numVoices - 1, v)].name; }
+
+void StackEngine::voiceTargets (int k, float& scale, float& cents, float& noiseDb, const Spectrum*& colorDb) const
+{
+    const int v = juce::jlimit (0, numVoices - 1, target.take[(size_t) k].voice);
+    scale   = v == 0 ? otherScale[k] : voices[v].scale;
+    cents   = v == 0 ? otherCents[k] : voices[v].cents;
+    noiseDb = voices[v].noiseDb;
+    colorDb = &voiceColorDb[(size_t) v];
 }
 
 StackEngine::StackEngine()
@@ -118,6 +149,19 @@ void StackEngine::prepare (double sr, int maxBlockSize)
     gateRel = (float) std::exp (-1.0 / (0.12 * sr));
     gateAheadSamples = juce::jmin ((int) dryDelay.size() - 1, (int) std::ceil (maxWarpMs * 0.001 * sr));
     gateHoldLen = 2 * gateAheadSamples;   // covers the latest a take can land
+
+    // Voice colour curves for this sample rate
+    voiceColorDb.assign ((size_t) numVoices, Spectrum {});
+    for (int v = 0; v < numVoices; ++v)
+        for (int b = 0; b < numBins; ++b)
+        {
+            const float hz = juce::jlimit (60.0f, 16000.0f, (float) b * (float) sr / (float) fftSize);
+            const float oct1k = std::log2 (hz / 1000.0f);
+            const float body = std::log2 (hz / 220.0f) / 0.6f, nasal = std::log2 (hz / 1100.0f) / 0.35f;
+            voiceColorDb[(size_t) v][(size_t) b] = voices[v].tiltDb * juce::jlimit (-1.0f, 1.0f, oct1k / 3.0f)
+                                                 + voices[v].bodyDb * std::exp (-0.5f * body * body)
+                                                 + voices[v].nasalDb * std::exp (-0.5f * nasal * nasal);
+        }
 
     reverb.setSampleRate (sr);
     stackBufL.assign ((size_t) maxBlock, 0.0f);
@@ -230,6 +274,9 @@ void StackEngine::seedTake (int k, bool resetState)
         t.sibMean = 0.0f;
         t.dsDb = 0.0f;
         t.sChar = target.take[(size_t) k].character;
+        const Spectrum* color = nullptr;
+        voiceTargets (k, t.vScale, t.vCents, t.vNoiseDb, color);
+        t.vColorDb = *color;
         std::fill (t.roomBuf.begin(), t.roomBuf.end(), 0.0f);
         t.roomPos = 0;
     }
@@ -359,13 +406,24 @@ void StackEngine::synthesiseFrame (Take& t, int k, int m, bool controlTick)
     const Frame& B = frameAt (i + 1);
 
     // Identity: vocal-tract size (formant scale) and register (cents), blended by Character
+    // Glide this take's voice toward the chosen one, then blend from you by Character
+    {
+        float tScale, tCents, tNoise;
+        const Spectrum* tColor = nullptr;
+        voiceTargets (k, tScale, tCents, tNoise, tColor);
+        t.vScale   += frameSmooth * (tScale - t.vScale);
+        t.vCents   += frameSmooth * (tCents - t.vCents);
+        t.vNoiseDb += frameSmooth * (tNoise - t.vNoiseDb);
+        for (size_t b = 0; b < (size_t) numBins; ++b)
+            t.vColorDb[b] += frameSmooth * ((*tColor)[b] - t.vColorDb[b]);
+    }
     const float ch = t.sChar;
-    const float fScale = (1.0f + vowelDrift * t.cFormant) * (1.0f + ch * (otherScale[k] - 1.0f));
-    const float cents = youCents[k] + ch * (otherCents[k] - youCents[k]) + maxPitchDriftCents * sPitch * t.cPitch;
+    const float fScale = (1.0f + vowelDrift * t.cFormant) * (1.0f + ch * (t.vScale - 1.0f));
+    const float cents = youCents[k] + ch * (t.vCents - youCents[k]) + maxPitchDriftCents * sPitch * t.cPitch;
     const float beta = std::pow (2.0f, cents / 1200.0f);
     const float gainLin = juce::Decibels::decibelsToGain (1.5f * t.cGain);
     const float dynDb = maxDynDb * sDyn * t.cDyn;
-    const float raspDb = maxRaspDb * sRasp * t.raspUnit;
+    const float raspDb = maxRaspDb * sRasp * t.raspUnit + ch * t.vNoiseDb;
 
     Spectrum envI, fineI, advI, phI;
     for (int b = 0; b < numBins; ++b)
@@ -446,7 +504,7 @@ void StackEngine::synthesiseFrame (Take& t, int k, int m, bool controlTick)
         // Tone tilt, slow level ride, and syllable dynamics with effort brightness (highs move 60 % more)
         const float pos = (float) b / (float) numBins;
         const float g = t.tilt[bi] * gainLin
-                      * juce::Decibels::decibelsToGain (dynDb * (1.0f + 0.6f * (pos - 0.5f)));
+                      * juce::Decibels::decibelsToGain (dynDb * (1.0f + 0.6f * (pos - 0.5f)) + ch * t.vColorDb[bi]);
         work[2 * bi] = re * g;
         work[2 * bi + 1] = im * g;
     }

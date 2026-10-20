@@ -8,7 +8,8 @@ struct TakeParams
 {
     float levelDb   = 0.0f;
     float pan       = 0.0f;   // -1..1, before Width
-    float character = 0.0f;   // 0 = you, 1 = someone else (vocal-tract size + register)
+    float character = 0.0f;   // 0 = you, 1 = fully the chosen voice
+    int   voice     = 0;      // which "someone else" (StackEngine::getVoiceName); 0 = Auto
     int   seed      = 1;      // re-roll just this take
     bool  mute = false, solo = false;
 };
@@ -29,8 +30,8 @@ struct StackParams
     int   seed       = 1;     // re-roll every take
 
     // Defaults match the plugin's parameter defaults, so renders and the plugin sound the same
-    std::array<TakeParams, 4> take {{ { 0.0f, -1.0f, 0.0f, 1 }, { 0.0f, 1.0f, 0.0f, 102 },
-                                      { 0.0f, -0.6f, 0.0f, 203 }, { 0.0f, 0.6f, 0.0f, 304 } }};
+    std::array<TakeParams, 4> take {{ { 0.0f, -1.0f, 0.0f, 0, 1 }, { 0.0f, 1.0f, 0.0f, 0, 102 },
+                                      { 0.0f, -0.6f, 0.0f, 0, 203 }, { 0.0f, 0.6f, 0.0f, 0, 304 } }};
     bool  link = false;       // B mirrors A (level, opposite pan), D mirrors C
     bool  leadMute = false, leadSolo = false;
 
@@ -41,6 +42,7 @@ struct StackParams
     float gateDb    = -80.0f;    // takes play only while the lead is above this (<= -80 = off)
 
     void setAllCharacters (float c) { for (auto& t : take) t.character = c; }
+    void setAllVoices (int v)       { for (auto& t : take) t.voice = v; }
     // Link: B follows A and D follows C (same level, mirrored pan). Applied by the host side.
     void applyLink()
     {
@@ -86,6 +88,10 @@ public:
 
     StackEngine();
 
+    // "Someone else" voices for TakeParams::voice
+    static int getNumVoices();
+    static const char* getVoiceName (int voice);
+
     // High quality: hop 128 instead of 256 (8x overlap). Takes effect at the next prepare().
     // Latency and the random performance (timing, dynamics, pitch, formant) are the same in both.
     void setHighQuality (bool high) { highQuality = high; }
@@ -122,6 +128,9 @@ private:
         int seedUsed = 0;                     // (global seed, take seed) combination in use
         float sibMean = 0.0f, dsDb = 0.0f;    // de-esser state
         float cWarp = 0.0f, cGain = 0.0f, cDyn = 0.0f, cFormant = 0.0f, cPitch = 0.0f;   // control-rate values
+        // Voice, glided toward the chosen one so switching never jumps
+        float vScale = 1.0f, vCents = 0.0f, vNoiseDb = 0.0f;
+        Spectrum vColorDb {};
 
         std::array<float, fftSize> ola {};
         std::array<float, normalHop> ready {};
@@ -140,6 +149,7 @@ private:
     void updateCuts();
     void synthesiseFrame (Take& t, int takeIndex, int frameIndex, bool controlTick);
     void seedTake (int takeIndex, bool resetState);
+    void voiceTargets (int takeIndex, float& scale, float& cents, float& noiseDb, const Spectrum*& colorDb) const;
     void updateTakeTargets();
     bool detectOnset (const Spectrum& logMag);
     void processChunk (const float* const* in, int numIn, float* outL, float* outR, int n);
@@ -174,6 +184,7 @@ private:
     int hopCounter = 0;
 
     std::array<Take, maxTakes> takes;
+    std::vector<Spectrum> voiceColorDb;       // per voice, per bin (depends on sample rate)
 
     // Lead level followers: slow (level matching) and fast (saturation ceiling)
     float dryPowSlow = 0.0f, dryPowFast = 0.0f, slowCoef = 0.0f, fastCoef = 0.0f;

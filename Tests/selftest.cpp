@@ -67,6 +67,14 @@ static bool runAudio (juce::AudioProcessor& p, int inChannels, float& peakOut)
     return true;
 }
 
+static int presetIndex (juce::AudioProcessor& p, const juce::String& name)
+{
+    for (int i = 0; i < p.getNumPrograms(); ++i)
+        if (p.getProgramName (i) == name)
+            return i;
+    return -1;
+}
+
 int main()
 {
     juce::ScopedJuceInitialiser_GUI juce;
@@ -79,19 +87,24 @@ int main()
         p->setCurrentProgram (i);
         check (p->getCurrentProgram() == i && p->getProgramName (i).isNotEmpty(), "select preset " + p->getProgramName (i));
     }
-    p->setCurrentProgram (2);   // Wide Quad
+    p->setCurrentProgram (presetIndex (*p, "Wide Quad"));
     check (near (plainValue (*p, "takes"), 4.0f), "Wide Quad sets Takes = 4");
-    p->setCurrentProgram (6);   // Backing Layer Only
+    p->setCurrentProgram (presetIndex (*p, "Backing Layer Only"));
     check (plainValue (*p, "leadmute") > 0.5f && near (plainValue (*p, "takes"), 2.0f),
            "Backing Layer Only mutes the lead and resets the rest to defaults");
     p->setCurrentProgram (0);
     check (plainValue (*p, "leadmute") < 0.5f && near (plainValue (*p, "tightness"), 40.0f), "Default restores defaults");
+
+    p->setCurrentProgram (presetIndex (*p, "Gang Vocal"));
+    check (near (plainValue (*p, "takeBvoice"), 3.0f) && near (plainValue (*p, "takeBcharacter"), 100.0f),
+           "Gang Vocal sets Take B to Deep Growler at 100 %");
 
     std::cout << "state save / restore\n";
     setPlain (*p, "tightness", 12.5f);
     setPlain (*p, "takeBcharacter", 77.0f);
     setPlain (*p, "takeCseed", 555.0f);
     setPlain (*p, "link", 1.0f);
+    setPlain (*p, "takeDvoice", 7.0f);
     juce::MemoryBlock state;
     p->getStateInformation (state);
     p->setCurrentProgram (0);
@@ -101,6 +114,7 @@ int main()
     check (std::abs (plainValue (*p, "takeBcharacter") - 77.0f) < 0.05f, "Take B Character restored");
     check (near (plainValue (*p, "takeCseed"), 555.0f), "Take C Seed restored");
     check (plainValue (*p, "link") > 0.5f, "Link restored");
+    check (near (plainValue (*p, "takeDvoice"), 7.0f), "Take D Voice restored");
 
     std::cout << "audio\n";
     float peak = 0.0f;
