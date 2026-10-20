@@ -96,6 +96,10 @@ mix. The renderer warns when peaks exceed 0 dBFS.
 | Nasal | +6 % | +0.4 st | nasal resonance around 1.1 kHz |
 | Chesty | -8 % | -0.9 st | more low-mid body, darker |
 | Thin | +10 % | +0.6 st | lean, brighter |
+| Monster | -30 % | -7 st | sub-octave, ~40 Hz growl flutter, drive, dark |
+| Robot | - | monotone ~140 Hz | metallic comb, 30 Hz ring mod, cleaner |
+| Alien | +30 % | +3 st | +80 Hz inharmonic shift, 6 Hz pitch wobble, nasal |
+| Child | +25 % | +12 st | lighter, brighter |
 
 Switching voices glides (~50 ms) instead of jumping.
 

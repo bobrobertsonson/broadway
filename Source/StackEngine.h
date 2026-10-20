@@ -133,6 +133,17 @@ private:
         float vScale = 1.0f, vCents = 0.0f, vNoiseDb = 0.0f;
         Spectrum vColorDb {};
 
+        // Sound-design effects of the voice (amounts glide like the rest of the voice)
+        struct Fx { float sub = 0, growlDepth = 0, drive = 0, robot = 0, whisper = 0, shiftHz = 0,
+                    ringDepth = 0, metal = 0, crush = 0, wobbleCents = 0; } vFx;
+        Spectrum phiSub {}, robotPhase {};
+        float wobblePhase = 0.0f, growlPhase = 0.0f, ringPhase = 0.0f, crushHold = 0.0f;
+        int crushCount = 0;
+        std::vector<float> combBuf;           // metallic resonance
+        int combPos = 0;
+        SmoothRandom growlJitter;             // keeps the growl from sounding like a steady tremolo
+        float cGrowl = 0.0f;
+
         std::array<float, fftSize> ola {};
         std::array<float, normalHop> ready {};
 

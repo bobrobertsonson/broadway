@@ -131,6 +131,20 @@ int main()
                "preset " + p->getProgramName (i) + " runs (peak " + juce::String (peak, 3) + ")");
     }
 
+    std::cout << "voices\n";
+    for (int v = 0; v < 14; ++v)
+    {
+        p->setCurrentProgram (0);
+        setPlain (*p, "takes", 4.0f);
+        for (const char* k : { "A", "B", "C", "D" })
+        {
+            setPlain (*p, juce::String ("take") + k + "voice", (float) v);
+            setPlain (*p, juce::String ("take") + k + "character", 100.0f);
+        }
+        check (runAudio (*p, 2, peak) && peak > 0.01f && peak < 4.0f,
+               "voice " + juce::String (v) + " at Character 100 on all 4 takes (peak " + juce::String (peak, 3) + ")");
+    }
+
     std::cout << "quality\n";
     p->setCurrentProgram (0);
     const int normalLatency = p->getLatencySamples();

@@ -65,7 +65,20 @@ namespace
     //   scale: vocal-tract size as a formant scale (>1 = smaller); cents: register;
     //   noiseDb: extra rasp/breath (level-neutral); tilt: dB at 8 kHz vs 1 kHz (mirrored below);
     //   body: low-mid chest resonance around 220 Hz; nasal: resonance around 1.1 kHz.
-    struct Voice { const char* name; float scale, cents, noiseDb, tiltDb, bodyDb, nasalDb; };
+    // Sound-design effects (all scaled by Character; 0 = off and skipped entirely):
+    //   sub: sub-octave layer level; growl: amplitude flutter (Hz, depth); drive: extra saturation;
+    //   robot: monotone at robotBins x bin spacing (~140 Hz at 48 kHz); whisper: harmonics turned to noise;
+    //   shiftHz: inharmonic frequency shift; ring: ring modulation (Hz, depth); metal: comb resonance (amount, ms);
+    //   crush: bit/sample-rate reduction; wobble: pitch LFO (Hz, cents).
+    struct Voice
+    {
+        const char* name;
+        float scale = 1, cents = 0, noiseDb = 0, tiltDb = 0, bodyDb = 0, nasalDb = 0;
+        float sub = 0, growlHz = 0, growlDepth = 0, drive = 0, robot = 0;
+        int robotBins = 3;
+        float whisper = 0, shiftHz = 0, ringHz = 0, ringDepth = 0, metal = 0, metalMs = 4, crush = 0,
+              wobbleHz = 0, wobbleCents = 0;
+    };
     constexpr Voice voices[] = {
         { "Auto",          0.0f,    0.0f, 0.0f,  0.0f,  0.0f, 0.0f },   // per-take mix, see otherScale/otherCents
         { "Bigger",        0.88f, -150.0f, 0.0f,  0.0f,  0.0f, 0.0f },
@@ -77,6 +90,12 @@ namespace
         { "Nasal",         1.06f,   40.0f, 0.0f,  0.0f, -2.0f, 7.0f },
         { "Chesty",        0.92f,  -90.0f, 0.0f, -2.0f,  4.0f, 0.0f },
         { "Thin",          1.10f,   60.0f, 0.0f,  2.0f, -5.0f, 0.0f },
+        // Creatures and other humans
+        //  name        scale  cents  noise tilt  body nasal  sub  growlHz depth drive robot bins whisper shift ringHz depth metal ms crush wobHz wobC
+        { "Monster",    0.70f, -700.0f, 4.0f, -4.0f, 4.0f, 0.0f, 0.6f, 40.0f, 0.6f, 1.0f },
+        { "Robot",      1.00f,    0.0f,-6.0f,  1.0f,-2.0f, 0.0f, 0.0f,  0.0f, 0.0f, 0.3f, 0.9f, 3, 0.0f,  0.0f, 30.0f, 0.4f, 0.5f, 4.0f },
+        { "Alien",      1.30f,  300.0f, 2.0f,  2.0f, 0.0f, 3.0f, 0.0f,  0.0f, 0.0f, 0.0f, 0.0f, 3, 0.0f, 80.0f,  0.0f, 0.0f, 0.0f, 4.0f, 0.0f, 6.0f, 50.0f },
+        { "Child",      1.25f, 1200.0f,-2.0f,  2.0f,-4.0f, 2.0f },
     };
     constexpr int numVoices = (int) (sizeof (voices) / sizeof (voices[0]));
 
@@ -85,6 +104,7 @@ namespace
 }
 
 int StackEngine::getNumVoices() { return numVoices; }
+static const auto& voiceDef (const StackParams& p, int k) { return voices[juce::jlimit (0, numVoices - 1, p.take[(size_t) k].voice)]; }
 const char* StackEngine::getVoiceName (int v) { return voices[juce::jlimit (0, numVoices - 1, v)].name; }
 
 void StackEngine::voiceTargets (int k, float& scale, float& cents, float& noiseDb, const Spectrum*& colorDb) const
@@ -131,6 +151,7 @@ void StackEngine::prepare (double sr, int maxBlockSize)
         t.level.reset (sr, 0.05);
         t.pan.reset (sr, 0.05);
         t.roomBuf.assign ((size_t) std::ceil (0.02 * sr) + 1, 0.0f);
+        t.combBuf.assign ((size_t) std::ceil (0.012 * sr) + 1, 0.0f);
     }
 
     maxWarpFrames = (float) (maxWarpMs * 0.001 * sr / hop);
@@ -235,7 +256,7 @@ void StackEngine::seedTake (int k, bool resetState)
     struct { SmoothRandom* r; float lo, hi, glide; } streams[] = {
         { &t.warp,    0.15f, 0.40f, 0.045f }, { &t.gain,  0.21f, 0.64f, 0.12f },
         { &t.dyn,     0.10f, 0.30f, 0.022f }, { &t.formant, 0.8f, 2.7f, 0.22f },
-        { &t.pitch,   0.53f, 1.60f, 0.22f } };
+        { &t.pitch,   0.53f, 1.60f, 0.22f }, { &t.growlJitter, 0.05f, 0.2f, 0.03f } };
     int s = 1;
     for (auto& st : streams)
     {
@@ -277,6 +298,19 @@ void StackEngine::seedTake (int k, bool resetState)
         t.sibMean = 0.0f;
         t.dsDb = 0.0f;
         t.sChar = target.take[(size_t) k].character;
+        {
+            const auto& vd = voiceDef (target, k);
+            t.vFx = { vd.sub, vd.growlDepth, vd.drive, vd.robot, vd.whisper, vd.shiftHz,
+                      vd.ringDepth, vd.metal, vd.crush, vd.wobbleCents };
+        }
+        juce::Random robotRng (takeSeed (seed, k, 7));   // own stream: the take's other randomness is untouched
+        for (int b = 0; b < numBins; ++b)                  // robot harmonics start at fixed random phases per take
+            t.robotPhase[(size_t) b] = (robotRng.nextFloat() * 2.0f - 1.0f) * pi;
+        t.phiSub.fill (0.0f);
+        t.wobblePhase = t.growlPhase = t.ringPhase = t.crushHold = 0.0f;
+        t.crushCount = 0;
+        std::fill (t.combBuf.begin(), t.combBuf.end(), 0.0f);
+        t.combPos = 0;
         const Spectrum* color = nullptr;
         voiceTargets (k, t.vScale, t.vCents, t.vNoiseDb, color);
         t.vColorDb = *color;
@@ -418,6 +452,7 @@ void StackEngine::synthesiseFrame (Take& t, int k, int m, bool controlTick)
         t.cPitch = t.pitch.next();
         t.cGain = t.gain.next();
         t.cDyn = t.dyn.next();
+        t.cGrowl = t.growlJitter.next();
     }
 
     // Timing: read the lead at this take's own warped time, speed-limited to +-15 %
@@ -440,10 +475,28 @@ void StackEngine::synthesiseFrame (Take& t, int k, int m, bool controlTick)
         t.vNoiseDb += frameSmooth * (tNoise - t.vNoiseDb);
         for (size_t b = 0; b < (size_t) numBins; ++b)
             t.vColorDb[b] += frameSmooth * ((*tColor)[b] - t.vColorDb[b]);
+        const auto& vd = voiceDef (target, k);
+        auto glideTo = [this] (float& v, float tgt) { v += frameSmooth * (tgt - v); };
+        glideTo (t.vFx.sub, vd.sub);          glideTo (t.vFx.growlDepth, vd.growlDepth);
+        glideTo (t.vFx.drive, vd.drive);      glideTo (t.vFx.robot, vd.robot);
+        glideTo (t.vFx.whisper, vd.whisper);  glideTo (t.vFx.shiftHz, vd.shiftHz);
+        glideTo (t.vFx.ringDepth, vd.ringDepth); glideTo (t.vFx.metal, vd.metal);
+        glideTo (t.vFx.crush, vd.crush);      glideTo (t.vFx.wobbleCents, vd.wobbleCents);
     }
     const float ch = t.sChar;
+    const auto& vd = voiceDef (target, k);
+    const float fxSub = ch * t.vFx.sub, fxRobot = ch * t.vFx.robot, fxWhisper = ch * t.vFx.whisper;
+    const float binHz = (float) sampleRate / (float) fftSize;
+    const float shiftBins = ch * t.vFx.shiftHz / binHz;                       // inharmonic shift, in bins
+    const float shiftAdv = twoPi * ch * t.vFx.shiftHz * (float) hop / (float) sampleRate;
+    float wobble = 0.0f;
+    if (ch * t.vFx.wobbleCents > 0.01f)
+    {
+        t.wobblePhase = std::fmod (t.wobblePhase + twoPi * vd.wobbleHz * (float) hop / (float) sampleRate, twoPi);
+        wobble = ch * t.vFx.wobbleCents * std::sin (t.wobblePhase);
+    }
     const float fScale = (1.0f + vowelDrift * t.cFormant) * (1.0f + ch * (t.vScale - 1.0f));
-    const float cents = youCents[k] + ch * (t.vCents - youCents[k]) + maxPitchDriftCents * sPitch * t.cPitch;
+    const float cents = youCents[k] + ch * (t.vCents - youCents[k]) + maxPitchDriftCents * sPitch * t.cPitch + wobble;
     const float beta = std::pow (2.0f, cents / 1200.0f);
     // Image Lock: mix this take's own level movement with its pair's shared one (variance-preserving),
     // so the two sides of the stack don't push against each other
@@ -471,7 +524,7 @@ void StackEngine::synthesiseFrame (Take& t, int k, int m, bool controlTick)
     for (int b = 0; b < numBins; ++b)
     {
         e[(size_t) b] = sampleAt (envI, (float) b / fScale);
-        f[(size_t) b] = sampleAt (fineI, (float) b / beta);
+        f[(size_t) b] = sampleAt (fineI, (float) b / beta - shiftBins);
         const float binPow = std::exp (2.0f * (e[(size_t) b] + f[(size_t) b]));
         if (f[(size_t) b] < tonalThreshold)
         {
@@ -499,13 +552,24 @@ void StackEngine::synthesiseFrame (Take& t, int k, int m, bool controlTick)
     const float tex = sTexture;
     const float keepOrig = std::sqrt (1.0f - tex), useFresh = std::sqrt (tex) * freshComp;
 
+    // Robot: a monotone harmonic comb under the voice's own envelope, matched to the frame's power
+    const int rBins = juce::jmax (1, vd.robotBins);
+    float robotGain = 0.0f;
+    if (fxRobot > 0.001f)
+    {
+        float combPow = 1.0e-20f;
+        for (int b = rBins; b < numBins; b += rBins)
+            combPow += std::exp (2.0f * e[(size_t) b]);
+        robotGain = std::sqrt (total / combPow);
+    }
+
     for (int b = 0; b < numBins; ++b)
     {
         const auto bi = (size_t) b;
-        const float src = (float) b / beta;
+        const float src = (float) b / beta - shiftBins;
         // Phase vocoder: advance by the input's own (beta-scaled) phase increment, so pitch moves
-        // by beta and nothing else does
-        t.phi[bi] = resetPhase ? sampleAt (phI, src) : princ (t.phi[bi] + beta * sampleAt (advI, src));
+        // by beta and nothing else does (plus the inharmonic shift, when a voice uses one)
+        t.phi[bi] = resetPhase ? sampleAt (phI, src) : princ (t.phi[bi] + beta * sampleAt (advI, src) + shiftAdv);
 
         if (t.rng.nextFloat() < redrawProb)
             t.phaseTgt[bi] = (t.rng.nextFloat() * 2.0f - 1.0f) * pi;
@@ -527,6 +591,38 @@ void StackEngine::synthesiseFrame (Take& t, int k, int m, bool controlTick)
         {
             re *= toneG;
             im *= toneG;
+            if (fxWhisper > 0.001f)
+            {
+                // Whisper: the tonal peak becomes noise of the same strength
+                const float u1 = juce::jmax (1.0e-7f, t.rng.nextFloat()), u2 = t.rng.nextFloat();
+                const float rad = std::sqrt (-0.5f * std::log (u1)) * std::exp (e[bi] + f[bi]) * freshComp * toneG;
+                re = std::sqrt (1.0f - fxWhisper) * re + std::sqrt (fxWhisper) * rad * std::cos (twoPi * u2);
+                im = std::sqrt (1.0f - fxWhisper) * im + std::sqrt (fxWhisper) * rad * std::sin (twoPi * u2);
+            }
+        }
+
+        if (fxSub > 0.001f)
+        {
+            // Sub-octave: the tonal peaks again, an octave down, with their own phase vocoder
+            const float srcSub = (float) b / (0.5f * beta) - shiftBins;
+            const float fs = sampleAt (fineI, srcSub);
+            t.phiSub[bi] = resetPhase ? sampleAt (phI, srcSub) : princ (t.phiSub[bi] + 0.5f * beta * sampleAt (advI, srcSub));
+            if (fs >= tonalThreshold)
+            {
+                const float mag = fxSub * std::exp (e[bi] + fs) * toneG;
+                re += mag * std::cos (t.phiSub[bi]);
+                im += mag * std::sin (t.phiSub[bi]);
+            }
+        }
+
+        if (fxRobot > 0.001f)
+        {
+            // Monotone: only every rBins-th bin, phases advancing exactly at the bin frequency
+            t.robotPhase[bi] = princ (t.robotPhase[bi] + omega[bi]);
+            const float mag = (b > 0 && b % rBins == 0) ? robotGain * std::exp (e[bi]) : 0.0f;
+            const float keep = std::sqrt (1.0f - fxRobot), use = std::sqrt (fxRobot);
+            re = keep * re + use * mag * std::cos (t.robotPhase[bi]);
+            im = keep * im + use * mag * std::sin (t.robotPhase[bi]);
         }
 
         // Tone tilt, slow level ride, and syllable dynamics with effort brightness (highs move 60 % more)
@@ -543,7 +639,6 @@ void StackEngine::synthesiseFrame (Take& t, int k, int m, bool controlTick)
     // pull everything above 3.5 kHz down (fully from 5 kHz); fast attack, ~30 ms release
     if (sDeEss > 0.001f)
     {
-        const float binHz = (float) sampleRate / (float) fftSize;
         float hf = 0.0f, all = 1.0e-20f;
         for (int b = 1; b < numBins; ++b)
         {
@@ -654,6 +749,53 @@ void StackEngine::processChunk (const float* const* in, int numIn, float* outL, 
             const float match = t.powFollow > 1.0e-12f
                 ? juce::jlimit (1.0f / maxMatchGain, maxMatchGain, std::sqrt (dryPowSlow / t.powFollow)) : 1.0f;
             y *= match * takeLevel;
+
+            // Sound-design stage (each step is skipped when its amount is zero)
+            {
+                const auto& vd = voiceDef (target, (int) (&t - takes.data()));
+                const float ch = t.sChar;
+                const float growl = ch * t.vFx.growlDepth;
+                if (growl > 0.001f)
+                {
+                    // Irregular amplitude flutter (rate jitters +-20 %), mean level kept
+                    t.growlPhase = std::fmod (t.growlPhase + twoPi * vd.growlHz * (1.0f + 0.2f * t.cGrowl) / (float) sampleRate, twoPi);
+                    y *= (1.0f - 0.5f * growl * (1.0f - std::sin (t.growlPhase))) / (1.0f - 0.5f * growl);
+                }
+                const float ringAmt = ch * t.vFx.ringDepth;
+                if (ringAmt > 0.001f)
+                {
+                    t.ringPhase = std::fmod (t.ringPhase + twoPi * vd.ringHz / (float) sampleRate, twoPi);
+                    y *= (1.0f - ringAmt) + ringAmt * juce::MathConstants<float>::sqrt2 * std::sin (t.ringPhase);
+                }
+                const float metal = ch * t.vFx.metal;
+                if (metal > 0.001f && ! t.combBuf.empty())
+                {
+                    const int len = (int) t.combBuf.size();
+                    const int d = juce::jlimit (1, len - 1, (int) (vd.metalMs * 0.001f * (float) sampleRate));
+                    int rp = t.combPos - d;
+                    if (rp < 0)
+                        rp += len;
+                    const float c = y + 0.75f * t.combBuf[(size_t) rp];
+                    t.combBuf[(size_t) t.combPos] = c;
+                    if (++t.combPos == len)
+                        t.combPos = 0;
+                    y = (1.0f - metal) * y + metal * 0.25f * c * 2.0f;   // 0.25 = 1 - feedback; x2 for the comb's level loss
+                }
+                const float crush = ch * t.vFx.crush;
+                if (crush > 0.001f)
+                {
+                    // Sample-and-hold at a quarter rate, 6-bit steps relative to the lead's level
+                    if (t.crushCount++ % 4 == 0)
+                        t.crushHold = y;
+                    const float q = ceiling / 32.0f;
+                    y = (1.0f - crush) * y + crush * q * std::round (t.crushHold / q);
+                }
+                if (ch * t.vFx.drive > 0.001f)
+                {
+                    const float c2 = ceiling / (1.0f + 2.0f * ch * t.vFx.drive);   // drive pushes into the tanh
+                    y = ceiling * std::tanh (y / c2) * (c2 / ceiling) * (1.0f + ch * t.vFx.drive);
+                }
+            }
 
             // Gentle saturation: a soft ceiling near the lead's own peak level
             y = ceiling * std::tanh (y / ceiling);
