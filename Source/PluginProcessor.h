@@ -20,12 +20,13 @@ public:
     bool acceptsMidi() const override { return false; }
     bool producesMidi() const override { return false; }
     bool isMidiEffect() const override { return false; }
-    double getTailLengthSeconds() const override { return 0.1; }
+    double getTailLengthSeconds() const override { return 2.0; }   // Space tail
 
-    int getNumPrograms() override { return 1; }
-    int getCurrentProgram() override { return 0; }
-    void setCurrentProgram (int) override {}
-    const juce::String getProgramName (int) override { return {}; }
+    // Factory presets
+    int getNumPrograms() override;
+    int getCurrentProgram() override { return currentProgram; }
+    void setCurrentProgram (int index) override;
+    const juce::String getProgramName (int index) override;
     void changeProgramName (int, const juce::String&) override {}
 
     void getStateInformation (juce::MemoryBlock&) override;
@@ -35,21 +36,11 @@ public:
 
 private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
-    void pushParameters();
+    StackParams readParameters() const;
+    float value (const juce::String& id) const { return apvts.getRawParameterValue (id)->load(); }
 
     StackEngine engine;
-    std::atomic<float>* takesParam = nullptr;
-    std::atomic<float>* tightnessParam = nullptr;
-    std::atomic<float>* characterParam = nullptr;
-    std::atomic<float>* textureParam = nullptr;
-    std::atomic<float>* raspParam = nullptr;
-    std::atomic<float>* dynamicsParam = nullptr;
-    std::atomic<float>* pitchDriftParam = nullptr;
-    std::atomic<float>* roomParam = nullptr;
-    std::atomic<float>* widthParam = nullptr;
-    std::atomic<float>* mixParam = nullptr;
-    std::atomic<float>* outputParam = nullptr;
-    std::atomic<float>* seedParam = nullptr;
+    int currentProgram = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StackFXProcessor)
 };

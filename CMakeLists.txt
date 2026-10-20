@@ -61,3 +61,16 @@ target_compile_definitions(stackfx_render PRIVATE
 target_link_libraries(stackfx_render
     PRIVATE juce::juce_audio_formats juce::juce_dsp
     PUBLIC  juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
+
+# Host-style self test of the real plugin processor (presets, state, mono, odd block sizes)
+juce_add_console_app(stackfx_selftest PRODUCT_NAME "stackfx_selftest")
+target_sources(stackfx_selftest PRIVATE
+    Tests/selftest.cpp
+    Source/PluginProcessor.cpp
+    Source/StackEngine.cpp)
+target_include_directories(stackfx_selftest PRIVATE Source)
+target_compile_definitions(stackfx_selftest PRIVATE
+    JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_DISPLAY_SPLASH_SCREEN=0)
+target_link_libraries(stackfx_selftest
+    PRIVATE juce::juce_audio_utils juce::juce_dsp
+    PUBLIC  juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)

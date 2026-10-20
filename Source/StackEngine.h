@@ -4,11 +4,19 @@
 #include <vector>
 
 // All amounts normalised 0..1 unless noted.
+struct TakeParams
+{
+    float levelDb   = 0.0f;
+    float pan       = 0.0f;   // -1..1, before Width
+    float character = 0.0f;   // 0 = you, 1 = someone else (vocal-tract size + register)
+    int   seed      = 1;      // re-roll just this take
+    bool  mute = false, solo = false;
+};
+
 struct StackParams
 {
     int   takes      = 2;     // 2..4
     float tightness  = 0.4f;  // timing warp: 1 = locked to the lead, 0 = +-40 ms
-    float character  = 0.0f;  // 0 = you, 1 = someone else (vocal-tract size + register)
     float texture    = 1.0f;  // fresh noise grain per take
     float rasp       = 0.5f;  // how differently raspy/clean the takes are
     float dynamics   = 0.5f;  // how differently each take leans into syllables
@@ -16,8 +24,31 @@ struct StackParams
     float room       = 0.5f;  // each take's own early reflections
     float width      = 1.0f;
     float mix        = 0.5f;  // 0..0.5 fades the stack in under the lead, 0.5..1 fades the lead out
-    float outputDb   = 0.0f;  // dB
-    int   seed       = 1;     // re-roll the random performance
+    float inputDb    = 0.0f;
+    float outputDb   = 0.0f;
+    int   seed       = 1;     // re-roll every take
+
+    // Defaults match the plugin's parameter defaults, so renders and the plugin sound the same
+    std::array<TakeParams, 4> take {{ { 0.0f, -1.0f, 0.0f, 1 }, { 0.0f, 1.0f, 0.0f, 102 },
+                                      { 0.0f, -0.6f, 0.0f, 203 }, { 0.0f, 0.6f, 0.0f, 304 } }};
+    bool  link = false;       // B mirrors A (level, opposite pan), D mirrors C
+    bool  leadMute = false, leadSolo = false;
+
+    float deEss     = 0.0f;      // sibilance reduction on the takes
+    float lowCutHz  = 80.0f;     // stack low cut (<= 20 = off)
+    float highCutHz = 20000.0f;  // stack high cut (>= 20000 = off)
+    float space     = 0.0f;      // ambience on the stack
+    float gateDb    = -80.0f;    // takes play only while the lead is above this (<= -80 = off)
+
+    void setAllCharacters (float c) { for (auto& t : take) t.character = c; }
+    // Link: B follows A and D follows C (same level, mirrored pan). Applied by the host side.
+    void applyLink()
+    {
+        if (! link)
+            return;
+        take[1].levelDb = take[0].levelDb;  take[1].pan = -take[0].pan;
+        take[3].levelDb = take[2].levelDb;  take[3].pan = -take[2].pan;
+    }
 };
 
 // Slow smoothed random signal in [-1, 1]: picks a new random target every few
@@ -82,6 +113,9 @@ private:
         Spectrum phi {}, phaseOff {}, phaseTgt {}, tilt {};
         bool phaseValid = false;
         float raspUnit = 0.0f;                // -1..1, scaled by Rasp
+        float sChar = 0.0f;                   // smoothed Character
+        int seedUsed = 0;                     // (global seed, take seed) combination in use
+        float sibMean = 0.0f, dsDb = 0.0f;    // de-esser state
 
         std::array<float, fftSize> ola {};
         std::array<float, hopSize> ready {};
@@ -93,24 +127,28 @@ private:
         std::array<int, 4> tapDelay {};
         std::array<float, 4> tapGain {};
 
-        juce::SmoothedValue<float> active, pan;
+        juce::SmoothedValue<float> level, pan; // level = active x take level x mute/solo
     };
 
     void analyseFrame();
+    void updateCuts();
     void synthesiseFrame (Take& t, int takeIndex, int frameIndex);
-    void seedTakes (bool resetState);
+    void seedTake (int takeIndex, bool resetState);
+    void updateTakeTargets();
     bool detectOnset (const Spectrum& logMag);
-    static float panPosition (int take, int numTakes);
+    void processChunk (const float* const* in, int numIn, float* outL, float* outR, int n);
     Frame& frameAt (int index) { return ring[(size_t) (((index % ringSize) + ringSize) % ringSize)]; }
+    int combinedSeed (int k) const { return target.seed * 1009 + target.take[(size_t) k].seed; }
 
     double sampleRate = 44100.0;
+    int maxBlock = 512;
     StackParams target;
-    int currentSeed = 1;
 
     // Frame-rate parameter smoothing (one-pole, ~50 ms)
     float frameSmooth = 0.0f;
-    float sTight = 0.4f, sChar = 0.0f, sTexture = 1.0f, sRasp = 0.5f, sDyn = 0.5f, sPitch = 0.3f, sRoom = 0.5f;
-    juce::SmoothedValue<float> width, mix, outGain, stackNorm;
+    float sTight = 0.4f, sTexture = 1.0f, sRasp = 0.5f, sDyn = 0.5f, sPitch = 0.3f, sRoom = 0.5f, sDeEss = 0.0f;
+    float sLowCut = 80.0f, sHighCut = 20000.0f;
+    juce::SmoothedValue<float> width, mix, inGain, outGain, stackNorm, leadGain;
 
     // Analysis
     juce::dsp::FFT fft { fftOrder };
@@ -130,6 +168,31 @@ private:
 
     // Lead level followers: slow (level matching) and fast (saturation ceiling)
     float dryPowSlow = 0.0f, dryPowFast = 0.0f, slowCoef = 0.0f, fastCoef = 0.0f;
+
+    // Gate: follows the lead slightly ahead (earliest take) and holds past it (latest take)
+    float gateEnv = 0.0f, gateGain = 1.0f, gateEnvRel = 0.0f, gateAtt = 0.0f, gateRel = 0.0f;
+    int gateHold = 0, gateHoldLen = 0, gateAheadSamples = 0;
+    bool gateOpen = true;
+
+    // Stack low/high cut: 2nd-order Butterworth biquads on the stack bus, per channel
+    struct Biquad
+    {
+        float b0 = 1, b1 = 0, b2 = 0, a1 = 0, a2 = 0;
+        float z1[2] {}, z2[2] {};
+        float process (float x, int ch)
+        {
+            const float y = b0 * x + z1[ch];
+            z1[ch] = b1 * x - a1 * y + z2[ch];
+            z2[ch] = b2 * x - a2 * y;
+            return y;
+        }
+    };
+    Biquad lowCut, highCut;
+    bool lowCutOn = true, highCutOn = false;
+
+    // Space: ambience on the stack bus
+    juce::Reverb reverb;
+    std::vector<float> stackBufL, stackBufR, dryBuf;
 
     // Dry lead delayed by the full latency
     std::vector<float> dryDelay;
