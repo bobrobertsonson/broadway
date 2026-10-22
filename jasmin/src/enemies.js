@@ -5,7 +5,12 @@ const KINDS = {
   t: { key: "enemy-subway", speed: 32 },
   l: { key: "enemy-laundry", hop: 170, every: 1.6, speed: 18 },
   a: { key: "enemy-alarm", hop: 240, every: 1.1, speed: 36 },
+  e: { key: "enemy-germ", speed: 26 },
+  f: { key: "enemy-food", hop: 150, every: 1.4, speed: 22 },
+  n: { key: "enemy-cold", fly: true, speed: 22, range: 32 },
 };
+
+export const ENEMY_CHARS = Object.keys(KINDS).join("");
 
 export function makeEnemyAnims(scene) {
   for (const k of Object.values(KINDS)) {

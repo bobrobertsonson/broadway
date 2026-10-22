@@ -13,22 +13,11 @@
 
 import { PALETTE, OUTFITS } from "./sprites.js";
 import { buildFrames } from "./frames.js";
+import { worldOutfit } from "./content.js";
 
 export const ART_OVERRIDES = {};
 
-const COMPANIONS = ["andrew", "rabbit", "son", "daughter", "sonFree"];
-
-// Derived characters: built from another character's frames with some slots removed.
-const DERIVED = {
-  sonFree: { from: "son", drop: ["L", "l", "A"] }, // the son after the egg hatches
-};
-
-function framesFor(name) {
-  const d = DERIVED[name];
-  if (!d) return buildFrames(name);
-  const f = buildFrames(d.from);
-  return { ...f, frames: f.frames.map((g) => g.map((row) => row.map((c) => (d.drop.includes(c) ? null : c)))) };
-}
+const COMPANIONS = ["andrew", "rupert", "isaac", "aya", "nube", "tim", "jasminCloak"];
 
 export function charKey(name, { outfit = "black", outline = false } = {}) {
   const base = name === "jasmin" || name === "jasminHat" ? `char-${name}-${outfit}` : `char-${name}`;
@@ -66,8 +55,8 @@ export function collectOutfits(content) {
   const out = {};
   for (const [name, pal] of Object.entries(OUTFITS)) out[name] = pal;
   for (const w of content.worlds || []) {
-    const u = w.outfitUnlock;
-    if (u && u.name) out[u.name] = { ...(OUTFITS[u.name] || OUTFITS.black), ...(u.palette || {}) };
+    const u = worldOutfit(w);
+    if (u) out[u.name] = { ...OUTFITS.black, ...u.palette };
   }
   return out;
 }
@@ -83,7 +72,7 @@ function buildOne(scene, name, palette, key, outline) {
     return;
   }
 
-  const { w, h, frames, anims } = framesFor(name);
+  const { w, h, frames, anims } = buildFrames(name);
   const pad = outline ? 1 : 0;
   const fw = w + pad * 2, fh = h + pad * 2;
   const tex = scene.textures.createCanvas(key, fw * frames.length, fh);

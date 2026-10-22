@@ -1,4 +1,5 @@
 import { charKey, animKey } from "./art.js";
+import { sortCompanions } from "./state.js";
 
 // Companions replay Jasmin's path from a history buffer (one point every STEP px
 // she travels). Each follower sits SPACING px further back along that path.
@@ -6,33 +7,68 @@ import { charKey, animKey } from "./art.js";
 
 const STEP = 2;
 const SPACING = 24;
-const HUDDLE = 13;
-const MAX_POINTS = 600;
+const HUDDLE = 14;
+const MAX_POINTS = 800;
+const HOPPERS = ["rupert"];
 
 export class Trail {
   constructor(scene, leader, names, outline) {
     this.scene = scene;
     this.leader = leader;
+    this.outline = outline;
     this.points = [];
     this.idle = 0;
     this.spacing = SPACING;
-    this.members = names.map((name, i) => {
-      const key = charKey(name, { outline });
-      const s = scene.add.sprite(leader.sprite.x - (i + 1) * 14, leader.sprite.y, key, 0).setOrigin(0.5, 1);
-      s.setDepth(9 - i);
-      s.play(animKey(key, "idle"));
-      return { name, key, sprite: s, slot: i + 1, last: { x: s.x, y: s.y }, anim: "idle", present: true };
-    });
+    this.members = [];
+    this.resetPoints();
+    for (const n of names) this.add(n);
     this.reset();
   }
 
-  reset() {
+  resetPoints() {
     const s = this.leader.sprite;
     this.points = [];
-    for (let i = 0; i < 80; i++) this.points.push({ x: s.x - this.leader.facing * i * STEP * 0.4, y: s.y, air: false });
+    for (let i = 0; i < 120; i++) this.points.push({ x: s.x - this.leader.facing * i * STEP * 0.4, y: s.y, air: false });
+  }
+
+  // Adds a companion (optionally appearing at x, y; otherwise behind Jasmin).
+  add(name, x, y) {
+    if (this.members.some((m) => m.name === name)) return this.rejoin(name);
+    const key = charKey(name, { outline: this.outline });
+    const s = this.scene.add.sprite(x ?? this.leader.sprite.x, y ?? this.leader.sprite.y, key, 0).setOrigin(0.5, 1);
+    s.play(animKey(key, "idle"));
+    this.members.push({ name, key, sprite: s, slot: 0, last: { x: s.x, y: s.y }, anim: "idle", present: true });
+    this.reorder();
+  }
+
+  reorder() {
+    const order = sortCompanions(this.members.map((m) => m.name));
+    this.members.sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name));
+    let slot = 1;
     for (const m of this.members) {
+      if (!m.present) continue;
+      m.slot = slot++;
+      m.sprite.setDepth(10 - m.slot);
+    }
+  }
+
+  // Swap every texture between plain and outlined (dark levels / night).
+  setOutline(on) {
+    this.outline = on;
+    for (const m of this.members) {
+      m.key = charKey(m.name, { outline: on });
+      m.sprite.setTexture(m.key, 0);
+      m.anim = null;
+    }
+  }
+
+  reset() {
+    this.resetPoints();
+    for (const m of this.members) {
+      if (!m.present) continue;
       const p = this.at(m.slot * HUDDLE);
       m.sprite.setPosition(p.x, p.y);
+      m.last = { x: p.x, y: p.y };
     }
   }
 
@@ -40,14 +76,41 @@ export class Trail {
     return this.members.find((m) => m.name === name && m.present);
   }
 
-  // Drops a member out of the trail (e.g. the rabbit at the send-off). Returns its sprite.
+  has(name) {
+    return !!this.get(name);
+  }
+
+  names() {
+    return this.members.filter((m) => m.present).map((m) => m.name);
+  }
+
+  // Takes a member out of the trail (cutscenes, send-off, ghosts). Returns the member.
   detach(name) {
     const m = this.members.find((x) => x.name === name);
     if (!m) return null;
     m.present = false;
-    const rest = this.members.filter((x) => x.present);
-    rest.forEach((x, i) => (x.slot = i + 1));
-    return m.sprite;
+    this.reorder();
+    return m;
+  }
+
+  rejoin(name) {
+    const m = this.members.find((x) => x.name === name);
+    if (!m) return null;
+    m.present = true;
+    this.reorder();
+    return m;
+  }
+
+  remove(name) {
+    const m = this.detach(name);
+    if (m) this.members = this.members.filter((x) => x !== m);
+    return m;
+  }
+
+  playOn(m, anim) {
+    if (m.anim === anim) return;
+    m.sprite.play(animKey(m.key, anim));
+    m.anim = anim;
   }
 
   at(dist) {
@@ -62,11 +125,10 @@ export class Trail {
     const dx = s.x - head.x, dy = s.y - head.y;
     const d = Math.hypot(dx, dy);
     if (d >= STEP) {
-      // Insert evenly spaced points along the move.
       const n = Math.floor(d / STEP);
       for (let k = 1; k <= n; k++) {
-        const t = (k * STEP) / d;
-        this.points.unshift({ x: head.x + dx * t, y: head.y + dy * t, air });
+        const tt = (k * STEP) / d;
+        this.points.unshift({ x: head.x + dx * tt, y: head.y + dy * tt, air });
       }
       if (this.points.length > MAX_POINTS) this.points.length = MAX_POINTS;
     }
@@ -77,16 +139,17 @@ export class Trail {
     this.spacing += (want - this.spacing) * Math.min(1, dt * (want < this.spacing ? 2.5 : 6));
 
     for (const m of this.members) {
-      if (!m.present) continue;
+      if (!m.present || m.scripted) continue;
       const p = this.at(m.slot * this.spacing);
       const sp = m.sprite;
       const vx = p.x - m.last.x;
       sp.setPosition(Math.round(p.x), Math.round(p.y));
       if (Math.abs(vx) > 0.05) sp.setFlipX(vx < 0);
+      const hop = HOPPERS.includes(m.name);
       let anim = "idle";
-      if (p.air) anim = m.name === "rabbit" ? "hop" : "jump";
-      else if (Math.abs(vx) > 0.15) anim = m.name === "rabbit" ? "hop" : "run";
-      if (anim !== m.anim) { sp.play(animKey(m.key, anim)); m.anim = anim; }
+      if (p.air) anim = hop ? "hop" : "jump";
+      else if (Math.abs(vx) > 0.15) anim = hop ? "hop" : "run";
+      this.playOn(m, anim);
       m.last = { x: p.x, y: p.y };
     }
   }
@@ -94,8 +157,8 @@ export class Trail {
   // True when this companion is standing right next to Jasmin.
   isNext(name) {
     const m = this.get(name);
-    if (!m) return false;
+    if (!m || m.scripted) return false;
     const s = this.leader.sprite;
-    return Math.abs(m.sprite.x - s.x) <= 18 && Math.abs(m.sprite.y - s.y) < 6 && m.anim === "idle";
+    return Math.abs(m.sprite.x - s.x) <= 20 && Math.abs(m.sprite.y - s.y) < 6 && m.anim === "idle";
   }
 }

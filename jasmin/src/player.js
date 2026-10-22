@@ -18,6 +18,10 @@ export const PHYS = {
   boostRabbit: 1.15,
   charm: 1.5,
   slowDaughter: 0.85,
+  iceTraction: 0.22,
+  waterGravity: 260,
+  waterSink: 70,
+  swimStroke: 170,
 };
 
 // Hitbox inside the 24 x 32 Jasmin frame (feet on the bottom row).
@@ -51,7 +55,33 @@ export class Player {
   }
 
   tex() {
+    if (this.cloaked) return charKey("jasminCloak", { outline: this.outline });
     return charKey(this.hasHat ? "jasminHat" : "jasmin", { outfit: this.outfit, outline: this.outline });
+  }
+
+  refreshTexture() {
+    this.sprite.setTexture(this.tex(), 0);
+    const a = this.anim || "idle";
+    this.anim = null;
+    this.play(this.cloaked && (a === "glide" || a === "wave" || a === "write") ? "idle" : a);
+  }
+
+  // The ghosts' drab hooded cloak (Minneapolis). No gliding while cloaked.
+  setCloak(on) {
+    if (this.cloaked === on) return;
+    this.cloaked = on;
+    this.refreshTexture();
+  }
+
+  setOutfit(name) {
+    this.outfit = name;
+    this.refreshTexture();
+  }
+
+  setOutline(on) {
+    this.outline = on;
+    this.refreshTexture();
+    this.syncBody();
   }
 
   play(anim) {
@@ -62,8 +92,7 @@ export class Player {
 
   setHat(on) {
     this.hasHat = on;
-    this.sprite.setTexture(this.tex(), 0);
-    this.play(this.anim || "idle");
+    this.refreshTexture();
   }
 
   syncBody() {
@@ -77,7 +106,7 @@ export class Player {
     return b.blocked.down || b.touching.down;
   }
 
-  // ctx: { andrewReady: bool }
+  // ctx: { andrewReady, inWater }
   update(dt, ctx) {
     const s = this.sprite, b = s.body;
     if (this.dead) return;
@@ -93,11 +122,29 @@ export class Player {
 
     // Horizontal: accelerate toward target speed.
     const target = dir * max;
-    const accel = ground ? (dir === 0 ? PHYS.decelGround : PHYS.accelGround) : PHYS.accelAir;
+    const ice = this.ice && ground ? PHYS.iceTraction : 1;
+    const accel = (ground ? (dir === 0 ? PHYS.decelGround : PHYS.accelGround) : PHYS.accelAir) * ice;
     const dv = target - b.velocity.x;
     const step = accel * dt;
     b.setVelocityX(Math.abs(dv) <= step ? target : b.velocity.x + Math.sign(dv) * step);
     if (dir !== 0 && dir !== this.facing) { this.facing = dir; s.setFlipX(dir < 0); this.syncBody(); }
+
+    // Swimming: slow sinking, every jump press is a stroke upward.
+    if (ctx.inWater) {
+      b.setGravityY(PHYS.waterGravity - this.scene.physics.world.gravity.y);
+      if (b.velocity.y > PHYS.waterSink) b.setVelocityY(PHYS.waterSink);
+      if (controls.pressed("jump")) { b.setVelocityY(-PHYS.swimStroke); sfx.jump(); }
+      this.swimming = true;
+      this.gliding = false;
+      this.updateAnim();
+      return;
+    }
+    if (this.swimming) {
+      this.swimming = false;
+      b.setGravityY(0);
+      // Leaving the water at the surface: a little hop out.
+      if (controls.jump && b.velocity.y < 0) b.setVelocityY(-PHYS.jump * 0.9);
+    }
 
     // Jump with coyote time and input buffering.
     this.coyote = ground ? PHYS.coyote : this.coyote - dt;
@@ -127,9 +174,9 @@ export class Player {
     if (b.velocity.y >= 0) this.boosted = false;
 
     // Glide with the hat.
-    this.gliding = this.hasHat && controls.jump && !ground && b.velocity.y > PHYS.glideFall;
+    this.gliding = this.hasHat && !this.cloaked && controls.jump && !ground && b.velocity.y > PHYS.glideFall;
     if (this.gliding) b.setVelocityY(PHYS.glideFall);
-    else if (this.hasHat && controls.jump && !ground && b.velocity.y > 0) this.gliding = true;
+    else if (this.hasHat && !this.cloaked && controls.jump && !ground && b.velocity.y > 0) this.gliding = true;
 
     if (ground && !this.wasGround && this.airTime > 0.25) sfx.land();
     this.airTime = ground ? 0 : (this.airTime || 0) + dt;
@@ -140,6 +187,7 @@ export class Player {
   updateAnim() {
     const b = this.sprite.body;
     if (this.forcedAnim) return this.play(this.forcedAnim);
+    if (this.swimming) return this.play(b.velocity.y < 0 ? "jump" : "fall");
     if (!this.onGround) {
       if (this.gliding) this.play("glide");
       else this.play(b.velocity.y < 0 ? "jump" : "fall");
@@ -180,6 +228,7 @@ export class Player {
     s.body.reset(x, y);
     s.setAlpha(1);
     this.invuln = 1.0;
+    this.cloaked = false;
     this.setHat(false);
     this.play("idle");
   }

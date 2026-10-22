@@ -176,3 +176,60 @@ body.touch #touch {
 #banner.top .title { font-size: clamp(18px, 3.6vw, 30px); }
 #banner.top .sub { font-size: 14px; }
 #banner.top .hint { margin-top: 2px; }
+
+#meter {
+  position: absolute;
+  top: calc(max(10px, env(safe-area-inset-top)) + 30px);
+  left: max(12px, env(safe-area-inset-left));
+  display: none;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+#meter .bar { width: 90px; height: 8px; border: 2px solid #f4f1ea; border-radius: 5px; overflow: hidden; background: rgba(20,16,18,0.5); }
+#meter .fill { height: 100%; width: 0; background: #ff6a5a; }
+#meter.cloaked .eye::after { content: " (cloaked)"; color: #c9c3d6; }
+#namebox {
+  position: absolute;
+  left: 50%;
+  bottom: 18%;
+  transform: translateX(-50%);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+  background: rgba(20, 16, 18, 0.85);
+  border: 2px solid #e0a43a;
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+#namebox.show { display: flex; }
+#namebox .prompt { font-size: 16px; font-weight: 700; }
+#namebox input {
+  font: inherit;
+  font-size: 18px;
+  width: min(320px, 60vw);
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 2px solid #f4f1ea;
+  background: #f4f1ea;
+  color: #141012;
+  text-align: center;
+}
+#namebox button {
+  font: inherit;
+  font-weight: 700;
+  padding: 6px 18px;
+  border-radius: 8px;
+  border: 2px solid #e0a43a;
+  background: #3b2a5c;
+  color: #f4f1ea;
+}
+#ui .inventory { list-style: none; margin: 8px 0 0; padding: 0; font-size: clamp(13px, 2.2vw, 17px); text-align: left; display: grid; gap: 4px; }
+#ui .inventory .where { color: #e0a43a; display: inline-block; min-width: 9em; }
+#banner.bottom { justify-content: flex-end; padding-bottom: 24vh; }
+#banner.bottom .hint { font-size: 16px; font-weight: 700; opacity: 1; }
+#labels .wlabel.small { font-size: 11px; opacity: 0.9; }
+#banner.bottom .hint { background: rgba(20, 16, 18, 0.6); padding: 4px 14px; border-radius: 999px; }

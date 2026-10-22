@@ -26,10 +26,19 @@ export const PALETTE = {
   L: "#7b4fbf", l: "#5e3a96", A: "#f5d342", // egg, egg shade, egg dots
   O: "#f2c94c", j: "#d9ad35",            // daughter onesie, onesie shade
   X: "#e8607a", x: "#b8405a",            // bow, bow knot
+  // Nube
+  Nk: "#c99c7a", Nk2: "#ad8060", Nm: "#a8665c", // skin, shadow, mouth
+  Nu: "#e8607a",                         // hair tie
+  Nt: "#4a90c2", Nt2: "#3a73a0",         // top, top shade (placeholder until her signature item is chosen)
+  Nj: "#2e3f5c", Nz: "#ececec",          // jeans, sneakers
+  Nb: "#d8c8a8", Nb2: "#a8946c",         // tote bag, tote strap
+  // Tim (Galapagos cameo): white skin, medium brown beard.
+  Tk: "#ecc8ac", Tb: "#7a5233", Tb2: "#9a6c45", Tt: "#33333a", Ti: "#3a4a5e", Tj: "#2b3a52",
   // Rabbit
   Rd: "#4e3220", Ro: "#b0682f", Rt: "#c99a63", Rm: "#e2c393", Rk: "#0d0a08", Rn: "#d98a8a",
-  // Outline drawn around characters on dark levels
+  // Added by Claude Code (engine needs): outline for dark levels, ghost cloak worn by Jasmin when seen.
   Ol: "#f4f1ea",
+  Kc: "#1c1a20", Kh: "#34313b",
 };
 
 // Outfit palettes: override only the slots that change.
@@ -88,7 +97,25 @@ const DAUGHTER = [
   [8,14,18,"O"],[9,13,18,"O"],[9,19,19,"N"],[10,13,18,"O"],[10,13,13,"j"],[11,13,18,"O"],[12,13,14,"O"],[12,17,18,"O"],[13,13,14,"j"],[13,17,18,"j"],
 ];
 
-// ---------- Rabbit (18 x 14), row strings ----------
+// ---------- Nube (24 x 22) ----------
+const NUBE = [
+  [0,13,17,"H"],[1,11,19,"H"],[1,14,15,"h"],[2,10,19,"H"],[3,7,9,"H"],[3,10,10,"Nu"],[3,11,13,"H"],[3,14,19,"Nk"],[4,6,8,"H"],[4,11,12,"H"],[4,13,20,"Nk"],[5,6,8,"H"],[5,11,12,"H"],[5,13,20,"Nk"],[5,16,16,"W"],[5,17,17,"E"],[6,6,7,"H"],[6,12,12,"H"],[6,13,21,"Nk"],[7,7,8,"H"],[7,13,20,"Nk"],[7,18,19,"Nm"],[8,7,7,"H"],[8,13,19,"Nk"],[8,13,13,"Nk2"],[9,14,18,"Nk"],[9,14,14,"Nk2"],[10,15,17,"Nk"],
+  [11,11,20,"Nt"],[12,11,20,"Nt"],[13,11,20,"Nt"],[14,11,20,"Nt"],[15,11,20,"Nt"],[11,11,11,"Nt2"],[12,11,11,"Nt2"],[13,11,11,"Nt2"],[14,11,11,"Nt2"],[15,11,11,"Nt2"],[14,21,21,"Nk"],[15,21,21,"Nk"],
+  [16,12,19,"Nj"],[17,12,19,"Nj"],[18,12,14,"Nj"],[18,17,19,"Nj"],[19,12,14,"Nj"],[19,17,19,"Nj"],[20,12,14,"Nj"],[20,17,19,"Nj"],[21,11,14,"Nz"],[21,17,20,"Nz"],
+  [11,12,12,"Nb2"],[11,11,11,"Nb2"],[12,10,10,"Nb2"],[13,8,10,"Nb"],[14,8,10,"Nb"],[15,8,10,"Nb"],[16,8,10,"Nb"],[16,8,8,"Nb2"],
+];
+
+// ---------- Tim (24 x 22): short, bald, huge beard, heavily tattooed ----------
+const TIM = [
+  [0,13,18,"Tk"],[1,12,19,"Tk"],[2,12,20,"Tk"],[3,12,20,"Tk"],[3,14,14,"Ti"],[4,12,20,"Tk"],[4,17,17,"E"],[5,12,21,"Tk"],[6,12,13,"Tk"],
+  [11,11,20,"Tt"],[12,11,20,"Tt"],[13,11,20,"Tt"],[14,11,20,"Tt"],[15,11,20,"Tt"],[16,11,20,"Tt"],
+  [12,10,10,"Ti"],[13,10,10,"Tk"],[14,10,10,"Ti"],[15,10,10,"Ti"],[16,10,10,"Tk"],[12,21,21,"Ti"],[13,21,21,"Ti"],[14,21,21,"Tk"],[15,21,21,"Ti"],[16,21,21,"Tk"],
+  [17,12,19,"Tj"],[18,12,19,"Tj"],[19,12,14,"Tj"],[19,17,19,"Tj"],[20,12,14,"Tj"],[20,17,19,"Tj"],[21,11,14,"B"],[21,17,20,"B"],
+  [6,14,21,"Tb"],[7,12,21,"Tb"],[8,12,21,"Tb"],[9,12,20,"Tb"],[10,13,20,"Tb"],[11,14,19,"Tb"],[12,15,18,"Tb"],[13,16,17,"Tb"],
+  [7,17,17,"Tb2"],[8,16,16,"Tb2"],[9,18,18,"Tb2"],[10,15,15,"Tb2"],[11,17,17,"Tb2"],
+];
+
+// ---------- Rupert the rabbit (18 x 14), row strings ----------
 const RABBIT_ROWS = [
   "..........DD.OO...",
   ".........DDD.OOO..",
@@ -113,7 +140,9 @@ export const SPRITES = {
   andrew:       { w: 24, h: 31, segs: ANDREW },
   son:          { w: 24, h: 17, segs: SON },
   daughter:     { w: 24, h: 14, segs: DAUGHTER },
-  rabbit:       { w: 18, h: 14, rows: RABBIT_ROWS, key: RABBIT_KEY },
+  nube:         { w: 24, h: 22, segs: NUBE },
+  tim:          { w: 24, h: 22, segs: TIM },
+  rupert:       { w: 18, h: 14, rows: RABBIT_ROWS, key: RABBIT_KEY },
 };
 
 // Draws a sprite into a 2D canvas context at pixel scale 1.

@@ -1,7 +1,7 @@
 import { controls } from "../controls.js";
 import { startMusic } from "../audio.js";
 import { ui, clean } from "../ui.js";
-import { game, text } from "../state.js";
+import { game, t } from "../state.js";
 import { charKey, animKey } from "../art.js";
 import { makeEnvironmentTextures } from "../tiles.js";
 
@@ -12,6 +12,7 @@ export class Credits extends Phaser.Scene {
   create() {
     ui.clearAll();
     ui.showHome(false);
+    controls.setActionVisible(false);
     makeEnvironmentTextures(this, "garden");
     const { width, height } = this.scale;
     this.cameras.main.setBackgroundColor("#8fd8f5");
@@ -19,7 +20,7 @@ export class Credits extends Phaser.Scene {
     this.add.tileSprite(0, height - 16, width, 64, "bg-hills").setOrigin(0, 1);
     this.add.tileSprite(0, height - 16, width, 16, "tile-ground-top").setOrigin(0, 0);
 
-    const key = charKey("rabbit");
+    const key = charKey("rupert");
     const floor = height - 16;
     this.rabbit = this.add.sprite(width * 0.35, floor, key).setOrigin(0.5, 1);
     this.friend = this.add.sprite(width * 0.62, floor, key).setOrigin(0.5, 1).setFlipX(true);
@@ -29,7 +30,7 @@ export class Credits extends Phaser.Scene {
     const gk = "prop-gate-closed";
     this.add.image(width * 0.85, floor, gk).setOrigin(0.5, 1);
 
-    const lines = (game.content.credits || []).map(text);
+    const lines = (game.content.credits || []).map((c) => t(c));
     this.lines = lines;
     this.i = 0;
     this.showNext();

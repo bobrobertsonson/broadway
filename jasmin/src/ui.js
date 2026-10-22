@@ -6,6 +6,8 @@ root.id = "ui";
 document.body.appendChild(root);
 root.innerHTML = `
   <div id="hud"></div>
+  <div id="meter"><span class="eye">seen</span><div class="bar"><div class="fill"></div></div></div>
+  <div id="namebox"><div class="prompt"></div><input maxlength="24" autocomplete="off" spellcheck="false"><button>OK</button></div>
   <div id="corner">
     <button id="btn-mute" aria-label="sound">&#9834;</button>
     <button id="btn-home" aria-label="map">&#8962;</button>
@@ -25,6 +27,10 @@ const fadeEl = $("#fade");
 let captionTimer = 0;
 
 // Removes em dashes from any on-screen string (spec rule), even if content has them.
+export function esc(s) {
+  return clean(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+}
+
 export function clean(s) {
   return String(s ?? "").replace(/—/g, ", ").replace(/–/g, "-");
 }
@@ -58,6 +64,12 @@ export const ui = {
     banner.classList.add("show");
   },
 
+  // Banner whose body is trusted HTML built by the game (strings inside must be escaped).
+  panel(title, html, hint = "") {
+    this.banner(title, "", hint);
+    banner.querySelector(".sub").innerHTML = html;
+  },
+
   hideBanner() {
     banner.classList.remove("show");
   },
@@ -88,9 +100,41 @@ export const ui = {
 
   clearAll() {
     this.setHud("");
+    this.meter(null);
     this.hideCaption();
     this.hideBanner();
     this.clearLabels();
+  },
+
+  // Ghost "seen" meter. value null hides it.
+  meter(value, cloaked = false) {
+    const m = $("#meter");
+    m.style.display = value == null ? "none" : "flex";
+    if (value == null) return;
+    m.querySelector(".fill").style.width = `${Math.round(value * 100)}%`;
+    m.classList.toggle("cloaked", cloaked);
+  },
+
+  // Text input for naming World 9. Resolves with the trimmed name.
+  askName(prompt) {
+    const box = $("#namebox");
+    const input = box.querySelector("input");
+    box.querySelector(".prompt").textContent = clean(prompt);
+    input.value = "";
+    box.classList.add("show");
+    setTimeout(() => input.focus(), 50);
+    return new Promise((resolve) => {
+      const done = () => {
+        const v = input.value.replace(/\u2014/g, " ").trim().slice(0, 24);
+        if (!v) return;
+        box.classList.remove("show");
+        input.blur();
+        resolve(v);
+      };
+      box.querySelector("button").onclick = done;
+      input.onkeydown = (e) => { e.stopPropagation(); if (e.key === "Enter") done(); };
+      input.onkeyup = (e) => e.stopPropagation();
+    });
   },
 
   onHome(fn) { $("#btn-home").onclick = fn; },

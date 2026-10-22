@@ -1,6 +1,7 @@
 // Content (levels.json) and saved progress.
+import { t, worldOutfit } from "./content.js";
 
-const SAVE_KEY = "jg-save-v1";
+const SAVE_KEY = "jg-save-v2";
 
 export const game = {
   content: null,   // levels.json
@@ -8,7 +9,7 @@ export const game = {
   save: null,
 };
 
-const DEFAULT_SAVE = { done: [], outfit: "black", outfitsUnlocked: ["black"], lastLevel: null };
+const DEFAULT_SAVE = { done: [], outfit: "black", outfitsUnlocked: ["black"], lastLevel: null, world9: "" };
 
 export function loadSave() {
   try {
@@ -17,16 +18,12 @@ export function loadSave() {
   } catch {
     game.save = { ...DEFAULT_SAVE };
   }
+  try { game.save.world9 = localStorage.getItem("jg-world9") || game.save.world9; } catch {}
   return game.save;
 }
 
 export function writeSave() {
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(game.save)); } catch {}
-}
-
-export function resetSave() {
-  game.save = { ...DEFAULT_SAVE, done: [], outfitsUnlocked: ["black"] };
-  writeSave();
 }
 
 // Flat list of levels in play order, each with its world.
@@ -53,30 +50,43 @@ export function isUnlocked(id) {
   return game.save.done.includes(list[i - 1].level.id);
 }
 
-// Companions present in a world: everyone who joined up to and including it,
-// minus anyone who left in an earlier world.
-export function companionsFor(world) {
-  const worlds = game.content.worlds;
-  const set = [];
-  for (const w of worlds) {
-    if (w.id > world.id) break;
-    for (const c of w.companionsJoin || []) if (!set.includes(c)) set.push(c);
-    if (w.id < world.id) for (const c of w.companionsLeave || []) set.splice(set.indexOf(c) >>> 0, set.includes(c) ? 1 : 0);
+const ORDER = ["andrew", "rupert", "isaac", "aya", "nube"];
+
+// Companions already with Jasmin when a level in this world starts: everyone who
+// joined in an earlier world, minus anyone who left in an earlier world.
+// (Companions joining in this world arrive mid-level at their map marker.)
+export function companionsAtStart(world) {
+  const set = new Set();
+  for (const w of game.content.worlds) {
+    if (w.id >= world.id) break;
+    for (const c of w.companionsJoin || []) set.add(c);
+    for (const c of w.companionsLeave || []) set.delete(c);
   }
-  const order = ["andrew", "rabbit", "son", "daughter"];
-  return set.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+  return ORDER.filter((c) => set.has(c));
 }
 
-// The rabbit's keepsake charm: once he has left in an earlier world.
+export function sortCompanions(names) {
+  return ORDER.filter((c) => names.includes(c));
+}
+
+// Rupert's keepsake charm: once he has left in an earlier world.
 export function hasCharm(world) {
-  return game.content.worlds.some((w) => w.id < world.id && (w.companionsLeave || []).includes("rabbit"));
+  return game.content.worlds.some((w) => w.id < world.id && (w.companionsLeave || []).includes("rupert"));
 }
 
-export function displayName(who) {
-  const n = game.content.names?.[who];
-  return n || who;
+// Outfit unlocked on arrival in a city. Returns its name if newly unlocked.
+export function arriveOutfit(world) {
+  const o = worldOutfit(world);
+  if (!o) return null;
+  const isNew = !game.save.outfitsUnlocked.includes(o.name);
+  if (isNew) game.save.outfitsUnlocked.push(o.name);
+  game.save.outfit = o.name;
+  writeSave();
+  return isNew ? o.name : null;
 }
 
-export function text(s) {
-  return s && String(s).trim() ? s : "TODO: caption";
+export function worldTitle(world) {
+  return t(world.title, `World ${world.id}`);
 }
+
+export { t };

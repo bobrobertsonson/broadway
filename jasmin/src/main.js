@@ -6,6 +6,8 @@ import { Title } from "./scenes/Title.js";
 import { WorldMap } from "./scenes/WorldMap.js";
 import { Level } from "./scenes/Level.js";
 import { Credits } from "./scenes/Credits.js";
+import { Intro } from "./scenes/Intro.js";
+import { Ending } from "./scenes/Ending.js";
 
 // Internal resolution is dynamic: about 180 to 220 px tall, width fills the
 // screen, scaled by a whole-number zoom so pixels stay square.
@@ -29,7 +31,7 @@ const config = {
   physics: { default: "arcade", arcade: { gravity: { y: 900 }, debug: false, tileBias: 20 } },
   input: { activePointers: 3 },
   fps: { target: 60 },
-  scene: [Boot, Title, WorldMap, Level, Credits],
+  scene: [Boot, Title, Intro, WorldMap, Level, Ending, Credits],
 };
 
 const phaser = new Phaser.Game(config);

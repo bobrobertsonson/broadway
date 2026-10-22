@@ -1,479 +1,418 @@
 {
-  "gameTitle": "Jasmin's Game",
-  "names": {
-    "jasmin": "Jasmin",
-    "andrew": "Andrew",
-    "rabbit": "TODO: rabbit name",
-    "son": "TODO: son name",
-    "daughter": "TODO: daughter name"
-  },
+  "title": "Super Jasmin World 3: A New Magic",
   "worlds": [
     {
-      "id": 1,
-      "title": "TODO: world 1 title",
+      "id": 0,
+      "title": "Nairobi",
+      "outfit": null,
       "companionsJoin": [],
-      "companionsLeave": [],
-      "outfitUnlock": {
-        "name": "purple",
-        "palette": {}
+      "levels": [
+        {
+          "id": "0-1",
+          "intro": true,
+          "endCaption": {
+            "text": "Born in Nairobi.",
+            "draft": true
+          }
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "title": "London",
+      "outfit": {
+        "name": {
+          "text": "London look",
+          "draft": true
+        },
+        "palette": "TODO: Claude Code picks a palette that fits the city; Andrew can change it"
       },
+      "companionsJoin": [],
       "levels": [
         {
           "id": "1-1",
-          "dark": false,
+          "setting": "London streets, rain, red double-decker buses as moving platforms",
+          "startCaption": {
+            "text": "London. Where the style started.",
+            "draft": true
+          },
           "collectibles": [
             {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
+              "type": "record",
+              "label": "Warpaint",
+              "caption": {
+                "text": "Warpaint on repeat.",
+                "draft": true
+              }
             },
             {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
+              "type": "record",
+              "label": "Bloc Party",
+              "caption": {
+                "text": "Bloc Party, loud.",
+                "draft": true
+              }
             }
           ],
-          "endCaption": "TODO: end caption"
-        },
-        {
-          "id": "1-2",
-          "dark": false,
-          "collectibles": [
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            }
-          ],
-          "endCaption": "TODO: end caption"
+          "skill": {
+            "text": "An eye for style",
+            "draft": true
+          }
         }
       ]
     },
     {
       "id": 2,
-      "title": "TODO: world 2 title",
+      "title": "Minneapolis",
+      "outfit": {
+        "name": {
+          "text": "Puffy coat",
+          "draft": true
+        },
+        "palette": "TODO: bright color"
+      },
       "companionsJoin": [
         "andrew"
       ],
-      "companionsLeave": [],
-      "outfitUnlock": {
-        "name": "forest",
-        "palette": {
-          "C": "#2f5a3e",
-          "c": "#1f3d2a",
-          "P": "#e0a43a",
-          "K": "#3b2a5c"
-        }
-      },
       "levels": [
         {
           "id": "2-1",
-          "dark": false,
+          "setting": "Gray, icy daytime city full of binocular ghosts. Andrew joins at a night picnic by a lake, then the rest of the level is at night (dark: true from that point).",
+          "startCaption": {
+            "text": "Minneapolis. Just passing through.",
+            "draft": true
+          },
+          "ghostFirstSeenCaption": {
+            "text": "They are always watching.",
+            "draft": true
+          },
+          "andrewJoinScene": {
+            "description": "Night. A blanket by the lake, a bottle of wine, a loaf of bread. Andrew is sitting there. He stands up and joins her.",
+            "caption": {
+              "text": "Wine, bread, a lake at night. That was the start.",
+              "draft": true
+            }
+          },
+          "togetherCaughtCaption": {
+            "text": "Not in public. Not here.",
+            "draft": true
+          },
           "collectibles": [
             {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
+              "type": "message",
+              "label": "First message",
+              "caption": {
+                "text": "A message from a guy just back from a year in Malaysia.",
+                "draft": true
+              }
             }
           ],
-          "endCaption": "TODO: end caption"
-        },
-        {
-          "id": "2-2",
-          "dark": true,
-          "collectibles": [
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            }
-          ],
-          "endCaption": "TODO: end caption"
+          "endCaption": {
+            "text": "You liked me enough to stick around.",
+            "draft": true
+          },
+          "skill": {
+            "text": "Staying power",
+            "draft": true
+          }
         }
       ]
     },
     {
       "id": 3,
-      "title": "TODO: world 3 title",
-      "companionsJoin": [
-        "rabbit"
-      ],
-      "companionsLeave": [
-        "rabbit"
-      ],
-      "outfitUnlock": {
-        "name": "wine",
-        "palette": {
-          "C": "#6e2233",
-          "c": "#4a1622",
-          "P": "#e8c26a",
-          "K": "#2a1f3d"
-        }
+      "title": "Chicago",
+      "outfit": {
+        "name": {
+          "text": "Chicago look",
+          "draft": true
+        },
+        "palette": "TODO: Claude Code picks a palette that fits the city; Andrew can change it"
       },
+      "companionsJoin": [
+        "rupert"
+      ],
       "levels": [
         {
           "id": "3-1",
-          "dark": false,
+          "setting": "Big, busy, colorful city. Crowds, food stalls, music, elevated train tracks as platforms. Warm colors after the gray.",
+          "startCaption": {
+            "text": "Chicago. Out in the open, together.",
+            "draft": true
+          },
+          "rabbitJoinCaption": {
+            "text": "Rupert. Mane first, questions later.",
+            "draft": true
+          },
           "collectibles": [
             {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
+              "type": "crowd",
+              "label": "The city",
+              "caption": {
+                "text": "Big city, big energy, everyone welcome. Finally.",
+                "draft": true
+              }
             }
           ],
-          "endCaption": "TODO: end caption"
-        },
-        {
-          "id": "3-2",
-          "dark": false,
-          "collectibles": [
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            }
-          ],
-          "endCaption": "TODO: end caption"
+          "skill": {
+            "text": "Freedom",
+            "draft": true
+          }
         }
       ]
     },
     {
       "id": 4,
-      "title": "TODO: world 4 title",
-      "companionsJoin": [
-        "son"
-      ],
-      "companionsLeave": [],
-      "outfitUnlock": {
-        "name": "midnight",
-        "palette": {
-          "C": "#1e2d55",
-          "c": "#131d38",
-          "P": "#d9d9e8",
-          "K": "#1a1a2e"
-        }
+      "title": "NYC Chinatown",
+      "outfit": {
+        "name": {
+          "text": "New York look",
+          "draft": true
+        },
+        "palette": "TODO: Claude Code picks a palette that fits the city; Andrew can change it"
       },
+      "companionsJoin": [
+        "isaac"
+      ],
+      "companionsLeave": [
+        "rupert"
+      ],
       "levels": [
         {
           "id": "4-1",
-          "dark": false,
+          "setting": "Henry Street. Strung lanterns, fire escapes, storefront signs, a dumpling shop across the street from home.",
+          "startCaption": {
+            "text": "New York. You finally made it.",
+            "draft": true
+          },
+          "isaacJoinCaption": {
+            "text": "Isaac. And Jennifer.",
+            "draft": true
+          },
           "collectibles": [
             {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
+              "type": "dumpling",
+              "label": "Dumpling shop",
+              "caption": {
+                "text": "Henry Street. Dumplings across the street, any time.",
+                "draft": true
+              }
             }
           ],
-          "endCaption": "TODO: end caption"
-        },
-        {
-          "id": "4-2",
-          "dark": false,
-          "collectibles": [
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            }
-          ],
-          "endCaption": "TODO: end caption"
+          "rabbitSendoffCaption": {
+            "text": "Rupert got the yard he deserved.",
+            "draft": true
+          },
+          "skill": {
+            "text": "A whole new kind of love",
+            "draft": true
+          }
         }
       ]
     },
     {
       "id": 5,
-      "title": "TODO: world 5 title",
-      "companionsJoin": [
-        "daughter"
-      ],
-      "companionsLeave": [],
-      "outfitUnlock": {
-        "name": "gold",
-        "palette": {
-          "C": "#2a262e",
-          "c": "#4a4552",
-          "P": "#f5d342",
-          "K": "#5c2a4a"
-        }
+      "title": "South America",
+      "outfit": {
+        "name": {
+          "text": "Travel look",
+          "draft": true
+        },
+        "palette": "TODO: Claude Code picks a palette that fits the city; Andrew can change it"
       },
+      "companionsJoin": [],
       "levels": [
         {
           "id": "5-1",
-          "dark": false,
-          "collectibles": [
+          "startCaption": {
+            "text": "One year. Seven countries. One baby.",
+            "draft": true
+          },
+          "segments": [
             {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
+              "country": "Mexico",
+              "setting": "Jungle cenote: a short underwater swim section. A corrupt cop blocks the path. When Jasmin reaches him, Andrew steps forward, pays the bribe, and grumbles; the cop steps aside. Jasmin does nothing.",
+              "stampCaption": {
+                "text": "Cenotes in the morning. I handled the mordida.",
+                "draft": true
+              }
             },
             {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
+              "country": "Panama",
+              "setting": "Green mountain valley (El Valle), then the Panama City skyline.",
+              "stampCaption": {
+                "text": "El Valle, then the big city.",
+                "draft": true
+              }
             },
             {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
+              "country": "Colombia",
+              "setting": "Short pass-through. Background swap only.",
+              "stampCaption": {
+                "text": "Colombia.",
+                "draft": true
+              }
             },
             {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
+              "country": "Ecuador: Galapagos",
+              "setting": "Most detailed segment. Giant tortoises as slow moving platforms, sea lions sunbathing on rocks, black iguanas. Tim (friend visiting from Seattle) appears as a cameo NPC.",
+              "stampCaption": {
+                "text": "Tortoises, sea lions, black iguanas, and Tim all the way from Seattle.",
+                "draft": true
+              }
             },
             {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
+              "country": "Chile",
+              "setting": "Valparaiso: a vertical climb up a hillside packed with colorful houses. A beautiful home at the top.",
+              "stampCaption": {
+                "text": "A house on a hill made of houses.",
+                "draft": true
+              }
+            },
+            {
+              "country": "Argentina",
+              "setting": "A cold, beautiful city and a beautiful apartment, but hazards everywhere: cold snaps, germ clouds, bad food (enemies are food and germs, never people). Ends in the wine mountains at a candlelit hut, where a short cutscene plays: Andrew proposes again.",
+              "stampCaption": {
+                "text": "Cold, sick, and badly fed. Still the best place to ask you again.",
+                "draft": true
+              },
+              "proposalCaption": {
+                "text": "I asked again. You said yes again.",
+                "draft": true
+              }
+            },
+            {
+              "country": "Brazil",
+              "setting": "Relief. Warm colors, beaches, food stalls, friendly crowds. Easiest segment.",
+              "stampCaption": {
+                "text": "Brazil. Warm again, fed again, saved.",
+                "draft": true
+              }
             }
           ],
-          "endCaption": "TODO: end caption"
+          "skill": {
+            "text": "Fearlessness",
+            "draft": true
+          }
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Brooklyn: Chocolate Factory",
+      "outfit": {
+        "name": {
+          "text": "Brooklyn look",
+          "draft": true
         },
+        "palette": "TODO: Claude Code picks a palette that fits the city; Andrew can change it"
+      },
+      "companionsJoin": [
+        "aya",
+        "nube"
+      ],
+      "levels": [
         {
-          "id": "5-2",
-          "dark": false,
+          "id": "6-1",
+          "setting": "Chocolate Factory Lofts: chocolate bar platforms, big loft windows. Isaac's school is part of the level: a backpack collectible and a school building in the background.",
+          "startCaption": {
+            "text": "Back in New York. Brooklyn this time.",
+            "draft": true
+          },
+          "ayaJoinCaption": {
+            "text": "Aya.",
+            "draft": true
+          },
+          "nubeJoinCaption": {
+            "text": "Nube. Part of the family.",
+            "draft": true
+          },
           "collectibles": [
             {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
-            },
-            {
-              "x": 0,
-              "y": 0,
-              "label": "TODO: label",
-              "caption": "TODO: caption"
+              "type": "backpack",
+              "label": "First day of school",
+              "caption": {
+                "text": "Isaac's first day of school.",
+                "draft": true
+              }
             }
           ],
-          "endCaption": "TODO: end caption"
+          "skill": {
+            "text": "A village",
+            "draft": true
+          }
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Brooklyn: The New Building",
+      "outfit": null,
+      "companionsJoin": [],
+      "levels": [
+        {
+          "id": "7-1",
+          "startCaption": {
+            "text": "New building. What could go wrong?",
+            "draft": true
+          },
+          "bossIntroCaption": {
+            "text": "Fire number three. Not on our watch.",
+            "draft": true
+          },
+          "bossDefeatedCaption": {
+            "text": "Out. Everyone is safe.",
+            "draft": true
+          },
+          "skill": {
+            "text": "Grace under fire",
+            "draft": true
+          }
         }
       ]
     }
   ],
-  "eggHatchesInto": "TODO: what the egg hatches into",
-  "rabbitSendoffCaption": "TODO: send-off caption",
+  "ending": {
+    "inventoryTitle": {
+      "text": "Everything you picked up along the way",
+      "draft": true
+    },
+    "fogCaption": {
+      "text": "Unexplored. That's the best part.",
+      "draft": true
+    },
+    "namePrompt": {
+      "text": "Name your next world.",
+      "draft": true
+    },
+    "jenniferCaption": {
+      "text": "Jennifer stays an egg. Some things are better before you know what they are.",
+      "draft": true
+    }
+  },
   "credits": [
-    "TODO: credits line 1",
-    "TODO: credits line 2",
-    "TODO: credits line 3"
+    {
+      "text": "Super Jasmin World 3: A New Magic",
+      "draft": true
+    },
+    {
+      "text": "Made for Jasmin, by Andrew.",
+      "draft": true
+    },
+    {
+      "text": "Starring Isaac, Aya, Nube, and Jennifer the egg.",
+      "draft": true
+    },
+    {
+      "text": "Special guest: Tim, all the way from Seattle.",
+      "draft": true
+    },
+    {
+      "text": "Rupert, happy in his new yard.",
+      "draft": true
+    },
+    {
+      "text": "Happy birthday.",
+      "draft": true
+    }
   ]
 }

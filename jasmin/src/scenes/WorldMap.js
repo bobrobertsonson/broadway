@@ -1,7 +1,7 @@
 import { controls } from "../controls.js";
 import { startMusic } from "../audio.js";
 import { ui, clean } from "../ui.js";
-import { game, allLevels, isUnlocked, writeSave, text } from "../state.js";
+import { game, allLevels, isUnlocked, writeSave, worldTitle, t } from "../state.js";
 import { charKey, animKey } from "../art.js";
 import { makeEnvironmentTextures } from "../tiles.js";
 
@@ -48,7 +48,7 @@ export class WorldMap extends Phaser.Scene {
   layout() {
     const { width, height } = this.scale;
     const n = this.entries.length;
-    const margin = 28;
+    const margin = 52;
     const usable = width - margin * 2;
     this.nodes = this.entries.map((e, i) => ({
       x: Math.round(margin + (usable * i) / Math.max(1, n - 1)),
@@ -79,10 +79,10 @@ export class WorldMap extends Phaser.Scene {
 
   refreshText() {
     const e = this.entries[this.idx];
-    const title = text(e.world.title).startsWith("TODO") ? `World ${e.world.id}` : e.world.title;
     const unlocked = game.save.outfitsUnlocked.filter((o) => game.outfits[o]);
     const outfitHint = unlocked.length > 1 ? `outfit: ${game.save.outfit} (${controls.isTouch ? "pen button" : "X"} to change)` : "";
-    ui.banner(title, `Level ${e.level.id}`, controls.isTouch ? "tap a level, then tap again to play" : "left/right to choose, jump to play", "top");
+    const skill = e.level.skill && game.save.done.includes(e.level.id) ? t(e.level.skill) : "";
+    ui.banner(worldTitle(e.world), skill, controls.isTouch ? "tap a city, then tap again to go" : "left/right to choose, jump to go", "top");
     ui.setHud(`<span class="item">${clean(outfitHint)}</span>`);
     controls.setActionVisible(unlocked.length > 1);
     this.labelNodes();
@@ -91,8 +91,11 @@ export class WorldMap extends Phaser.Scene {
   labelNodes() {
     const z = this.game.scale.zoom;
     const r = this.game.canvas.getBoundingClientRect();
+    const short = (w) => worldTitle(w).replace(/^Brooklyn: /, "").replace(/^NYC /, "");
     this.nodes.forEach((p, i) => {
-      ui.label(`n${i}`, this.entries[i].level.id, r.left + p.x * z, r.top + (p.y + 20) * z, i === this.idx ? "sel" : "plain");
+      const below = i % 2 === 0;
+      const sel = i === this.idx;
+      ui.label(`n${i}`, short(this.entries[i].world), r.left + p.x * z, r.top + (p.y + (below ? 22 : -34)) * z, sel ? "sel" : "plain small");
     });
   }
 
@@ -147,7 +150,8 @@ export class WorldMap extends Phaser.Scene {
     this.starting = true;
     await ui.fade(true, 300);
     ui.clearAll();
-    this.scene.start("Level", { id: this.entries[this.idx].level.id });
+    const e = this.entries[this.idx];
+    this.scene.start(e.level.intro ? "Intro" : "Level", { id: e.level.id });
     ui.fade(false, 300);
   }
 }

@@ -1,20 +1,26 @@
 import { controls } from "../controls.js";
 import { sfx, startMusic } from "../audio.js";
 import { ui, icon, clearIconCache } from "../ui.js";
-import { game, findLevel, nextLevelId, companionsFor, hasCharm, displayName, text, writeSave } from "../state.js";
+import { game, findLevel, nextLevelId, companionsAtStart, hasCharm, writeSave, arriveOutfit, worldTitle } from "../state.js";
+import { t, has, joinCaption } from "../content.js";
 import { MAPS } from "../maps.js";
 import { THEMES, makeEnvironmentTextures } from "../tiles.js";
+import { makePropTextures } from "../props.js";
 import { Player } from "../player.js";
 import { Trail } from "../companions.js";
-import { makeEnemyAnims, spawnEnemy, updateEnemy, squash } from "../enemies.js";
+import { makeEnemyAnims, spawnEnemy, updateEnemy, squash, ENEMY_CHARS } from "../enemies.js";
+import { Ghosts } from "../ghosts.js";
+import { Boss } from "../boss.js";
 import { charKey, animKey } from "../art.js";
 
 const T = 16;
 const TILE = { ground: 0, top: 1, brick: 2, oneway: 3 };
-const ENEMY_CHARS = "itla";
-const PEN_WIDTH = 4;     // tiles per pen line
+const PEN_WIDTH = 4;
 const PEN_PER_PICKUP = 3;
 const REVEAL_RADIUS = 84;
+const JOIN_MARKERS = { R: "rupert", I: "isaac", Y: "aya", N: "nube" };
+const HIDE_KEYS = ["prop-hide-snowbank", "prop-hide-shelter", "prop-hide-door"];
+const ITEM_KEYS = { record: "item-record", message: "item-message", crowd: "item-crowd", dumpling: "item-dumpling", backpack: "item-backpack", stamp: "item-stamp" };
 
 export class Level extends Phaser.Scene {
   constructor() { super("Level"); }
@@ -24,7 +30,8 @@ export class Level extends Phaser.Scene {
     const found = findLevel(data.id);
     this.world = found.world;
     this.level = found.level;
-    this.map = MAPS[data.id] || MAPS["1-1"];
+    this.mapId = data.map || data.id;
+    this.map = MAPS[this.mapId] || MAPS[Object.keys(MAPS)[0]];
   }
 
   create() {
@@ -32,33 +39,36 @@ export class Level extends Phaser.Scene {
     clearIconCache();
     controls.release();
     this.mode = "play";
+    this.cut = null;
     this.dark = !!this.level.dark;
-    const themeName = this.dark ? "night" : this.map.theme || "day";
-    this.theme = THEMES[themeName] || THEMES.day;
+    makePropTextures(this);
+    this.themeName = this.dark ? "minneapolisNight" : this.map.theme || "day";
+    this.theme = THEMES[this.themeName] || THEMES.day;
     makeEnvironmentTextures(this, this.theme);
     makeEnemyAnims(this);
     this.makeSpark();
 
+    this.newOutfit = arriveOutfit(this.world);
     this.parseMap();
     this.buildBackground();
     this.buildTiles();
 
-    const outline = this.dark;
     this.player = new Player(this, this.spawn.x, this.spawn.y, {
       outfit: game.save.outfit,
-      outline,
+      outline: this.dark,
       charm: hasCharm(this.world),
     });
+    this.player.ice = !!this.map.ice;
     this.checkpoint = { ...this.spawn };
+    this.lastSafe = { ...this.spawn };
 
-    const names = companionsFor(this.world);
-    this.trail = new Trail(this, this.player, names, outline);
-    this.applyCompanionMods(names);
-
+    this.trail = new Trail(this, this.player, companionsAtStart(this.world), this.dark);
     this.buildObjects();
+    this.applyCompanionMods();
 
     this.physics.add.collider(this.player.sprite, this.layer);
     this.physics.add.collider(this.player.sprite, this.penLines);
+    this.physics.add.collider(this.player.sprite, this.movers);
     this.physics.add.collider(this.enemies, this.layer);
     this.physics.add.overlap(this.player.sprite, this.enemies, (_p, e) => this.touchEnemy(e));
 
@@ -72,7 +82,6 @@ export class Level extends Phaser.Scene {
       ui.clearAll();
     });
     this.events.on("charm-used", () => this.refreshHud());
-
     this.input.on("pointerdown", () => { this.tapped = true; });
     ui.showHome(true);
     ui.onHome(() => this.leave());
@@ -80,7 +89,7 @@ export class Level extends Phaser.Scene {
     this.penUses = 0;
     this.score = 0;
     this.refreshHud();
-    startMusic(this.dark ? "night" : this.map.music || "level");
+    startMusic(this.map.music || "level");
     this.intro();
   }
 
@@ -94,7 +103,7 @@ export class Level extends Phaser.Scene {
     this.mapW = this.colsN * T;
     this.mapH = this.rowsN * T;
     this.spawn = { x: 3 * T, y: (this.rowsN - 3) * T };
-    this.horizon = (this.rowsN - 3) * T; // where the background hills sit
+    this.horizon = (this.rowsN - 3) * T;
     for (let y = 0; y < this.rowsN; y++)
       for (let x = 0; x < this.colsN; x++)
         if (this.cells[y][x] === "S") this.spawn = { x: x * T + 8, y: (y + 1) * T };
@@ -104,18 +113,22 @@ export class Level extends Phaser.Scene {
     return this.cells[y]?.[x] ?? ".";
   }
 
-  buildTiles() {
-    // Compose a tileset texture from the procedural tiles.
-    if (this.textures.exists("tileset")) this.textures.remove("tileset");
-    const ts = this.textures.createCanvas("tileset", T * 4, T);
+  composeTileset() {
+    const ts = this.textures.exists("tileset") ? this.textures.get("tileset") : this.textures.createCanvas("tileset", T * 4, T);
     const ctx = ts.getContext();
+    ctx.clearRect(0, 0, T * 4, T);
     ["tile-ground", "tile-ground-top", "tile-brick", "tile-oneway"].forEach((k, i) => {
       ctx.drawImage(this.textures.get(k).getSourceImage(), i * T, 0);
     });
     ts.refresh();
+  }
 
+  buildTiles() {
+    if (this.textures.exists("tileset")) this.textures.remove("tileset");
+    this.composeTileset();
     const data = [];
     this.hidden = [];
+    this.water = [];
     for (let y = 0; y < this.rowsN; y++) {
       const row = [];
       for (let x = 0; x < this.colsN; x++) {
@@ -125,6 +138,7 @@ export class Level extends Phaser.Scene {
         else if (c === "-") row.push(TILE.oneway);
         else {
           if (c === "h") this.hidden.push({ x, y, revealed: false });
+          if (c === "w") this.water.push({ x, y });
           row.push(-1);
         }
       }
@@ -134,33 +148,63 @@ export class Level extends Phaser.Scene {
     const tileset = map.addTilesetImage("tileset", "tileset", T, T, 0, 0);
     this.layer = map.createLayer(0, tileset, 0, 0).setDepth(2);
     this.layer.setCollision([TILE.ground, TILE.top, TILE.brick, TILE.oneway]);
-    this.layer.forEachTile((t) => {
-      if (t.index === TILE.oneway) t.setCollision(false, false, true, false);
+    this.layer.forEachTile((tile) => {
+      if (tile.index === TILE.oneway) tile.setCollision(false, false, true, false);
     });
+    this.waterImgs = this.water.map((w) => this.add.image(w.x * T, w.y * T, "tile-water").setOrigin(0).setDepth(12).setAlpha(0.75));
     this.physics.world.setBounds(0, -200, this.mapW, this.mapH + 400);
     this.physics.world.checkCollision.down = false;
   }
 
   buildBackground() {
     const sky = (this.sky = this.add.graphics().setScrollFactor(0).setDepth(-10));
+    this.far = this.add.tileSprite(0, 0, 10, 96, "bg-far").setOrigin(0, 1).setScrollFactor(0).setDepth(-9);
     this.hills = this.add.tileSprite(0, 0, 10, 64, "bg-hills").setOrigin(0, 1).setScrollFactor(0).setDepth(-8);
     this.clouds = this.add.tileSprite(0, 8, 10, 32, "bg-clouds").setOrigin(0, 0).setScrollFactor(0).setDepth(-9);
+    this.night = this.add.rectangle(0, 0, 10, 10, 0x0a0a28, 0).setOrigin(0).setScrollFactor(0).setDepth(30);
+    this.rain = [];
     this.layoutBackground();
-    this.drawSky = () => {
-      const { width, height } = this.scale;
-      const top = Phaser.Display.Color.HexStringToColor(this.theme.sky[0]).color;
-      const bot = Phaser.Display.Color.HexStringToColor(this.theme.sky[1]).color;
-      sky.clear();
-      sky.fillGradientStyle(top, top, bot, bot, 1);
-      sky.fillRect(0, 0, width, height);
-    };
     this.drawSky();
+  }
+
+  drawSky() {
+    const { width, height } = this.scale;
+    const top = Phaser.Display.Color.HexStringToColor(this.theme.sky[0]).color;
+    const bot = Phaser.Display.Color.HexStringToColor(this.theme.sky[1]).color;
+    this.sky.clear();
+    this.sky.fillGradientStyle(top, top, bot, bot, 1);
+    this.sky.fillRect(0, 0, width, height);
+    // London rain.
+    for (const r of this.rain) r.destroy();
+    this.rain = [];
+    if (this.theme.rain) {
+      for (let i = 0; i < 40; i++) {
+        this.rain.push(this.add.image(Math.random() * width, Math.random() * height, "fx-rain").setScrollFactor(0).setDepth(25).setAlpha(0.45));
+      }
+    }
   }
 
   layoutBackground() {
     const { width, height } = this.scale;
-    this.hills.setSize(width, 64).setPosition(0, height);
+    this.hills.setSize(width, 64);
+    this.far.setSize(width, 96);
     this.clouds.setSize(width, 32);
+    this.night.setSize(width, height);
+  }
+
+  // Switch sky, background and tiles to another theme (segments, picnic night).
+  setTheme(name) {
+    if (this.themeName === name || !THEMES[name]) return;
+    this.themeName = name;
+    this.theme = THEMES[name];
+    makeEnvironmentTextures(this, this.theme);
+    this.composeTileset();
+    this.hills.setTexture("bg-hills");
+    this.far.setTexture("bg-far");
+    this.clouds.setTexture("bg-clouds");
+    for (const w of this.waterImgs) w.setTexture("tile-water");
+    for (const h of this.hidden) if (h.revealed) this.layer.putTileAt(TILE.brick, h.x, h.y);
+    this.drawSky();
   }
 
   setCameraBounds() {
@@ -178,13 +222,18 @@ export class Level extends Phaser.Scene {
   buildObjects() {
     this.enemies = this.physics.add.group();
     this.penLines = this.physics.add.staticGroup();
+    this.movers = this.physics.add.group({ allowGravity: false, immovable: true });
     this.items = [];
     this.hatPickups = [];
     this.checkpoints = [];
-    let slot = 0;
-    const content = this.level.collectibles || [];
-    const placed = content.filter((c) => c.x || c.y);
-    const slotted = content.filter((c) => !c.x && !c.y);
+    this.joiners = [];
+    this.npcs = [];
+    this.triggers = [];
+    this.ghosts = null;
+    this.boss = null;
+    let slot = 0, stamp = 0;
+    const collectibles = this.level.collectibles || [];
+    const segments = this.level.segments || [];
 
     for (let y = 0; y < this.rowsN; y++) {
       for (let x = 0; x < this.colsN; x++) {
@@ -192,28 +241,57 @@ export class Level extends Phaser.Scene {
         const wx = x * T + 8, wy = (y + 1) * T;
         if (ENEMY_CHARS.includes(c)) spawnEnemy(this, this.enemies, c, wx, wy);
         else if (c === "*") {
-          const data = slotted[slot++];
-          if (data) this.addCollectible(wx, wy - 2, data);
+          const data = collectibles[slot++];
+          if (data) this.addCollectible(wx, wy - 2, ITEM_KEYS[data.type] || "item-collectible", t(data.label), t(data.caption));
+        } else if (c === "$") {
+          const seg = segments[stamp++];
+          if (seg) this.addCollectible(wx, wy - 2, "item-stamp", t(seg.country), t(seg.stampCaption));
         } else if (c === "H") this.hatPickups.push(this.addItem(wx, wy - 2, "item-hat", "hat"));
         else if (c === "p") this.addItem(wx, wy - 2, "item-pen", "pen");
         else if (c === "k") {
           const k = this.add.image(wx, wy, "prop-checkpoint-off").setOrigin(0.5, 1).setDepth(3);
           this.checkpoints.push({ sprite: k, x: wx, y: wy, on: false });
         } else if (c === "F") this.goal = this.add.image(wx, wy, "prop-goal").setOrigin(0.5, 1).setDepth(3);
-        else if (c === "D") this.door = this.add.image(wx, wy, "prop-door").setOrigin(0.5, 1).setDepth(3);
         else if (c === "G") this.gate = this.add.image(wx, wy, "prop-gate-open").setOrigin(0.5, 1).setDepth(11);
-        else if (c === "E") this.eggSpot = { x: wx, y: wy, done: false };
+        else if (c === "B") this.trigger(wx, wy, this.add.image(wx, wy, "prop-door").setOrigin(0.5, 1).setDepth(3), () => this.enterBoss(), "boss");
         else if (c === "r") {
-          const key = charKey("rabbit", { outline: this.dark });
-          this.otherRabbit = this.add.sprite(wx, wy, key, 0).setOrigin(0.5, 1).setDepth(8);
+          const key = charKey("rupert", { outline: this.dark });
+          this.otherRabbit = this.add.sprite(wx, wy, key, 0).setOrigin(0.5, 1).setDepth(8).setFlipX(true);
           this.otherRabbit.play(animKey(key, "idle"));
-          this.otherRabbit.setFlipX(true);
-        }
+        } else if (JOIN_MARKERS[c]) this.addJoiner(JOIN_MARKERS[c], wx, wy);
+        else if (c === "P") this.addPicnic(wx, wy);
+        else if (c === "g") (this.ghosts ||= new Ghosts(this)).addGhost(wx, wy);
+        else if (c === "b") (this.ghosts ||= new Ghosts(this)).addHide(wx, wy, HIDE_KEYS[(x + y) % HIDE_KEYS.length]);
+        else if (c === "X") {
+          this.add.image(wx, wy, "prop-exit").setOrigin(0.5, 1).setDepth(3);
+          this.exitX = wx;
+        } else if (c === "u" || c === "o") this.addMover(c, x * T, y * T);
+        else if (c === "L" || c === "Q") {
+          const key = c === "L" ? "deco-sealion" : "deco-iguana";
+          this.ensureAnim(key, 2, 2);
+          this.add.sprite(wx, wy, `${key}-0`).setOrigin(0.5, 1).setDepth(4).play(key);
+        } else if (c === "T") this.addTim(wx, wy);
+        else if (c === "c") this.addCop(wx, wy);
+        else if (c === "C") this.addHut(wx, wy);
+        else if (c === "Z") this.bossAt = { x: wx, y: wy };
+        else if (c === "V") (this.valveSpots ||= []).push({ x: wx, y: wy });
       }
     }
-    for (const c of placed) this.addCollectible(c.x * T + 8, (c.y + 1) * T - 2, c);
-    if (slot < slotted.length) console.warn(`${this.levelId}: ${slotted.length - slot} collectibles have no * slot in the map`);
-    this.collectTotal = this.items.filter((i) => i.type === "collectible").length;
+    if (this.ghosts && this.exitX) this.ghosts.setExit(this.exitX);
+    if (this.bossAt) {
+      this.boss = new Boss(this, this.bossAt.x, this.bossAt.y);
+      for (const v of this.valveSpots || []) this.boss.addValve(v.x, v.y);
+    }
+    if (slot < collectibles.length) console.warn(`${this.levelId}: ${collectibles.length - slot} collectibles have no * slot`);
+  }
+
+  ensureAnim(key, n, rate) {
+    if (this.anims.exists(key)) return;
+    this.anims.create({ key, frames: [...Array(n).keys()].map((i) => ({ key: `${key}-${i}` })), frameRate: rate, repeat: -1 });
+  }
+
+  trigger(x, y, sprite, fn, id) {
+    this.triggers.push({ x, y, sprite, fn, id, done: false });
   }
 
   addItem(x, y, key, type) {
@@ -224,9 +302,62 @@ export class Level extends Phaser.Scene {
     return it;
   }
 
-  addCollectible(x, y, data) {
-    const it = this.addItem(x, y, "item-collectible", "collectible");
-    it.data = data;
+  addCollectible(x, y, key, label, caption) {
+    const it = this.addItem(x, y, key, "collectible");
+    it.label = label;
+    it.caption = caption;
+  }
+
+  addMover(c, x, y) {
+    const key = c === "u" ? "plat-bus" : "plat-tortoise-0";
+    const m = this.movers.create(x, y, key).setOrigin(0, 0).setDepth(4);
+    m.body.setAllowGravity(false).setImmovable(true);
+    m.body.checkCollision.down = false;
+    m.body.checkCollision.left = false;
+    m.body.checkCollision.right = false;
+    if (c === "o") {
+      this.ensureAnim("plat-tortoise", 2, 2);
+      m.play("plat-tortoise");
+      m.body.setSize(32, 10).setOffset(0, 0);
+    } else m.body.setSize(48, 8).setOffset(0, 0);
+    m.home = x;
+    m.range = 4 * T;
+    m.speed = c === "u" ? 34 : 18;
+    m.body.setVelocityX(m.speed);
+  }
+
+  addJoiner(name, x, y) {
+    const key = charKey(name, { outline: this.dark });
+    const s = this.add.sprite(x, y, key, 0).setOrigin(0.5, 1).setDepth(7).setFlipX(true);
+    s.play(animKey(key, "idle"));
+    this.joiners.push({ name, x, y, sprite: s, done: false });
+  }
+
+  addPicnic(x, y) {
+    this.add.image(x, y, "prop-picnic").setOrigin(0.5, 1).setDepth(3);
+    const key = charKey("andrew", { outline: this.dark });
+    const s = this.add.sprite(x + 10, y, key, 0).setOrigin(0.5, 1).setDepth(7).setFlipX(true);
+    s.play(animKey(key, "idle"));
+    this.picnic = { x, y, sprite: s, done: false };
+  }
+
+  addTim(x, y) {
+    const key = charKey("tim", { outline: this.dark });
+    const s = this.add.sprite(x, y, key, 0).setOrigin(0.5, 1).setDepth(7).setFlipX(true);
+    s.play(animKey(key, "idle"));
+    this.npcs.push({ kind: "tim", sprite: s, key, waved: false });
+  }
+
+  addCop(x, y) {
+    const s = this.add.sprite(x, y, "npc-cop-0").setOrigin(0.5, 1).setDepth(7).setFlipX(true);
+    this.cop = { x, y, sprite: s, done: false };
+  }
+
+  addHut(x, y) {
+    const hut = this.add.image(x, y, "prop-hut").setOrigin(0.5, 1).setDepth(3);
+    this.ensureAnim("prop-candle", 2, 5);
+    for (const dx of [-30, -24, 24, 30]) this.add.sprite(x + dx, y, "prop-candle-0").setOrigin(0.5, 1).setDepth(4).play("prop-candle");
+    this.hut = { x, y, sprite: hut, done: false };
   }
 
   makeSpark() {
@@ -250,11 +381,37 @@ export class Level extends Phaser.Scene {
 
   // ---------- companions ----------
 
-  applyCompanionMods(names) {
-    const m = this.player.mods;
-    if (names.includes("rabbit")) m.jump = Math.max(m.jump, 1.15);
-    if (names.includes("daughter")) m.speed = 0.85;
-    this.double = names.includes("daughter");
+  applyCompanionMods() {
+    const m = this.player.mods, names = this.trail.names();
+    m.jump = names.includes("rupert") ? 1.15 : 1;
+    m.speed = names.includes("aya") && !names.includes("nube") ? 0.85 : 1;
+    this.double = names.includes("aya");
+  }
+
+  join(name, x, y) {
+    this.trail.add(name, x, y);
+    this.applyCompanionMods();
+    const cap = joinCaption(this.level, name);
+    if (has(cap)) ui.caption("", t(cap), 3800);
+    sfx.checkpoint();
+  }
+
+  // Ghosts caught them together: Andrew goes back to wait at the last checkpoint.
+  sendAndrewBack() {
+    const m = this.trail.get("andrew");
+    if (!m) return;
+    this.trail.detach("andrew");
+    m.scripted = true;
+    const cp = this.checkpoint;
+    this.tweens.add({
+      targets: m.sprite, alpha: 0, duration: 400,
+      onComplete: () => {
+        m.sprite.setPosition(cp.x + 12, cp.y).setFlipX(false);
+        this.trail.playOn(m, "idle");
+        this.tweens.add({ targets: m.sprite, alpha: 1, duration: 400 });
+        this.andrewWaiting = m;
+      },
+    });
   }
 
   // ---------- loop ----------
@@ -266,17 +423,25 @@ export class Level extends Phaser.Scene {
 
     const p = this.player;
     const andrewReady = this.trail.isNext("andrew");
-    p.update(dt, { andrewReady });
+    p.update(dt, { andrewReady, inWater: this.inWater() });
     this.trail.update(dt);
     for (const e of this.enemies.getChildren()) updateEnemy(e, dt, this.layer);
-
-    const cam = this.cameras.main;
-    this.hills.tilePositionX = cam.scrollX * 0.3;
-    this.hills.y = Math.round(this.horizon - cam.scrollY * 0.85 + 8);
-    this.clouds.tilePositionX = this.cameras.main.scrollX * 0.12 + this.time.now * 0.002;
-
+    for (const m of this.movers.getChildren()) {
+      if (m.x > m.home + m.range) m.body.setVelocityX(-m.speed);
+      if (m.x < m.home - m.range) m.body.setVelocityX(m.speed);
+      m.setFlipX(m.body.velocity.x < 0 && m.texture.key !== "plat-bus");
+    }
+    this.ghosts?.update(dt);
+    this.boss?.update(dt);
+    this.updateScenery(dt);
     this.updateLabels(andrewReady);
 
+    if (this.cut) {
+      this.cut.age += dt;
+      if (this.cut.age > 0.5 && (this.tapped || controls.confirmed())) this.endCut();
+      this.tapped = false;
+      return;
+    }
     if (this.mode === "await") {
       if (controls.confirmed() || this.tapped) { this.mode = "done"; this.onConfirm?.(); }
       this.tapped = false;
@@ -285,7 +450,10 @@ export class Level extends Phaser.Scene {
     this.tapped = false;
     if (this.mode !== "play") return;
 
-    if (p.sprite.y > this.mapH + 24 && !p.dead) p.die();
+    if (p.onGround && !p.sprite.body.touching.down && !p.dead) this.lastSafe = { x: p.sprite.x, y: p.sprite.y };
+    if (p.sprite.y > this.mapH + 24 && !p.dead) {
+      if (!this.cloudCatch()) p.die();
+    }
     if (p.dead) {
       if (!this.respawning) this.respawnSoon();
       return;
@@ -298,19 +466,69 @@ export class Level extends Phaser.Scene {
     this.checkTriggers();
   }
 
+  inWater() {
+    if (!this.water.length) return false;
+    const s = this.player.sprite;
+    return this.cell(Math.floor(s.x / T), Math.floor((s.y - 10) / T)) === "w";
+  }
+
+  updateScenery(dt) {
+    const cam = this.cameras.main, { height } = this.scale;
+    this.hills.tilePositionX = cam.scrollX * 0.3;
+    this.far.tilePositionX = cam.scrollX * 0.15;
+    this.hills.y = Math.round(this.horizon - cam.scrollY * 0.85 + 8);
+    this.far.y = Math.round(this.horizon - cam.scrollY * 0.9 - 10);
+    this.clouds.tilePositionX = cam.scrollX * 0.08 + this.time.now * 0.002;
+    for (const r of this.rain) {
+      r.y += 260 * dt;
+      r.x -= 40 * dt;
+      if (r.y > height) { r.y = -6; r.x = Math.random() * this.scale.width; }
+    }
+    // South America: palette changes per country.
+    const segs = this.map.segments;
+    if (segs) {
+      const x = this.player.sprite.x / T;
+      let seg = segs[0];
+      for (const s of segs) if (x >= s.col) seg = s;
+      if (seg && seg.theme !== this.themeName) {
+        this.setTheme(seg.theme);
+        if (this.seenCountry !== seg.country) {
+          this.seenCountry = seg.country;
+          ui.banner(seg.country, "", "", "top");
+          this.time.delayedCall(1800, () => ui.hideBanner());
+        }
+      }
+    }
+    // Tim waves when Jasmin passes.
+    for (const n of this.npcs) {
+      if (n.kind === "tim" && !n.waved && Math.abs(n.sprite.x - this.player.sprite.x) < 48) {
+        n.waved = true;
+        n.sprite.play(animKey(n.key, "wave"));
+        this.time.delayedCall(2600, () => n.sprite.play(animKey(n.key, "idle")));
+      }
+    }
+    // Jennifer glows when a hidden block is near Isaac.
+    const isaac = this.trail.get("isaac");
+    if (isaac && this.hidden.some((h) => !h.revealed && Math.abs(h.x * T - isaac.sprite.x) < 140)) {
+      if (!this.glow) this.glow = this.add.image(0, 0, "fx-glow").setDepth(11).setBlendMode(Phaser.BlendModes.ADD);
+      this.glow.setPosition(isaac.sprite.x + (isaac.sprite.flipX ? -9 : 9), isaac.sprite.y - 8);
+      this.glow.setAlpha(0.5 + Math.sin(this.time.now / 160) * 0.3).setVisible(true);
+    } else if (this.glow) this.glow.setVisible(false);
+  }
+
   updateLabels(andrewReady) {
     const cam = this.cameras.main, z = cam.zoom * this.game.scale.zoom;
     const canvas = this.game.canvas.getBoundingClientRect();
     const toScreen = (x, y) => [canvas.left + (x - cam.worldView.x) * z, canvas.top + (y - cam.worldView.y) * z];
-    if (this.door) {
-      const [sx, sy] = toScreen(this.door.x, this.door.y - this.door.height - 2);
-      ui.label("door", "next level", sx, sy);
-    }
     const andrew = this.trail.get("andrew");
     if (andrew && andrewReady && this.mode === "play" && !this.player.dead) {
       const [sx, sy] = toScreen(andrew.sprite.x, andrew.sprite.y - 33);
       ui.label("boost", "boost!", sx, sy, "plain");
     } else ui.label("boost", "", -999, -999, "plain");
+    if (this.speech) {
+      const [sx, sy] = toScreen(this.speech.sprite.x, this.speech.sprite.y - this.speech.sprite.height - 2);
+      ui.label("speech", this.speech.text, sx, sy);
+    } else ui.label("speech", "", -999, -999);
   }
 
   // ---------- interactions ----------
@@ -325,8 +543,13 @@ export class Level extends Phaser.Scene {
       p.cut = !controls.jump;
       return;
     }
+    this.hurtPlayer(e.x);
+  }
+
+  hurtPlayer(fromX) {
+    const p = this.player;
     const hadHat = p.hasHat;
-    const r = p.hurt(e.x);
+    const r = p.hurt(fromX);
     if (r === "hat" && hadHat) this.dropHat();
     this.refreshHud();
   }
@@ -336,6 +559,30 @@ export class Level extends Phaser.Scene {
     const h = this.add.image(s.x, s.y - 30, "item-hat").setDepth(12);
     this.tweens.add({ targets: h, x: h.x - this.player.facing * 30, y: h.y - 20, angle: -120, duration: 300, ease: "Quad.out" });
     this.tweens.add({ targets: h, y: h.y + 80, alpha: 0, delay: 300, duration: 600, ease: "Quad.in", onComplete: () => h.destroy() });
+  }
+
+  // Nube's cloud catches one pit fall per level.
+  cloudCatch() {
+    if (!this.trail.has("nube") || this.cloudUsed) return false;
+    this.cloudUsed = true;
+    const p = this.player, s = p.sprite;
+    const to = this.lastSafe;
+    const cloud = this.add.image(s.x, this.mapH, "fx-cloud").setDepth(13);
+    p.locked = true;
+    s.body.setVelocity(0, 0).setAllowGravity(false);
+    this.tweens.add({ targets: [s, cloud], x: to.x, duration: 900, ease: "Sine.inOut" });
+    this.tweens.add({ targets: s, y: to.y - 4, duration: 900, ease: "Sine.inOut" });
+    this.tweens.add({
+      targets: cloud, y: to.y + 6, duration: 900, ease: "Sine.inOut",
+      onComplete: () => {
+        s.body.setAllowGravity(true);
+        p.locked = false;
+        this.tweens.add({ targets: cloud, alpha: 0, y: cloud.y - 30, duration: 600, onComplete: () => cloud.destroy() });
+      },
+    });
+    ui.caption("Nube's cloud", "Caught you. Once per level.", 2400);
+    sfx.hat();
+    return true;
   }
 
   checkItems() {
@@ -350,17 +597,20 @@ export class Level extends Phaser.Scene {
       if (it.type === "collectible") {
         this.score += this.double ? 2 : 1;
         sfx.collect();
-        ui.caption(text(it.data.label), text(it.data.caption));
+        ui.caption(it.label, it.caption);
       } else if (it.type === "hat") {
         if (!this.player.hasHat) this.player.setHat(true);
         sfx.hat();
-        if (!this.hatTaught) { this.hatTaught = true; ui.caption("witch hat", "Hold jump while falling to glide", 3000); }
+        if (!this.hatTaught) {
+          this.hatTaught = true;
+          ui.caption("witch hat", this.player.cloaked ? "Hold jump to glide (not while cloaked)" : "Hold jump while falling to glide", 3000);
+        }
       } else if (it.type === "pen") {
         this.penUses += PEN_PER_PICKUP;
         sfx.hat();
         if (!this.penTaught) {
           this.penTaught = true;
-          ui.caption("pen", controls.isTouch ? "Tap the pen button to draw a platform" : "Press X to draw a platform", 3200);
+          ui.caption("pen", controls.isTouch ? "Tap the pen button to write a platform" : "Press X to write a platform", 3200);
         }
       }
       this.refreshHud();
@@ -379,6 +629,10 @@ export class Level extends Phaser.Scene {
       seg.setAlpha(0);
       this.tweens.add({ targets: seg, alpha: 1, duration: 80, delay: i * 50 });
     }
+    if (!p.cloaked) {
+      p.forcedAnim = "write";
+      this.time.delayedCall(350, () => { if (p.forcedAnim === "write") p.forcedAnim = null; });
+    }
     sfx.pen();
     this.refreshHud();
   }
@@ -396,12 +650,12 @@ export class Level extends Phaser.Scene {
   }
 
   revealHidden() {
-    const son = this.trail.get("son");
-    if (!son || !this.hidden.length) return;
+    const isaac = this.trail.get("isaac");
+    if (!isaac || !this.hidden.length) return;
     for (const h of this.hidden) {
       if (h.revealed) continue;
       const cx = h.x * T + 8, cy = h.y * T + 8;
-      if (Math.hypot(son.sprite.x - cx, son.sprite.y - 8 - cy) > REVEAL_RADIUS) continue;
+      if (Math.hypot(isaac.sprite.x - cx, isaac.sprite.y - 8 - cy) > REVEAL_RADIUS) continue;
       h.revealed = true;
       this.layer.putTileAt(TILE.brick, h.x, h.y);
       this.puff(cx, cy, 0xd6b8ff, 8);
@@ -410,11 +664,29 @@ export class Level extends Phaser.Scene {
   }
 
   checkTriggers() {
-    const s = this.player.sprite;
-    if (this.goal && Math.abs(s.x - this.goal.x) < 10 && s.y > this.goal.y - 48) return this.reachGoal();
-    if (this.gate && s.x > this.gate.x - 36) return this.sendoff();
-    if (this.eggSpot && !this.eggSpot.done && s.x > this.eggSpot.x) this.hatchEgg();
-    if (this.door && Math.abs(s.x - this.door.x) < 10 && this.player.onGround) return this.enterDoor();
+    const s = this.player.sprite, x = s.x;
+    if (this.andrewWaiting && Math.abs(this.andrewWaiting.sprite.x - x) < 18 && Math.abs(this.andrewWaiting.sprite.y - s.y) < 20) {
+      const m = this.andrewWaiting;
+      this.andrewWaiting = null;
+      m.scripted = false;
+      this.trail.rejoin("andrew");
+      this.trail.reset();
+      sfx.checkpoint();
+    }
+    for (const j of this.joiners) {
+      if (j.done || x < j.x - 24) continue;
+      j.done = true;
+      j.sprite.destroy();
+      this.join(j.name, j.x, j.y);
+    }
+    if (this.picnic && !this.picnic.done && x > this.picnic.x - 40) return this.picnicScene();
+    if (this.cop && !this.cop.done && x > this.cop.x - 44) return this.copScene();
+    if (this.hut && !this.hut.done && x > this.hut.x - 30) return this.proposalScene();
+    for (const tr of this.triggers) {
+      if (!tr.done && Math.abs(x - tr.x) < 10 && this.player.onGround) { tr.done = true; return tr.fn(); }
+    }
+    if (this.goal && Math.abs(x - this.goal.x) < 10 && s.y > this.goal.y - 48) return this.reachGoal();
+    if (this.gate && x > this.gate.x - 36) return this.sendoff();
   }
 
   respawnSoon() {
@@ -438,6 +710,7 @@ export class Level extends Phaser.Scene {
     parts.push(`<span class="item ${p.hasHat ? "" : "dim"}">${icon(g, "item-hat", 2)}</span>`);
     if (this.penUses > 0 || this.penTaught) parts.push(`<span class="item">${icon(g, "item-pen", 2)}${this.penUses}</span>`);
     if (hasCharm(this.world)) parts.push(`<span class="item ${p.charmReady ? "" : "dim"}">${icon(g, "item-charm", 2)}</span>`);
+    if (this.boss) parts.push(`<span class="item">${icon(g, "prop-valve-1", 1)}${this.boss.opened}/3</span>`);
     ui.setHud(parts.join(""));
     controls.setActionVisible(this.penUses > 0);
   }
@@ -445,14 +718,12 @@ export class Level extends Phaser.Scene {
   // ---------- flow ----------
 
   intro() {
-    const w = this.world;
-    ui.banner(text(w.title), `Level ${this.levelId}`);
-    this.time.delayedCall(1600, () => ui.hideBanner());
-    const firstOfWorld = w.levels[0].id === this.levelId;
-    if (firstOfWorld && (w.companionsJoin || []).length) {
-      const who = w.companionsJoin.map(displayName).join(" and ");
-      this.time.delayedCall(1900, () => ui.caption("new friend", `${who} joined you`, 3200));
-    }
+    const sub = has(this.level.startCaption) ? t(this.level.startCaption) : "";
+    ui.banner(worldTitle(this.world), sub);
+    this.time.delayedCall(2600, () => ui.hideBanner());
+    if (this.newOutfit) this.time.delayedCall(2900, () => ui.caption("new outfit", this.newOutfit, 2600));
+    if (this.boss) this.time.delayedCall(800, () => this.boss.intro());
+    if (this.levelId === "3-1" && this.trail.has("andrew") && !this.boss) this.pairedWalk();
   }
 
   freeze() {
@@ -461,6 +732,181 @@ export class Level extends Phaser.Scene {
     p.locked = true;
     p.sprite.body.setVelocityX(0);
     controls.setActionVisible(false);
+  }
+
+  unfreeze() {
+    this.mode = "play";
+    this.player.locked = false;
+    this.player.forcedAnim = null;
+    this.speech = null;
+    this.refreshHud();
+  }
+
+  // Skippable cutscene. finish() must leave everything in its end state.
+  startCut(finish) {
+    this.freeze();
+    this.cut = { finish, timers: [], tweens: [], age: 0 };
+    ui.label("skip", controls.isTouch ? "tap to skip" : "jump to skip", window.innerWidth - 70, window.innerHeight - 8, "plain");
+  }
+
+  cutDelay(ms, fn) {
+    if (this.cut) this.cut.timers.push(this.time.delayedCall(ms, fn));
+  }
+
+  cutTween(cfg) {
+    const tw = this.tweens.add(cfg);
+    this.cut?.tweens.push(tw);
+    return tw;
+  }
+
+  endCut() {
+    const c = this.cut;
+    if (!c) return;
+    this.cut = null;
+    for (const tm of c.timers) tm.remove(false);
+    for (const tw of c.tweens) tw.stop();
+    ui.label("skip", "", -999, -999);
+    c.finish();
+  }
+
+  // Walk a scripted character to x at a given speed (inside a cutscene).
+  walkTo(sprite, key, x, speed = 70, anim = "run") {
+    sprite.setFlipX(x < sprite.x);
+    sprite.play(animKey(key, anim), true);
+    return new Promise((res) => {
+      this.cutTween({
+        targets: sprite, x, duration: Math.max(80, (Math.abs(x - sprite.x) / speed) * 1000),
+        onComplete: () => { sprite.play(animKey(key, anim === "hop" ? "idle" : "idle")); res(); },
+      });
+    });
+  }
+
+  // Chicago opens with Jasmin and Andrew walking hand in hand.
+  pairedWalk() {
+    const p = this.player, s = p.sprite;
+    const m = this.trail.detach("andrew");
+    m.scripted = true;
+    const endX = s.x + 110;
+    const finish = () => {
+      m.sprite.setPosition(endX - 11, s.y);
+      s.x = endX;
+      s.body.reset(endX, s.y);
+      m.scripted = false;
+      this.trail.rejoin("andrew");
+      this.trail.reset();
+      this.unfreeze();
+    };
+    this.startCut(finish);
+    m.sprite.setPosition(s.x - 11, s.y).setDepth(9).setFlipX(false);
+    p.forcedAnim = "run";
+    m.sprite.play(animKey(m.key, "run"));
+    this.cutTween({ targets: [s, m.sprite], x: `+=110`, duration: 4200, onUpdate: () => s.body.reset(s.x, s.y) });
+    this.cutDelay(4400, () => this.endCut());
+  }
+
+  // Minneapolis: night picnic by the lake, Andrew joins, the level turns to night.
+  picnicScene() {
+    const pc = this.picnic;
+    pc.done = true;
+    const p = this.player;
+    const finish = () => {
+      this.night.setAlpha(0);
+      this.setTheme("minneapolisNight");
+      this.dark = true;
+      p.setOutline(true);
+      this.trail.setOutline(true);
+      pc.sprite.destroy();
+      if (!this.trail.has("andrew")) this.join("andrew", p.sprite.x - 14, p.sprite.y);
+      this.checkpoint = { x: pc.x, y: pc.y };
+      startMusic("night");
+      this.unfreeze();
+    };
+    this.startCut(finish);
+    this.cutTween({ targets: this.night, alpha: 0.85, duration: 900, yoyo: true, hold: 200 });
+    this.cutDelay(1000, () => {
+      this.setTheme("minneapolisNight");
+      p.setOutline(true);
+      this.trail.setOutline(true);
+      const key = charKey("andrew", { outline: true });
+      pc.sprite.setTexture(key, 0).play(animKey(key, "idle"));
+      ui.caption("", t(this.level.andrewJoinScene?.caption), 0);
+    });
+    this.cutDelay(2600, () => {
+      const key = charKey("andrew", { outline: true });
+      this.cutTween({ targets: pc.sprite, y: pc.y - 8, duration: 180, yoyo: true });
+      this.cutDelay(500, () => this.walkTo(pc.sprite, key, p.sprite.x + 16, 50));
+    });
+    this.cutDelay(7500, () => { ui.hideCaption(); this.endCut(); });
+  }
+
+  // Mexico: Andrew deals with the cop. Short and automatic.
+  copScene() {
+    const cop = this.cop;
+    cop.done = true;
+    const m = this.trail.get("andrew") ? this.trail.detach("andrew") : null;
+    const finish = () => {
+      cop.sprite.setVisible(false);
+      if (m) { m.scripted = false; m.sprite.setAlpha(1); this.trail.rejoin("andrew"); this.trail.reset(); }
+      this.unfreeze();
+    };
+    this.startCut(finish);
+    if (!m) { this.cutDelay(600, () => this.endCut()); return; }
+    m.scripted = true;
+    m.sprite.setDepth(11);
+    this.walkTo(m.sprite, m.key, cop.x - 14, 90).then(() => {
+      cop.sprite.setTexture("npc-cop-1");
+      this.speech = { sprite: m.sprite, text: "grumble grumble" };
+      sfx.collect();
+      this.cutDelay(1600, () => {
+        this.speech = null;
+        cop.sprite.setTexture("npc-cop-0");
+        this.cutTween({ targets: cop.sprite, x: cop.x + 26, alpha: 0, duration: 900 });
+        this.cutDelay(1100, () => this.endCut());
+      });
+    });
+  }
+
+  // Argentina: the candlelit hut, Andrew proposes again.
+  proposalScene() {
+    const hut = this.hut;
+    hut.done = true;
+    const p = this.player, s = p.sprite;
+    const m = this.trail.get("andrew") ? this.trail.detach("andrew") : null;
+    const hearts = [];
+    const finish = () => {
+      for (const h of hearts) h.destroy();
+      this.night.setAlpha(0);
+      ui.hideCaption();
+      if (m) { m.scripted = false; m.sprite.setY(s.y); this.trail.rejoin("andrew"); this.trail.reset(); }
+      startMusic(this.map.music || "level");
+      this.unfreeze();
+    };
+    this.startCut(finish);
+    startMusic("sendoff");
+    this.cutTween({ targets: this.night, alpha: 0.5, duration: 1200 });
+    p.sprite.setFlipX(false);
+    if (m) {
+      m.scripted = true;
+      m.sprite.setDepth(11);
+      this.walkTo(m.sprite, m.key, s.x + 18, 60).then(() => {
+        m.sprite.setFlipX(true);
+        this.cutTween({ targets: m.sprite, y: s.y + 3, duration: 400 });
+        sfx.win();
+        for (let i = 0; i < 8; i++) {
+          this.cutDelay(300 + i * 350, () => {
+            const h = this.add.image(s.x + 9 + Phaser.Math.Between(-10, 10), s.y - 30, "fx-heart").setDepth(20);
+            hearts.push(h);
+            this.cutTween({ targets: h, y: h.y - 40, alpha: 0, duration: 1600 });
+          });
+        }
+        this.cutDelay(800, () => ui.caption("", t(this.hut && this.segmentField("Argentina", "proposalCaption")), 0));
+        this.cutDelay(8200, () => this.endCut());
+      });
+    } else this.cutDelay(2000, () => this.endCut());
+  }
+
+  segmentField(country, field) {
+    return (this.level.segments || []).find((sg) => sg.country === country)?.[field];
   }
 
   reachGoal() {
@@ -475,22 +921,27 @@ export class Level extends Phaser.Scene {
     const save = game.save;
     if (!save.done.includes(id)) save.done.push(id);
     save.lastLevel = id;
-    const lastOfWorld = this.world.levels[this.world.levels.length - 1].id === id;
-    let sub = text(this.level.endCaption);
-    if (lastOfWorld) {
-      const u = this.world.outfitUnlock;
-      if (u?.name && !save.outfitsUnlocked.includes(u.name)) {
-        save.outfitsUnlocked.push(u.name);
-        sub += `  New outfit: ${u.name}`;
-      }
-    }
     writeSave();
     ui.hideCaption();
-    ui.banner(lastOfWorld ? "World complete" : "Level complete", sub, controls.isTouch ? "tap to continue" : "press jump to continue");
+    const sub = has(this.level.endCaption) ? t(this.level.endCaption) : "";
+    ui.banner(`${worldTitle(this.world)} complete`, sub, controls.isTouch ? "tap to continue" : "press jump to continue");
     this.time.delayedCall(600, () => {
       this.mode = "await";
       this.onConfirm = () => this.goTo("WorldMap", { select: nextLevelId(id) || id });
     });
+  }
+
+  enterBoss() {
+    this.freeze();
+    sfx.gate();
+    this.time.delayedCall(500, () => this.goTo("Level", { id: this.levelId, map: "7-boss" }));
+  }
+
+  finishGame() {
+    const save = game.save;
+    if (!save.done.includes(this.levelId)) save.done.push(this.levelId);
+    writeSave();
+    this.goTo("Ending", {});
   }
 
   leave() {
@@ -506,89 +957,48 @@ export class Level extends Phaser.Scene {
     ui.fade(false, 300);
   }
 
-  // The rabbit send-off at the end of World 3.
+  // The rabbit send-off at the end of NYC Chinatown.
   sendoff() {
-    this.gate.triggered = true;
     const gate = this.gate;
     this.gate = null;
-    this.freeze();
-    startMusic("sendoff");
     const p = this.player;
-    this.time.delayedCall(900, () => {
-      const rabbit = this.trail.detach("rabbit");
-      if (!rabbit) return this.finishSendoff(gate);
-      const key = charKey("rabbit", { outline: this.dark });
-      rabbit.play(animKey(key, "hop"));
-      rabbit.setFlipX(false);
-      rabbit.setDepth(12);
-      const past = gate.x + 30;
-      const dest = this.otherRabbit ? this.otherRabbit.x - 22 : gate.x + 90;
-      this.tweens.chain({
-        targets: rabbit,
-        tweens: [
-          { x: past, duration: Math.max(600, (past - rabbit.x) * 12), ease: "Linear" },
-          { x: past, duration: 1400, onStart: () => { rabbit.play(animKey(key, "idle")); rabbit.setFlipX(true); } },
-          { x: dest, duration: Math.max(700, (dest - past) * 14), onStart: () => { rabbit.setFlipX(false); rabbit.play(animKey(key, "hop")); } },
-        ],
-        onComplete: () => {
-          rabbit.play(animKey(key, "idle"));
-          this.finishSendoff(gate);
-        },
+    startMusic("sendoff");
+    const m = this.trail.get("rupert") ? this.trail.detach("rupert") : null;
+    const rabbit = m?.sprite;
+    const past = gate.x + 30;
+    const dest = this.otherRabbit ? this.otherRabbit.x - 22 : gate.x + 90;
+    const finish = () => {
+      if (rabbit) { rabbit.setPosition(dest, gate.y).setFlipX(false); rabbit.play(animKey(m.key, "idle")); }
+      gate.setTexture("prop-gate-closed");
+      p.forcedAnim = null;
+      this.trail.remove("rupert");
+      this.time.delayedCall(10, () => {
+        ui.caption("keepsake", "Rupert's charm: one extra high jump per level, in mid air", 4200);
+        this.time.delayedCall(2600, () => this.complete());
       });
-      this.time.delayedCall(Math.max(600, (past - rabbit.x) * 12) + 2200, () => {
+    };
+    this.startCut(finish);
+    if (!rabbit) { this.cutDelay(1000, () => this.endCut()); return; }
+    m.scripted = true;
+    rabbit.setDepth(12);
+    this.cutDelay(900, () => {
+      rabbit.play(animKey(m.key, "hop"));
+      rabbit.setFlipX(false);
+      const d1 = Math.max(600, (past - rabbit.x) * 12);
+      this.cutTween({ targets: rabbit, x: past, duration: d1 });
+      this.cutDelay(d1, () => { rabbit.play(animKey(m.key, "idle")); rabbit.setFlipX(true); });
+      this.cutDelay(d1 + 1400, () => {
+        rabbit.setFlipX(false);
+        rabbit.play(animKey(m.key, "hop"));
+        this.cutTween({ targets: rabbit, x: dest, duration: Math.max(700, (dest - past) * 14), onComplete: () => rabbit.play(animKey(m.key, "idle")) });
+      });
+      this.cutDelay(d1 + 2200, () => {
         gate.setTexture("prop-gate-closed");
         sfx.gate();
         p.forcedAnim = "wave";
-        ui.caption("", text(game.content.rabbitSendoffCaption), 0);
+        ui.caption("", t(this.level.rabbitSendoffCaption), 0);
       });
-    });
-  }
-
-  finishSendoff() {
-    this.time.delayedCall(4200, () => {
-      this.player.forcedAnim = null;
-      ui.hideCaption();
-      ui.caption("keepsake", "You kept his charm: one extra high jump per level, in mid air", 4200);
-      this.time.delayedCall(2600, () => this.complete());
-    });
-  }
-
-  hatchEgg() {
-    this.eggSpot.done = true;
-    const son = this.trail.get("son");
-    if (!son) return;
-    this.freeze();
-    this.time.delayedCall(700, () => {
-      const s = son.sprite;
-      sfx.hatch();
-      this.tweens.add({ targets: s, angle: { from: -6, to: 6 }, duration: 90, yoyo: true, repeat: 5,
-        onComplete: () => {
-          s.setAngle(0);
-          const freeKey = charKey("sonFree", { outline: this.dark });
-          son.key = freeKey;
-          s.setTexture(freeKey, 0);
-          son.anim = null;
-          this.puff(s.x + 8, s.y - 10, 0xf5d342, 16);
-          this.puff(s.x + 8, s.y - 10, 0x7b4fbf, 10);
-          ui.caption("the egg hatched", text(game.content.eggHatchesInto), 4500);
-          this.time.delayedCall(2200, () => { this.mode = "play"; this.player.locked = false; this.refreshHud(); });
-        } });
-    });
-  }
-
-  enterDoor() {
-    const door = this.door;
-    this.door = null;
-    this.freeze();
-    sfx.win();
-    this.time.delayedCall(1200, async () => {
-      const save = game.save;
-      if (!save.done.includes(this.levelId)) save.done.push(this.levelId);
-      writeSave();
-      const p = this.player.sprite;
-      this.tweens.add({ targets: [p, ...this.trail.members.filter((m) => m.present).map((m) => m.sprite)],
-        alpha: 0, x: door.x, duration: 900 });
-      this.time.delayedCall(1000, () => this.goTo("Credits", {}));
+      this.cutDelay(d1 + 7200, () => { ui.hideCaption(); this.endCut(); });
     });
   }
 }

@@ -4,7 +4,7 @@
 
 import { SPRITES } from "./sprites.js";
 
-export const CHARACTERS = ["jasmin", "jasminHat", "andrew", "son", "daughter", "rabbit"];
+export const CHARACTERS = ["jasmin", "jasminHat", "jasminCloak", "andrew", "isaac", "aya", "nube", "rupert", "tim"];
 
 // ---------- grid helpers ----------
 
@@ -97,6 +97,7 @@ function legs(g, r0, r1, split, dxL, dxR, liftL = 0, liftR = 0) {
 }
 
 const isHair = (s) => s === "H" || s === "h";
+const CLOAK_MAP = { H: "Kc", h: "Kh", C: "Kc", c: "Kc", P: "Kc" };
 
 // Moves the trailing hair (hair pixels at cols <= cMax, rows >= rMin) column by column.
 // shiftFn(c) > 0 moves a column down (gap at the top filled with its first pixel so the
@@ -137,8 +138,22 @@ function jasminLegs(g, dxL, dxR, liftL = 0, liftR = 0) {
   return legs(g, r0, r1, split, dxL, dxR, liftL, liftR);
 }
 
+// Hood over the crown (drawn with hair slots; recolored to the cloak later) plus fold highlights.
+const HOOD = [[3, 14, 17], [4, 12, 19], [5, 11, 20], [6, 10, 21], [7, 9, 22], [8, 9, 22]];
+const HOOD_LIGHT = [[4, 14], [5, 12], [8, 21], [8, 22], [7, 22]];
+const CLOAK_FOLDS = [[21, 17], [24, 14], [25, 18], [26, 12], [27, 16], [26, 20]];
+
+function cloakBase(g) {
+  for (const [r, a, b] of HOOD) for (let c = a; c <= b; c++) g[r][c] = "H";
+  for (const [r, c] of HOOD_LIGHT) g[r][c] = "h";
+  for (const [r, c] of CLOAK_FOLDS) if (g[r][c] && g[r][c] !== "S") g[r][c] = "Kh";
+  return g;
+}
+
 function buildJasmin(name) {
-  const base = rasterize(SPRITES[name]);
+  const cloak = name === "jasminCloak";
+  const base = rasterize(SPRITES[cloak ? "jasmin" : name]);
+  if (cloak) cloakBase(base);
   const hat = name === "jasminHat";
   const frames = [];
   const add = (g) => frames.push(g) - 1;
@@ -238,13 +253,48 @@ function buildJasmin(name) {
   }
 
   // wave: raised hand, two positions
-  const waveA = [[18, 21], [17, 21], [16, 22], [15, 22], [14, 22], [14, 23], [13, 22], [13, 23]];
-  const waveB = [[18, 21], [17, 22], [16, 22], [15, 23], [14, 23], [13, 23], [13, 22], [12, 23]];
+  const waveA = [[12, 22, "Tk"], [11, 22, "Ti"], [11, 21, "Tk"], [10, 22, "Tk"], [10, 23, "Tk"], [9, 22, "Tk"], [9, 23, "Ti"], [8, 22, "Ti"], [8, 23, "Tk"], [7, 22, "Tk"], [7, 23, "Tk"], [6, 22, "Ti"], [6, 23, "Tk"], [5, 22, "Tk"], [5, 23, "Tk"], [4, 23, "Tk"]];
+  const waveB = [[12, 22, "Tk"], [11, 22, "Ti"], [11, 21, "Tk"], [10, 22, "Tk"], [10, 23, "Tk"], [9, 23, "Tk"], [8, 23, "Ti"], [7, 22, "Tk"], [7, 23, "Tk"], [6, 22, "Tk"], [6, 23, "Ti"], [5, 21, "Tk"], [5, 22, "Tk"], [4, 21, "Tk"], [4, 22, "Ti"]];
   for (const px of [waveA, waveB]) {
     const g = mk();
     for (const [r, c] of px) setPx(g, r, c, "S");
     if (px === waveB) hairShift(g, (c) => (c <= 5 ? 1 : 0));
     add(g);
+  }
+
+  // write: forearm and pen held forward, tip scribbles (G = pen)
+  {
+    const g = mk();
+    for (const c of [20, 21, 22]) setPx(g, 19, c, "S");
+    setPx(g, 19, 23, "G");
+    setPx(g, 20, 23, "G");
+    add(g);
+  }
+  {
+    const g = mk();
+    for (const c of [20, 21, 22]) setPx(g, 18, c, "S");
+    setPx(g, 18, 23, "G");
+    setPx(g, 19, 23, "G");
+    hairShift(g, (c) => (c <= 6 ? 1 : 0));
+    squash(g, 26);
+    add(g);
+  }
+
+  if (cloak) {
+    const keep = [0, 1, 2, 3, 4, 5, 6, 7, 10];
+    const out = keep.map((i) => frames[i].map((row) => row.map((s) => CLOAK_MAP[s] || s)));
+    return {
+      w: 24,
+      h: 32,
+      frames: out,
+      anims: {
+        idle: { frames: [0, 1], rate: 3, repeat: -1 },
+        run: { frames: [2, 3, 4, 5], rate: 10, repeat: -1 },
+        jump: { frames: [6], rate: 1, repeat: 0 },
+        fall: { frames: [7], rate: 1, repeat: 0 },
+        hurt: { frames: [8], rate: 1, repeat: 0 },
+      },
+    };
   }
 
   return {
@@ -259,22 +309,27 @@ function buildJasmin(name) {
       glide: { frames: [8, 9], rate: 6, repeat: -1 },
       hurt: { frames: [10], rate: 1, repeat: 0 },
       wave: { frames: [11, 12], rate: 4, repeat: -1 },
+      write: { frames: [13, 14], rate: 5, repeat: -1 },
     },
   };
 }
 
-// ---------- Andrew, son, daughter ----------
+// ---------- Andrew, Isaac, Aya, Nube ----------
 
 // cfg: leg rows, split column, squash row, stride size (px at the foot), tuck lift.
 const WALKERS = {
   andrew: { r0: 23, r1: 30, split: 15, sq: 19, stride: 2, tuck: 3 },
-  son: { r0: 14, r1: 16, split: 15, sq: 12, stride: 2, tuck: 1 },
-  daughter: { r0: 12, r1: 13, split: 15, sq: 10, stride: 1, tuck: 1 },
+  isaac: { r0: 14, r1: 16, split: 15, sq: 12, stride: 2, tuck: 1 },
+  aya: { r0: 12, r1: 13, split: 15, sq: 10, stride: 1, tuck: 1 },
+  nube: { r0: 18, r1: 21, split: 15, sq: 17, stride: 2, tuck: 2 },
 };
+
+// sprites.js still keys the kids as son / daughter
+const WALKER_SPRITE = { isaac: "son", aya: "daughter" };
 
 function buildWalker(name) {
   const cfg = WALKERS[name];
-  const spr = SPRITES[name];
+  const spr = SPRITES[WALKER_SPRITE[name] || name];
   const base = rasterize(spr);
   const frames = [];
   const mk = () => clone(base);
@@ -319,10 +374,10 @@ function buildWalker(name) {
   };
 }
 
-// ---------- Rabbit ----------
+// ---------- Rupert ----------
 
-function buildRabbit() {
-  const spr = SPRITES.rabbit;
+function buildRupert() {
+  const spr = SPRITES.rupert;
   // padded 2 px on top and 2 px on the left to give the stretched hop room
   const base = pad(rasterize(spr), 2, 2);
   const mk = () => clone(base);
@@ -371,19 +426,68 @@ function buildRabbit() {
   };
 }
 
+// ---------- Tim ----------
+
+function buildTim() {
+  const spr = SPRITES.tim;
+  const base = rasterize(spr);
+  const mk = () => clone(base);
+  const frames = [mk()];
+
+  // idle 2: 1px bob, beard tip sways forward
+  {
+    const g = mk();
+    for (let r = 12; r <= 13; r++)
+      for (let c = W(g) - 2; c >= 0; c--)
+        if (g[r][c] === "Tb" || g[r][c] === "Tb2") {
+          g[r][c + 1] = g[r][c];
+          g[r][c] = g[r][c - 1] === "Tb" || g[r][c - 1] === "Tb2" ? g[r][c] : "Tt";
+        }
+    squash(g, 17);
+    frames.push(g);
+  }
+
+  // wave: front arm raised, two positions. Ti = tattoo ink on a Tk forearm.
+  const armDown = (g) => {
+    for (let r = 13; r <= 16; r++) g[r][21] = null;
+  };
+  const waveA = [[12, 22, "Tk"], [11, 22, "Ti"], [11, 21, "Tk"], [10, 22, "Tk"], [10, 23, "Tk"], [9, 22, "Tk"], [9, 23, "Ti"], [8, 22, "Ti"], [8, 23, "Tk"], [7, 22, "Tk"], [7, 23, "Tk"], [6, 22, "Ti"], [6, 23, "Tk"], [5, 22, "Tk"], [5, 23, "Tk"], [4, 23, "Tk"]];
+  const waveB = [[12, 22, "Tk"], [11, 22, "Ti"], [11, 21, "Tk"], [10, 22, "Tk"], [10, 23, "Tk"], [9, 23, "Tk"], [8, 23, "Ti"], [7, 22, "Tk"], [7, 23, "Tk"], [6, 22, "Tk"], [6, 23, "Ti"], [5, 21, "Tk"], [5, 22, "Tk"], [4, 21, "Tk"], [4, 22, "Ti"]];
+  for (const px of [waveA, waveB]) {
+    const g = mk();
+    armDown(g);
+    for (const [r, c, s] of px) setPx(g, r, c, s);
+    frames.push(g);
+  }
+
+  return {
+    w: spr.w,
+    h: spr.h,
+    frames,
+    anims: {
+      idle: { frames: [0, 1], rate: 2, repeat: -1 },
+      wave: { frames: [2, 3], rate: 4, repeat: -1 },
+    },
+  };
+}
+
 // ---------- public API ----------
 
 export function buildFrames(name) {
   switch (name) {
     case "jasmin":
     case "jasminHat":
+    case "jasminCloak":
       return buildJasmin(name);
     case "andrew":
-    case "son":
-    case "daughter":
+    case "isaac":
+    case "aya":
+    case "nube":
       return buildWalker(name);
-    case "rabbit":
-      return buildRabbit();
+    case "rupert":
+      return buildRupert();
+    case "tim":
+      return buildTim();
     default:
       throw new Error("buildFrames: unknown character " + name);
   }

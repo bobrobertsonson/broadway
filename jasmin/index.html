@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#141012">
-  <title>Jasmin's Game</title>
+  <title>Super Jasmin World 3: A New Magic</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -28,7 +28,9 @@
     <div>Turn your phone sideways to play</div>
   </div>
 
-  <script src="vendor/phaser.min.js"></script>
+  <!-- Phaser from the CDN, with a local copy as fallback (offline, or CDN blocked). -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+  <script>window.Phaser || document.write('<script src="vendor/phaser.min.js"><\/script>')</script>
   <script type="module" src="src/main.js"></script>
 </body>
 </html>
