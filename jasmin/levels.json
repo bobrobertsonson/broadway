@@ -52,10 +52,26 @@
               }
             },
             {
+              "type": "chicken",
+              "label": "Chicken shop",
+              "caption": {
+                "text": "You grew up on London chicken shops.",
+                "draft": true
+              }
+            },
+            {
               "type": "record",
               "label": "Bloc Party",
               "caption": {
                 "text": "Bloc Party, loud.",
+                "draft": true
+              }
+            },
+            {
+              "type": "nandos",
+              "label": "Nando's",
+              "caption": {
+                "text": "Nando's. Extra hot?",
                 "draft": true
               }
             }

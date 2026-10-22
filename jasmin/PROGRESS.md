@@ -65,6 +65,15 @@ Game lives in `jasmin/` on branch `jasmin-game`. Run: `npx http-server jasmin -c
 - **Tested** with mocked PlayStation, Switch and Xbox pad ids, a window blur event, the F key and the idle pointer, at 1920x1080. Not tested on a real Mac, TV or controller.
 - **Uncertain:** Safari's ids for Switch controllers, and whether Safari maps Switch buttons by position or by label. [Guessing]: by position, the same as Chrome.
 
+## Content from Andrew
+
+- **London (she grew up there):**
+  - New collectibles "Chicken shop" (a chicken box) and "Nando's" (a generic peri-peri chilli; no Nando's branding is drawn).
+  - A London chicken-shop storefront stands in the level, with a pixel "CHICKEN" sign. Map marker `K`.
+  - Pickup order, left to right: Warpaint, Chicken shop, Bloc Party, Nando's.
+  - The alarm-clock enemy by the shop was removed so the area stays calm.
+  - Both captions are drafts written by Claude Code from Andrew's one-line answer: "You grew up on London chicken shops." and "Nando's. Extra hot?"
+
 ## Logo (Andrew's feedback)
 
 - **Flattened:** no drop shadow, highlight bands or glints. The letters are flat purple with a 1 px gold outline and a 1 px dark rim, the hat is flat-colored, and the subtitle is flat cream-gold.

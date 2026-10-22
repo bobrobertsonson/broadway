@@ -12,6 +12,7 @@ import { makeEnemyAnims, spawnEnemy, updateEnemy, squash, ENEMY_CHARS } from "..
 import { Ghosts } from "../ghosts.js";
 import { Boss } from "../boss.js";
 import { charKey, animKey } from "../art.js";
+import { FONTS, fontSafe } from "../font.js";
 
 const T = 16;
 const TILE = { ground: 0, top: 1, brick: 2, oneway: 3 };
@@ -20,7 +21,7 @@ const PEN_PER_PICKUP = 3;
 const REVEAL_RADIUS = 84;
 const JOIN_MARKERS = { R: "rupert", I: "isaac", Y: "aya", N: "nube" };
 const HIDE_KEYS = ["prop-hide-snowbank", "prop-hide-shelter", "prop-hide-door"];
-const ITEM_KEYS = { record: "item-record", message: "item-message", crowd: "item-crowd", dumpling: "item-dumpling", backpack: "item-backpack", stamp: "item-stamp" };
+const ITEM_KEYS = { chicken: "item-chicken", nandos: "item-nandos", record: "item-record", message: "item-message", crowd: "item-crowd", dumpling: "item-dumpling", backpack: "item-backpack", stamp: "item-stamp" };
 
 export class Level extends Phaser.Scene {
   constructor() { super("Level"); }
@@ -272,6 +273,7 @@ export class Level extends Phaser.Scene {
           this.ensureAnim(key, 2, 2);
           this.add.sprite(wx, wy, `${key}-0`).setOrigin(0.5, 1).setDepth(4).play(key);
         } else if (c === "T") this.addTim(wx, wy);
+        else if (c === "K") this.addChickenShop(wx, wy);
         else if (c === "c") this.addCop(wx, wy);
         else if (c === "C") this.addHut(wx, wy);
         else if (c === "Z") this.bossAt = { x: wx, y: wy };
@@ -340,6 +342,13 @@ export class Level extends Phaser.Scene {
     const s = this.add.sprite(x + 10, y, key, 0).setOrigin(0.5, 1).setDepth(7).setFlipX(true);
     s.play(animKey(key, "idle"));
     this.picnic = { x, y, sprite: s, done: false };
+  }
+
+  // London chicken shop front (decor behind the action), sign lettered in the pixel font.
+  addChickenShop(x, y) {
+    const shop = this.add.image(x, y, "prop-chickenshop").setOrigin(0.5, 1).setDepth(1);
+    const sign = this.add.bitmapText(0, 0, FONTS.small, fontSafe("CHICKEN")).setDepth(1);
+    sign.setPosition(Math.round(x - sign.width / 2), Math.round(shop.y - shop.height + 4));
   }
 
   addTim(x, y) {

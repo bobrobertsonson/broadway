@@ -3,7 +3,9 @@
 // already exist are skipped, so calling again is cheap.
 //
 // KEYS (width x height)
-//  Collectibles 12x12: item-record, item-message, item-crowd, item-dumpling, item-backpack, item-stamp
+//  Collectibles 12x12: item-record, item-message, item-crowd, item-dumpling, item-backpack, item-stamp,
+//                      item-chicken, item-nandos
+//  London: prop-chickenshop 56x48 (decor)
 //  Hiding spots: prop-hide-snowbank 32x20, prop-hide-shelter 32x32, prop-hide-door 20x32
 //  prop-exit 24x32, prop-picnic 40x12, prop-hut 56x44, prop-candle-0/-1 3x7,
 //  prop-lantern-0/-1 8x12, prop-sign-0/-1/-2 24x12, prop-valve-0 (closed)/-1 (open) 16x16,
@@ -759,4 +761,57 @@ export function makePropTextures(scene) {
   M('fx-heart', 7, 6, ({ A }) => A([
     '.hh.hh.', 'hHHhHHh', 'hHHHHHh', '.hHHHh.', '..hHh..', '...h...',
   ], { h: INK, H: HEART }));
+
+  // ================= London (Andrew: she grew up in London) =================
+  // Chicken shop box: red and white striped carton with a drumstick.
+  M('item-chicken', 12, 12, ({ A }) => A([
+    '.......oo...',
+    '......oDDo..',
+    '.....oDdDo..',
+    '..ooooDDoooo',
+    '.oRWRWoBoRWo',
+    '.oRWRWRWRWRo'.slice(0, 12),
+    '.oRWRWRWRWRo',
+    '.oRWRWRWRWRo',
+    '.oRWRWRWRWRo',
+    '.ooooooooooo',
+    '............',
+    '............',
+  ], { o: INK, R: '#e23a3a', W: WHITE, D: '#c8823c', d: '#e8a85a', B: '#f0d8b0' }));
+
+  // Peri-peri: a red chilli with a green stem (generic, no restaurant branding).
+  M('item-nandos', 12, 12, ({ A }) => A([
+    '.......oo...',
+    '......oGGo..',
+    '.....oGGo...',
+    '....oRRo....',
+    '...oRrRRo...',
+    '..oRrRRRo...',
+    '..oRRRRRo...',
+    '.oRRRRRo....',
+    '.oRRRRo.....',
+    'oRRRo.......',
+    'ooo.........',
+    '............',
+  ], { o: INK, R: '#e0302c', r: '#ff7a6a', G: '#4caa3c' }));
+
+  // A London chicken shop front (background decor; the sign text is drawn by the level).
+  M('prop-chickenshop', 56, 48, ({ R, P }) => {
+    const BRICK = '#8a4a3a', BRICK_D = '#6e3a2e', SIGN = '#d8262a', SIGN_D = '#a01c20';
+    const AWN = '#ffffff', AWN_R = '#e23a3a', WIN = '#ffe9a8', WIN_D = '#f0c860', FRAME = '#2a2038';
+    R(0, 0, 56, 48, BRICK);
+    for (let y = 2; y < 48; y += 4) for (let x = (y / 4) % 2 ? 0 : 4; x < 56; x += 8) R(x, y, 1, 3, BRICK_D);
+    for (let y = 1; y < 48; y += 4) R(0, y, 56, 1, BRICK_D);
+    // sign board
+    R(2, 3, 52, 11, FRAME); R(3, 4, 50, 9, SIGN); R(3, 12, 50, 1, SIGN_D);
+    // striped awning
+    for (let x = 0; x < 56; x++) R(x, 15, 1, 5, Math.floor(x / 4) % 2 ? AWN : AWN_R);
+    for (let x = 0; x < 56; x += 4) R(x + 1, 20, 2, 1, Math.floor(x / 4) % 2 ? AWN : AWN_R);
+    // lit window and door
+    R(3, 23, 32, 22, FRAME); R(4, 24, 30, 20, WIN); R(4, 36, 30, 8, WIN_D);
+    R(18, 24, 1, 20, FRAME);
+    R(38, 23, 15, 25, FRAME); R(39, 24, 13, 24, '#5a2e2a'); R(40, 26, 11, 9, WIN); P(49, 38, WIN_D);
+    // counter silhouette in the window
+    R(5, 38, 28, 2, '#c8823c');
+  });
 }
