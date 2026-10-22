@@ -106,7 +106,7 @@ function layout(text, font, scale, gap) {
 }
 
 function buildLogo() {
-  const M = 6;
+  const M = 30; // top margin: room for the tilted hat above the J (texture is cropped later)
   const W = 240;
   const H = 112;
   const px = new Uint8ClampedArray(W * H * 4);
@@ -153,32 +153,57 @@ function buildLogo() {
   const x4 = cx - Math.floor((l4.width + 3) / 2);
   l4.items.forEach((it, i) => sub.glyph(it.g, x4 + it.x, y4 + [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0][i], 2, sc));
 
-  // Witch hat bitmap, leaning left, placed on the J
+  // Witch hat hanging on the J: drawn upright (fill only), rotated with nearest
+  // sampling so it tilts down to the left, then outlined. The brim's right end hooks
+  // over the J's top bar and the hat hangs off the letter's left side.
   const HAT = [
-    "..OO.........",
-    "..OPOO.......",
-    "...OPPO......",
-    "...OPPPO.....",
-    "...OPPPPO....",
-    "..OPPPPPPO...",
-    "..OGGGGGGGO..",
-    "..OGGGGGGGO..",
-    "OOOOOOOOOOOOO",
-    "OBBBBBBBBBBBO",
-    ".OOOOOOOOOOO.",
+    "..............PP.......",
+    ".............PPP.......",
+    "............PPP........",
+    "...........PPP.........",
+    "..........PPPP.........",
+    "..........PPPPP........",
+    ".........PPPPPP........",
+    ".........PPPPPPP.......",
+    "........PPPPPPPP.......",
+    "........PPPPPPPPP......",
+    ".......PPPPPPPPPPP.....",
+    "......PPPPPPPPPPPPP....",
+    ".....PPPPPPPPPPPPPPP...",
+    ".....GGGGGGGGGGGGGGG...",
+    ".....GGGGGGGGGGGGGGG...",
+    "BBBBBBBBBBBBBBBBBBBBBBB",
+    ".BBBBBBBBBBBBBBBBBBBBB.",
   ];
-  const hx = x2 - 1;
-  const hy = y2 - 8 + bounce[0];
-  const hc = { O: "#1e1236", P: "#3b2a5c", B: "#3b2a5c", G: "#e0a43a" };
-  HAT.forEach((row, r) => {
-    for (let c = 0; c < row.length; c++) {
-      const ch = row[c];
-      if (ch === ".") continue;
-      hat.set(hx + c, hy + r);
-      const col = hc[ch];
-      hatCol.set((hy + r) * W + hx + c, col);
+  const TILT = -0.42; // radians, counter-clockwise: left side hangs lower
+  const pivot = { x: 22, y: 15 }; // brim's right end (in HAT coordinates)
+  const anchor = { x: x2 + 11, y: y2 + bounce[0] - 1 }; // on top of the J's top bar
+  const hatFill = new Map();
+  const cos = Math.cos(-TILT), sin = Math.sin(-TILT);
+  for (let dy = -34; dy <= 12; dy++) {
+    for (let dx = -36; dx <= 6; dx++) {
+      // inverse-rotate each destination pixel back into the upright bitmap
+      const sx = Math.round(pivot.x + dx * cos - dy * sin);
+      const sy = Math.round(pivot.y + dx * sin + dy * cos);
+      const ch = HAT[sy]?.[sx];
+      if (!ch || ch === ".") continue;
+      hatFill.set(`${anchor.x + dx},${anchor.y + dy}`, ch);
     }
-  });
+  }
+  const hc = { P: "#3b2a5c", B: "#3b2a5c", G: "#e0a43a" };
+  const HAT_OUTLINE = "#1e1236";
+  for (const [k, ch] of hatFill) {
+    const [x, y] = k.split(",").map(Number);
+    for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) {
+      const nk = `${x + ox},${y + oy}`;
+      if (!hatFill.has(nk)) hatCol.set((y + oy) * W + x + ox, HAT_OUTLINE);
+    }
+  }
+  for (const [k, ch] of hatFill) {
+    const [x, y] = k.split(",").map(Number);
+    hat.set(x, y);
+    hatCol.set(y * W + x, hc[ch]);
+  }
 
   // ---- Compose ----
   const dMain = main.dist(2);

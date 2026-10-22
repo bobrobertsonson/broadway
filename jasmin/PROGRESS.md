@@ -69,6 +69,7 @@ Game lives in `jasmin/` on branch `jasmin-game`. Run: `npx http-server jasmin -c
 
 - **Flattened:** no drop shadow, highlight bands or glints. The letters are flat purple with a 1 px gold outline and a 1 px dark rim, the hat is flat-colored, and the subtitle is flat cream-gold.
 - **Smaller:** about 30% smaller than before. JASMIN is 3x (was 4x), WORLD 3: is 2x (was 3x) and SUPER stays at 2x. The hat was redrawn to fit the smaller J.
+- **Hat:** larger (about as tall as the JASMIN letters) and tilted about 24 degrees, with the brim's right end hooked over the J's top bar so it hangs off the letter. It is drawn upright, rotated with nearest sampling, then outlined, so the pixels stay clean.
 - **Overrides `CLAUDE.md`:** its "soft drop shadow" line is superseded by Andrew's request.
 
 ## Pixel text and the Mac launcher
