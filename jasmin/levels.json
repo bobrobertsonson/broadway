@@ -55,8 +55,8 @@
               "type": "chicken",
               "label": "Chicken shop",
               "caption": {
-                "text": "You grew up on London chicken shops.",
-                "draft": true
+                "text": "The REAL Chicken Shop Connoisseur.",
+                "draft": false
               }
             },
             {
