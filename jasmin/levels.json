@@ -39,8 +39,8 @@
           "id": "1-1",
           "setting": "London streets, rain, red double-decker buses as moving platforms",
           "startCaption": {
-            "text": "London. Where the style started.",
-            "draft": true
+            "text": "London. Where it all really started.",
+            "draft": false
           },
           "collectibles": [
             {

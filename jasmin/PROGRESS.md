@@ -33,7 +33,7 @@ Game lives in `jasmin/` on branch `jasmin-game`. Run: `npx http-server jasmin -c
 - **Send-off yard:** the scene turns to the sunny garden theme as Rupert reaches the gate.
 - **Boss:** one arena screen after the 7-1 climb, entered through a door (`B`). Embers and touching the fire hurt like enemies do (they knock the hat off, then restart her). The fire grows slowly, and each open valve shrinks it.
 - **Jennifer in the ending:** Isaac holds a larger egg drawn from the egg's palette slots (L, l, A).
-- **Palettes written into levels.json:** the palette TODOs were addressed to me, so the chosen colors now live in `levels.json`, each with a `paletteNote`. `levels.json` has no TODOs left. 56 captions are still `"draft": true`.
+- **Palettes written into levels.json:** the palette TODOs were addressed to me, so the chosen colors now live in `levels.json`, each with a `paletteNote`. `levels.json` has no TODOs left. 57 captions are still `"draft": true` (London's start caption is approved: "London. Where it all really started.").
 - **Minneapolis:** I filled a 2-wide pit 13 tiles from the start. On ice it killed every test run.
 - **No religious symbols anywhere:** removed a cross from the London dome silhouette.
 
