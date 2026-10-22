@@ -1,6 +1,6 @@
 // Procedural logo for "Super Jasmin World 3: A New Magic".
 // Original pixel lettering: 5-7 px wide stroke-heavy glyphs, scaled up, rounded,
-// with a bouncy baseline, gold outline and a soft drop shadow.
+// with a bouncy baseline and a flat gold outline (no shadows or highlights).
 
 const BIG = {
   S: [".XXXX", "XX..X", "XX...", ".XXX.", "...XX", "X..XX", "XXXX."],
@@ -125,28 +125,28 @@ function buildLogo() {
   const hat = new Buf(W, H);
   const hatCol = new Map();
 
-  const bounce = [0, -2, 1, -1, 2, 0];
-  const l1 = layout("SUPER", BIG, 2, 4);
-  const l2 = layout("JASMIN", BIG, 4, 6);
-  const l3 = layout("WORLD 3:", BIG, 3, 5);
+  const bounce = [0, -1, 1, 0, 1, 0];
+  const l1 = layout("SUPER", BIG, 2, 3);
+  const l2 = layout("JASMIN", BIG, 3, 5);
+  const l3 = layout("WORLD 3:", BIG, 2, 4);
   const sc = (r) => (8 - r) >> 3;
   const l4 = layout("A New Magic", SCRIPT, 2, 4);
 
   const cx = Math.floor(W / 2);
   const y1 = M;
-  const y2 = M + 18;
-  const y3 = M + 52;
-  const y4 = M + 79;
+  const y2 = y1 + 7 * 2 + 5;
+  const y3 = y2 + 7 * 3 + 6;
+  const y4 = y3 + 7 * 2 + 5;
 
   // JASMIN
   const x2 = cx - Math.floor(l2.width / 2);
-  l2.items.forEach((it, i) => main.glyph(it.g, x2 + it.x, y2 + bounce[i], 4));
+  l2.items.forEach((it, i) => main.glyph(it.g, x2 + it.x, y2 + bounce[i], 3));
   // SUPER, perched to the right of the hat
-  const x1 = x2 + 28 + Math.floor((l2.width - 28 - l1.width) / 2);
-  l1.items.forEach((it, i) => main.glyph(it.g, x1 + it.x, y1 + [1, -1, 0, -1, 1][i], 2));
+  const x1 = x2 + 16 + Math.floor((l2.width - 16 - l1.width) / 2);
+  l1.items.forEach((it, i) => main.glyph(it.g, x1 + it.x, y1, 2));
   // WORLD 3:
   const x3 = cx - Math.floor(l3.width / 2);
-  l3.items.forEach((it, i) => main.glyph(it.g, x3 + it.x, y3 + [0, 1, -1, 1, 0, 0, 1, 0][i], 3));
+  l3.items.forEach((it, i) => main.glyph(it.g, x3 + it.x, y3 + [0, 1, 0, 1, 0, 0, 1, 0][i], 2));
   main.round();
 
   // Subtitle (italic script, scale 2)
@@ -155,23 +155,19 @@ function buildLogo() {
 
   // Witch hat bitmap, leaning left, placed on the J
   const HAT = [
-    "....OOO...............",
-    "...OPPPO..............",
-    "..OPPPPPO.............",
-    "..OPPPPPPO............",
-    "...OPPPPPPO...........",
-    "....OPPPPPPO..........",
-    ".....OPPPPPPO.........",
-    ".....OPPPPPPPO........",
-    "....OGGGGGGGGGO.......",
-    "....OGGGGGGGGGGO......",
-    ".OOOOOOOOOOOOOOOOO....",
-    "OBBBBBBBBBBBBBBBBBO...",
-    ".OBBBBBBBBBBBBBBBBBO..",
-    "..OOBBBBBBBBBBBBBOO...",
-    "....OOOOOOOOOOOOO.....",
+    "..OO.........",
+    "..OPOO.......",
+    "...OPPO......",
+    "...OPPPO.....",
+    "...OPPPPO....",
+    "..OPPPPPPO...",
+    "..OGGGGGGGO..",
+    "..OGGGGGGGO..",
+    "OOOOOOOOOOOOO",
+    "OBBBBBBBBBBBO",
+    ".OOOOOOOOOOO.",
   ];
-  const hx = x2 + 4;
+  const hx = x2 - 1;
   const hy = y2 - 8 + bounce[0];
   const hc = { O: "#1e1236", P: "#3b2a5c", B: "#3b2a5c", G: "#e0a43a" };
   HAT.forEach((row, r) => {
@@ -179,51 +175,22 @@ function buildLogo() {
       const ch = row[c];
       if (ch === ".") continue;
       hat.set(hx + c, hy + r);
-      let col = hc[ch];
-      if (ch !== "O") {
-        const left = row[c - 1], up = r > 0 ? HAT[r - 1][c] : ".";
-        if (ch === "G") col = r === 8 ? "#f5cd6a" : "#e0a43a";
-        else if (left === "O" || up === "O" || up === "." || left === ".") col = "#5a4585";
-        if (r >= 12 && ch === "B") col = "#2c1f47";
-      }
+      const col = hc[ch];
       hatCol.set((hy + r) * W + hx + c, col);
     }
   });
-  // a little star on the hat
-  hatCol.set((hy + 3) * W + hx + 4, "#ffe9a0");
-  hatCol.set((hy + 4) * W + hx + 5, "#e0a43a");
 
   // ---- Compose ----
-  const dMain = main.dist(3);
+  const dMain = main.dist(2);
   const dSub = sub.dist(1);
   const dHat = hat.dist(0);
-  const shadowC = [26, 12, 54];
 
-  // shadows
+  // main outline: flat 1px gold with a 1px dark rim
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
       const i = y * W + x;
-      const inMain = dMain[i] <= 3 || dSub[i] <= 1;
-      if (inMain) {
-        const sx = x + 2, sy = y + 2;
-        if (sx < W && sy < H) over(sx, sy, shadowC, 0.38);
-      }
-    }
-  }
-  // main outline: gold (<=2) with dark rim (3)
-  for (let y = 0; y < H; y++) {
-    for (let x = 0; x < W; x++) {
-      const i = y * W + x;
-      if (dMain[i] === 3) over(x, y, hex("#3a1d63"));
-    }
-  }
-  for (let y = 0; y < H; y++) {
-    for (let x = 0; x < W; x++) {
-      const i = y * W + x;
-      if (dMain[i] <= 2 && dMain[i] > 0) {
-        const topEdge = !(dMain[i - W] <= 2 && i - W >= 0) ? true : false;
-        over(x, y, hex(topEdge ? "#f6cf6f" : "#e0a43a"));
-      }
+      if (dMain[i] === 2) over(x, y, hex("#3a1d63"));
+      else if (dMain[i] === 1) over(x, y, hex("#e0a43a"));
     }
   }
   // subtitle outline
@@ -233,36 +200,14 @@ function buildLogo() {
       if (dSub[i] === 1) over(x, y, hex("#3a1d63"));
     }
   }
-  // letter fills with highlight / shade
+  // flat letter fills
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
-      if (!main.get(x, y)) continue;
-      let c = "#5a2d91";
-      if (!main.get(x, y - 1)) c = "#b48ae8";
-      else if (!main.get(x, y - 2)) c = "#8a55c8";
-      else if (!main.get(x, y - 3)) c = "#7140ad";
-      else if (!main.get(x, y + 1)) c = "#3f1f6e";
-      else if (!main.get(x - 1, y) && main.get(x, y + 2)) c = "#6c3ca6";
-      over(x, y, hex(c));
+      if (main.get(x, y)) over(x, y, hex("#5a2d91"));
+      else if (sub.get(x, y)) over(x, y, hex("#f6cf6f"));
     }
   }
-  // sparkly glints on letters
-  [[x2 + 6, y2 + 5], [x3 + 12, y3 + 4]].forEach(([gx, gy]) => {
-    over(gx, gy, hex("#ffffff"));
-    over(gx + 1, gy, hex("#ffffff"));
-  });
-  // subtitle fill: warm gold-cream, lighter on top
-  for (let y = 0; y < H; y++) {
-    for (let x = 0; x < W; x++) {
-      if (!sub.get(x, y)) continue;
-      over(x, y, hex(!sub.get(x, y - 1) ? "#fff6d0" : !sub.get(x, y + 1) ? "#e0a43a" : "#ffd966"));
-    }
-  }
-  // hat: shadow, outline pixels in hatCol
-  hatCol.forEach((c, i) => {
-    const x = i % W, y = (i / W) | 0;
-    over(x + 1, y + 1, shadowC, 0.3);
-  });
+  // hat (flat colors)
   hatCol.forEach((c, i) => over(i % W, (i / W) | 0, hex(c)));
 
   // measure subtitle bbox

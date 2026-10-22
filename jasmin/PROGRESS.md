@@ -65,6 +65,12 @@ Game lives in `jasmin/` on branch `jasmin-game`. Run: `npx http-server jasmin -c
 - **Tested** with mocked PlayStation, Switch and Xbox pad ids, a window blur event, the F key and the idle pointer, at 1920x1080. Not tested on a real Mac, TV or controller.
 - **Uncertain:** Safari's ids for Switch controllers, and whether Safari maps Switch buttons by position or by label. [Guessing]: by position, the same as Chrome.
 
+## Logo (Andrew's feedback)
+
+- **Flattened:** no drop shadow, highlight bands or glints. The letters are flat purple with a 1 px gold outline and a 1 px dark rim, the hat is flat-colored, and the subtitle is flat cream-gold.
+- **Smaller:** about 30% smaller than before. JASMIN is 3x (was 4x), WORLD 3: is 2x (was 3x) and SUPER stays at 2x. The hat was redrawn to fit the smaller J.
+- **Overrides `CLAUDE.md`:** its "soft drop shadow" line is superseded by Andrew's request.
+
 ## Pixel text and the Mac launcher
 
 - **All on-screen text is drawn in pixels at the game's own scale.** That covers captions, banners, the HUD, labels, the pause screen, the world map, the inventory, World 9 naming and the portrait-phone notice.
