@@ -7,10 +7,11 @@ document.body.appendChild(root);
 root.innerHTML = `
   <div id="hud"></div>
   <div id="meter"><span class="eye">seen</span><div class="bar"><div class="fill"></div></div></div>
-  <div id="namebox"><div class="prompt"></div><input maxlength="24" autocomplete="off" spellcheck="false"><button>OK</button><div class="keys"></div></div>
+  <div id="namebox"><div class="prompt"></div><input maxlength="24" autocomplete="off" spellcheck="false"><button>OK</button><div class="keys"></div><div class="keyhint"></div></div>
   <div id="corner">
     <button id="btn-mute" aria-label="sound">&#9834;</button>
     <button id="btn-home" aria-label="map">&#8962;</button>
+    <button id="btn-full" aria-label="full screen">&#10530;</button>
   </div>
   <div id="caption"><div class="label"></div><div class="text"></div></div>
   <div id="banner"><div class="title"></div><div class="sub"></div><div class="hint"></div></div>
@@ -124,7 +125,7 @@ export const ui = {
     input.value = "";
     box.classList.add("show");
     buildKeys();
-    this.namePicker(!!opts.picker);
+    this.namePicker(!!opts.picker, opts.hint);
     if (!opts.picker) setTimeout(() => input.focus(), 50);
     return new Promise((resolve) => {
       const done = () => {
@@ -142,9 +143,10 @@ export const ui = {
   },
 
   // Letter grid: show/hide, move the highlight, press the highlighted key.
-  namePicker(on) {
+  namePicker(on, hint = "") {
     const keys = $("#namebox .keys");
     keys.classList.toggle("show", on);
+    $("#namebox .keyhint").textContent = on ? clean(hint) : "";
     if (on) { $("#namebox input").blur(); highlight(); }
   },
   nameNav(dx, dy) {
@@ -158,6 +160,8 @@ export const ui = {
   nameSubmit() { nameDone?.(); },
 
   onHome(fn) { $("#btn-home").onclick = fn; },
+  onFull(fn) { $("#btn-full").onclick = fn; },
+  showFull(v) { $("#btn-full").style.display = v ? "" : "none"; },
   onMute(fn) { $("#btn-mute").onclick = fn; },
   setMuted(m) { $("#btn-mute").classList.toggle("off", m); },
   showHome(v) { $("#btn-home").style.display = v ? "" : "none"; },

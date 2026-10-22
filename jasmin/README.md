@@ -19,6 +19,20 @@ On a TV or any big screen the game picks the largest whole-number zoom in real s
 
 Progress is saved in the browser. Reset: run `localStorage.clear()` in the browser console.
 
+## Playing on a TV from a Mac (HDMI + controller)
+
+Set up once, in this order:
+
+1. **Display: extend, don't mirror.** System Settings > Displays: use the TV as a separate display (not "Mirror"), at its native resolution ("Default for display" or 1080p). Mirroring makes macOS rescale the picture and the pixel art goes soft.
+2. **TV picture size:** set the TV's HDMI input to "Just Scan", "Screen Fit", "PC" or "1:1" (the name varies by brand). Otherwise the TV crops the edges. The HUD keeps a 3.5% margin on large screens just in case.
+3. **Sound to the TV:** System Settings > Sound > Output > the TV.
+4. **Controller:** pair it in System Settings > Bluetooth (Xbox, PlayStation and Switch Pro controllers all work on recent macOS). On-screen button names follow the controller: A/X on Xbox, ✕/□ on PlayStation, B/Y on Switch.
+5. **Browser:** Chrome or Safari. Open the game, drag the window onto the TV, then press **F** (or click the corner button) for full screen.
+6. **Press one key or click once on the Mac.** Browsers don't let a controller button start sound or full screen, so the F press (or any click) does it. After that, the controller is enough.
+7. **Keep the game window focused.** Clicking on the Mac's own screen can stop controller input. The game pauses itself when that happens; press Start to resume.
+
+The game asks the browser to keep the screen awake while it's open. Esc in full screen only leaves full screen; it doesn't also quit the level.
+
 ## Put it online (GitHub Pages)
 
 Repo Settings > Pages > Deploy from a branch > pick the branch and `/ (root)`. The game is then at `https://<user>.github.io/<repo>/jasmin/`.

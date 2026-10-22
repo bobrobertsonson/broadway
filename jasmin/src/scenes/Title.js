@@ -43,7 +43,9 @@ export class Title extends Phaser.Scene {
     const key = charKey("jasmin", { outfit: game.save.outfit });
     this.add.sprite(width / 2, height - 16, key).setOrigin(0.5, 1).play(animKey(key, "idle"));
 
+    const full = document.fullscreenElement || document.webkitFullscreenElement;
     ui.banner("", "", controls.isTouch ? "Tap to start" : "Press Start", "bottom");
+    if (!controls.isTouch && !full) ui.setHud(`<span class="item tip">F for full screen</span>`);
     this.input.once("pointerdown", () => this.start());
     const restart = () => this.scene.restart();
     this.scale.once("resize", restart);

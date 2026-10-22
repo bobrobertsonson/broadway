@@ -16,6 +16,21 @@ const STICK_ON = 0.5;   // stick hysteresis: press past 0.5, release under 0.3
 const STICK_OFF = 0.3;
 const START = 9;        // standard mapping index of the Start button
 
+// Printed button names by controller family. The standard mapping is by position:
+// jump is always the bottom face button, pen the left one, back the right one.
+const PAD_LABELS = {
+  xbox: { jump: "A", pen: "X", start: "Menu", back: "B" },
+  playstation: { jump: "\u2715", pen: "\u25A1", start: "Options", back: "\u25CB" },
+  nintendo: { jump: "B", pen: "Y", start: "+", back: "A" },
+};
+
+function padFamily(id = "") {
+  if (/xbox|045e/i.test(id)) return "xbox";
+  if (/054c|dualsense|dualshock|playstation|^wireless controller/i.test(id)) return "playstation";
+  if (/057e|nintendo|pro controller|joy-con/i.test(id)) return "nintendo";
+  return "xbox";
+}
+
 const held = { left: false, right: false, up: false, down: false, jump: false, action: false, start: false, back: false, mute: false };
 const touchHeld = { left: false, right: false, jump: false, action: false };
 let prev = { ...held };
@@ -30,6 +45,10 @@ export const controls = {
   left: false, right: false, jump: false, action: false,
   isTouch: false,
   device: "keyboard",    // last used: "keyboard" | "touch" | "gamepad"
+  padType: "xbox",       // family of the last used pad, for button names
+
+  // Names of the jump / pen / start / back buttons on the pad in use.
+  padLabels() { return PAD_LABELS[this.padType]; },
 
   update() {
     pollGamepads();
@@ -50,10 +69,14 @@ export const controls = {
   // On-screen hint text for the device in use. kind: "confirm" | "skip" | "pen".
   hint(kind) {
     const d = this.device === "touch" || (this.isTouch && this.device !== "gamepad") ? "touch" : this.device;
+    const b = this.padLabels();
     const words = {
-      confirm: { touch: "tap", gamepad: "press A", keyboard: "press jump" },
-      skip: { touch: "tap to skip", gamepad: "A to skip", keyboard: "jump to skip" },
-      pen: { touch: "Tap the pen button to write a platform", gamepad: "Press X to write a platform", keyboard: "Press X to write a platform" },
+      confirm: { touch: "tap", gamepad: `press ${b.jump}`, keyboard: "press jump" },
+      skip: { touch: "tap to skip", gamepad: `${b.jump} to skip`, keyboard: "jump to skip" },
+      pen: { touch: "Tap the pen button to write a platform", gamepad: `Press ${b.pen} to write a platform`, keyboard: "Press X to write a platform" },
+      pause: { touch: "", gamepad: `${b.start} to resume, ${b.back} for the map`, keyboard: "Enter to resume, Esc for the map" },
+      choose: { touch: "tap a city, then tap again to go", gamepad: `left/right to choose, ${b.jump} to go`, keyboard: "left/right to choose, jump to go" },
+      name: { touch: "", gamepad: `${b.jump} type, ${b.pen} delete, ${b.start} done`, keyboard: "" },
     };
     return words[kind][d];
   },
@@ -100,7 +123,14 @@ function pollGamepads() {
     padHeld.back ||= pad.B;
     padHeld.start ||= !!pad.buttons[START]?.pressed;
   }
-  const active = ["left", "right", "up", "down", "jump", "action", "back", "start"].some((k) => padHeld[k]);
+  let active = false;
+  for (const pad of plugin.getAll()) {
+    if (!pad?.connected) continue;
+    if (pad.buttons.some((btn) => btn.pressed) || Math.abs(pad.leftStick.x) > STICK_ON || Math.abs(pad.leftStick.y) > STICK_ON) {
+      active = true;
+      controls.padType = padFamily(pad.id);
+    }
+  }
   if (active) {
     controls.device = "gamepad";
     onGesture?.(); // harmless if the browser does not count it as a user gesture
@@ -118,6 +148,8 @@ export function initControls(onFirstGesture, game) {
   window.addEventListener("keydown", (e) => {
     const k = KEYMAP[e.code];
     if (e.target?.tagName === "INPUT") return; // typing a name
+    // In full screen, Esc belongs to the browser (it exits full screen); don't also leave the level.
+    if (e.code === "Escape" && (document.fullscreenElement || document.webkitFullscreenElement)) return;
     if (k) { if (!e.repeat) latch[k] = true; held[k] = true; e.preventDefault(); }
     controls.device = "keyboard";
     gesture();

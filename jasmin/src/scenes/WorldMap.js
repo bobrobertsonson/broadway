@@ -81,9 +81,9 @@ export class WorldMap extends Phaser.Scene {
   refreshText() {
     const e = this.entries[this.idx];
     const unlocked = game.save.outfitsUnlocked.filter((o) => game.outfits[o]);
-    const outfitHint = unlocked.length > 1 ? `outfit: ${game.save.outfit} (${controls.device === "touch" ? "pen button" : "X"} to change)` : "";
+    const outfitHint = unlocked.length > 1 ? `outfit: ${game.save.outfit} (${controls.device === "touch" ? "pen button" : controls.device === "gamepad" ? controls.padLabels().pen : "X"} to change)` : "";
     const skill = e.level.skill && game.save.done.includes(e.level.id) ? t(e.level.skill) : "";
-    ui.banner(worldTitle(e.world), skill, controls.device === "touch" ? "tap a city, then tap again to go" : controls.device === "gamepad" ? "left/right to choose, A to go" : "left/right to choose, jump to go", "top");
+    ui.banner(worldTitle(e.world), skill, controls.hint("choose"), "top");
     ui.setHud(`<span class="item">${clean(outfitHint)}</span>`);
     controls.setActionVisible(unlocked.length > 1);
     this.labelNodes();

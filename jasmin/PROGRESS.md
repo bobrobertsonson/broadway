@@ -53,6 +53,18 @@ Game lives in `jasmin/` on branch `jasmin-game`. Run: `npx http-server jasmin -c
 - **Tested with a mocked standard gamepad** behind `navigator.getGamepads()`, which drives Phaser's real gamepad plugin. Not tested with a physical controller.
 - **Audio unlock with a pad:** if the browser doesn't count a pad press as a user gesture, music stays off until a key, click or tap. [Guessing] that most TV browsers behave this way.
 
+## Mac + HDMI TV + controller
+
+- **Button names follow the controller:** Xbox (A/X/Menu/B), PlayStation (✕/□/Options/○), Switch (B/Y/+/A). The family is detected from the pad id, and the actions are position-based per the standard mapping.
+- **Full screen:** a corner button and the F key, since a pad button isn't allowed to request full screen. The title screen shows "F for full screen". In full screen, Esc only exits full screen.
+- **Screen Wake Lock** while the game is visible, so the Mac and TV don't sleep mid-cutscene.
+- **Mouse pointer** hides after 2 seconds without moving.
+- **Auto-pause** when the window loses focus.
+- **HUD and corner buttons** keep a 3.5% margin on large screens against TV overscan.
+- **Mac setup steps** are in the README (extend instead of mirror, TV "Just Scan", sound output, pairing).
+- **Tested** with mocked PlayStation, Switch and Xbox pad ids, a window blur event, the F key and the idle pointer, at 1920x1080. Not tested on a real Mac, TV or controller.
+- **Uncertain:** Safari's ids for Switch controllers, and whether Safari maps Switch buttons by position or by label. [Guessing]: by position, the same as Chrome.
+
 ## Step 6 verification (headless Chromium, 844x390, scripted input)
 
 - **Minneapolis:** a ghost that sees her stops and stares, the meter fills, and she gets the cloak. Standing on a hiding spot hides her, and the cloak comes off after 5 s out of sight. At the picnic the level turns to night and Andrew joins. If a ghost sees them together, Andrew is sent back to the checkpoint and the goal waits until she fetches him. The exit sign ends the ghosts.

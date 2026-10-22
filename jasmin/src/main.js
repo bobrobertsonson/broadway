@@ -66,4 +66,52 @@ ui.setMuted(muted);
 setMuted(muted);
 ui.onMute(() => { muted = !muted; setMuted(muted); ui.setMuted(muted); });
 
-initControls(() => unlockAudio(), phaser);
+initControls(() => { unlockAudio(); keepAwake(); }, phaser);
+
+// ---------- Big screen (Mac + HDMI TV) helpers ----------
+
+// Full screen hides all browser chrome. Needs a key press or click: browsers do not
+// accept a controller button as permission for this.
+function toggleFullscreen() {
+  const el = document.documentElement;
+  const on = document.fullscreenElement || document.webkitFullscreenElement;
+  try {
+    const r = on ? (document.exitFullscreen || document.webkitExitFullscreen).call(document)
+      : (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+    r?.catch?.(() => {});
+  } catch {}
+}
+const canFullscreen = !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+ui.showFull(canFullscreen && !window.matchMedia("(pointer: coarse)").matches);
+ui.onFull(toggleFullscreen);
+window.addEventListener("keydown", (e) => { if (e.code === "KeyF" && !e.repeat && e.target?.tagName !== "INPUT") toggleFullscreen(); });
+const syncFull = () => document.body.classList.toggle("fullscreen", !!(document.fullscreenElement || document.webkitFullscreenElement));
+document.addEventListener("fullscreenchange", syncFull);
+document.addEventListener("webkitfullscreenchange", syncFull);
+
+// Keep the Mac and TV awake: controller input may not count as activity for sleep.
+let wakeLock = null;
+async function keepAwake() {
+  if (wakeLock || !("wakeLock" in navigator) || document.visibilityState !== "visible") return;
+  try {
+    wakeLock = await navigator.wakeLock.request("screen");
+    wakeLock.addEventListener("release", () => { wakeLock = null; });
+  } catch {}
+}
+keepAwake();
+document.addEventListener("visibilitychange", keepAwake);
+
+// Hide the mouse pointer over the TV picture when it isn't moving.
+let idleTimer = 0;
+window.addEventListener("mousemove", () => {
+  document.body.classList.remove("idle-cursor");
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => document.body.classList.add("idle-cursor"), 2000);
+});
+
+// If the window loses focus (e.g. a click on the Mac's other screen), the browser may
+// stop sending controller input: pause instead of letting her run into a pit.
+phaser.events.on("blur", () => {
+  const level = phaser.scene.getScene("Level");
+  if (level?.sys.isActive() && level.mode === "play" && !level.cut) level.togglePause();
+});

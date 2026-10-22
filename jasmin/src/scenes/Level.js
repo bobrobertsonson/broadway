@@ -756,8 +756,7 @@ export class Level extends Phaser.Scene {
       this.tweens.pauseAll();
       this.anims.pauseAll();
       this.time.paused = true;
-      const hint = controls.device === "gamepad" ? "Start to resume, B for the map" : "Enter to resume, Esc for the map";
-      ui.banner("Paused", "", hint, "dim");
+      ui.banner("Paused", "", controls.hint("pause"), "dim");
     } else {
       this.physics.resume();
       this.tweens.resumeAll();

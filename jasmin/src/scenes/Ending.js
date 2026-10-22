@@ -32,7 +32,7 @@ export class Ending extends Phaser.Scene {
     this.updateLabelsFrame();
     if (this.naming) {
       // Gamepad typing on the letter grid: d-pad/stick move, A types, X deletes, Start finishes.
-      if (controls.device === "gamepad") ui.namePicker(true);
+      if (controls.device === "gamepad") ui.namePicker(true, controls.hint("name"));
       if (controls.pressed("left")) ui.nameNav(-1, 0);
       if (controls.pressed("right")) ui.nameNav(1, 0);
       if (controls.pressed("up")) ui.nameNav(0, -1);
@@ -118,7 +118,7 @@ export class Ending extends Phaser.Scene {
     this.tweens.add({ targets: pen, alpha: 1, y: spot.y - 20, duration: 800, ease: "Back.out" });
     sfx.pen();
     this.naming = true;
-    const name = await ui.askName(t(game.content.ending?.namePrompt), { picker: controls.device === "gamepad" });
+    const name = await ui.askName(t(game.content.ending?.namePrompt), { picker: controls.device === "gamepad", hint: controls.hint("name") });
     this.naming = false;
     game.save.world9 = name;
     try { localStorage.setItem("jg-world9", name); } catch {}
