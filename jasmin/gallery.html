@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Character Gallery</title>
+  <link rel="icon" href="data:,">
+  <style>
+    html, body { margin: 0; height: 100%; background: #141012; }
+    #game { display: flex; align-items: center; justify-content: center; min-height: 100%; }
+    #game canvas { image-rendering: pixelated; }
+  </style>
+</head>
+<body>
+  <div id="game"></div>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+  <script>window.Phaser || document.write('<script src="vendor/phaser.min.js"><\/script>')</script>
+  <script type="module" src="src/gallery.js"></script>
+</body>
+</html>

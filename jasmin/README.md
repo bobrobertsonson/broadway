@@ -10,6 +10,8 @@ Open http://localhost:8080. On a phone on the same Wi-Fi: `http://<your-computer
 
 Test shortcuts: `?level=5-1` jumps into a level, `?level=7-1&map=7-boss` into the fire boss, `?scene=Ending` or `?scene=Credits` into those scenes.
 
+**Character gallery:** open `gallery.html` (e.g. http://localhost:8080/gallery.html) to see every character, outfit, enemy and NPC playing all of its animations, drawn exactly as the game draws them. Useful after editing `sprites.js` or swapping in Aseprite sheets.
+
 Controls:
 - **Keyboard:** arrows or A/D to move, Space/Up/Z to jump (hold to glide with the hat), X or Shift for the pen, Enter or P to pause, Esc for the map, M to mute.
 - **Gamepad** (any standard-mapping pad, through Phaser's gamepad plugin): d-pad or left stick to move, A to jump (hold to glide), X for the pen, Start to pause (and to confirm in menus), B for the map while paused. When naming World 9, an on-screen letter grid appears: d-pad to move, A to type, X to delete, Start to finish. Browsers only expose a pad after one of its buttons has been pressed on the page.

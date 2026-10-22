@@ -721,7 +721,12 @@ export class Level extends Phaser.Scene {
       this.join(j.name, j.x, j.y);
     }
     if (this.picnic && !this.picnic.done && x > this.picnic.x - 40) return this.picnicScene();
-    if (this.cop && !this.cop.done && x > this.cop.x - 44) return this.copScene();
+    if (this.cop && !this.cop.done && x > this.cop.x - 44) {
+      // Only when she is actually at the cop; if she is somehow far past him, he just leaves.
+      if (x < this.cop.x + 80) return this.copScene();
+      this.cop.done = true;
+      this.cop.sprite.setVisible(false);
+    }
     if (this.hut && !this.hut.done && x > this.hut.x - 30) return this.proposalScene();
     for (const tr of this.triggers) {
       if (!tr.done && Math.abs(x - tr.x) < 10 && this.player.onGround) { tr.done = true; return tr.fn(); }
@@ -845,7 +850,7 @@ export class Level extends Phaser.Scene {
     sprite.play(animKey(key, anim), true);
     return new Promise((res) => {
       this.cutTween({
-        targets: sprite, x, duration: Math.max(80, (Math.abs(x - sprite.x) / speed) * 1000),
+        targets: sprite, x, duration: Math.min(2500, Math.max(80, (Math.abs(x - sprite.x) / speed) * 1000)),
         onComplete: () => { sprite.play(animKey(key, anim === "hop" ? "idle" : "idle")); res(); },
       });
     });

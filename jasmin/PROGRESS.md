@@ -75,6 +75,12 @@ Game lives in `jasmin/` on branch `jasmin-game`. Run: `npx http-server jasmin -c
   - An EALING street sign near the start marks her neighborhood (from Andrew). It is London style: white plate, black capitals, red stripe, on a post. Signs are a reusable map option, `signs: [{ col, text }]`, lettered with the pixel font's glyphs without the outline (`drawPlain` in `font.js`).
   - Both captions are drafts written by Claude Code from Andrew's one-line answer: Chicken shop is now Andrew's "The REAL Chicken Shop Connoisseur." (approved); "Nando's. Extra hot?" is still a draft.
 
+## Gallery and gameplay clips
+
+- **`gallery.html`** shows every character, outfit, enemy and NPC animating, using the game's own art pipeline.
+- **Gameplay GIFs** of each set piece were recorded from the real game with scripted input (London, ghosts, picnic, Chicago, send-off, tortoise, cop, proposal, the full family, the boss).
+- **Bug found while recording:** if Jasmin was ever far past the bribe cop without having triggered him (for example after a teleport), the cop scene started anyway and Andrew walked back for up to a minute. Now the cop only triggers when she is near him, and otherwise just leaves. Scripted walks in cutscenes are also capped at 2.5 seconds.
+
 ## On-screen copy placement (Andrew's feedback)
 
 - **Titles at the top:** the level start, level complete and Nairobi intro titles now sit at the top of the screen, under the HUD row, instead of in the middle over the action.
