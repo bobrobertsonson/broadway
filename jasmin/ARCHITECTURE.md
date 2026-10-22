@@ -14,6 +14,9 @@ No build step. `index.html` loads Phaser 3.80.1 from jsDelivr with a local fallb
 | `src/tiles.js` | Per-theme environment: tiles, sky, background layers. |
 | `src/props.js` | Theme-independent textures: items, props, NPC props, enemies, boss, fx. |
 | `src/logo.js` | Title logo texture. |
+| `src/font.js` | Pixel fonts (`px` small, `px-big` titles), white with baked outline, tintable. |
+| `src/ui.js` | UI state + API (captions, banners, HUD, labels, name entry). No drawing. |
+| `src/scenes/UI.js` | Overlay scene that draws `ui.js` state in pixels at game scale; always on top. |
 | `src/audio.js` | WebAudio sfx + music. |
 | `src/maps.js` | ASCII level layouts. |
 | `src/content.js` | Reads `levels.json` (captions may be strings or `{text, draft}`). |

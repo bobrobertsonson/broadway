@@ -20,6 +20,8 @@ export class Boot extends Phaser.Scene {
     makeEnvironmentTextures(this, "day");
     makePropTextures(this);
 
+    this.scene.launch("UI");
+
     // ?level=2-1 jumps straight into a level (for testing).
     const q = new URLSearchParams(location.search);
     if (q.get("level")) this.scene.start("Level", { id: q.get("level"), map: q.get("map") || undefined });

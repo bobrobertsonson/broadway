@@ -36,7 +36,7 @@ export class Credits extends Phaser.Scene {
     this.i = 0;
     this.showNext();
     startMusic("credits");
-    this.input.on("pointerdown", () => (this.tapped = true));
+    this.input.on("pointerdown", (ptr) => { if (!ui.hitsButton(ptr)) this.tapped = true; });
   }
 
   hop(key, floor) {

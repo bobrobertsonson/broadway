@@ -65,6 +65,19 @@ Game lives in `jasmin/` on branch `jasmin-game`. Run: `npx http-server jasmin -c
 - **Tested** with mocked PlayStation, Switch and Xbox pad ids, a window blur event, the F key and the idle pointer, at 1920x1080. Not tested on a real Mac, TV or controller.
 - **Uncertain:** Safari's ids for Switch controllers, and whether Safari maps Switch buttons by position or by label. [Guessing]: by position, the same as Chrome.
 
+## Pixel text and the Mac launcher
+
+- **All on-screen text is drawn in pixels at the game's own scale.** That covers captions, banners, the HUD, labels, the pause screen, the world map, the inventory, World 9 naming and the portrait-phone notice.
+  - Two pixel fonts live in `src/font.js`: `px`, a proportional 5x7 font with descenders, and `px-big`, an uppercase title font. Both are white with a baked 1 px dark outline, so they read on any background and can be tinted.
+  - A Phaser overlay scene (`src/scenes/UI.js`) draws the state recorded by `src/ui.js`. The HTML text overlay is gone, so text now scales exactly like the art: 6x on a 1080p TV, 2x on a phone.
+  - The touch buttons stay as HTML because they're controls, but their symbols are now pixel icons.
+- **World 9 naming:** a pixel letter grid works with taps, clicks and the gamepad, and a keyboard can type directly. The phone's own keyboard is no longer used.
+- **Fog map:** it zooms out in whole steps (3x, 2x, 1x) instead of a smooth zoom down to 0.55x, which broke the pixel grid.
+- **Still not on the pixel grid:** the fire boss grows smoothly (1x to 1.7x), and the intro's glow effect scales smoothly.
+- **Keyboard M (mute)** was listed in the README but never wired up. It is fixed.
+- **`Play on TV.command`** (Mac): double-click it to serve the game and open Chrome in kiosk mode (full screen) with sound allowed, so no key press is needed before the controller works. It needs Python 3 or Node, or an `ONLINE_URL`. Untested on a Mac.
+- **Native Mac app:** decided against for now (see the chat). The launcher gives the same experience without code signing, a build step or a heavy runtime.
+
 ## Step 6 verification (headless Chromium, 844x390, scripted input)
 
 - **Minneapolis:** a ghost that sees her stops and stares, the meter fills, and she gets the cloak. Standing on a hiding spot hides her, and the cloak comes off after 5 s out of sight. At the picnic the level turns to night and Andrew joins. If a ghost sees them together, Andrew is sent back to the checkpoint and the goal waits until she fetches him. The exit sign ends the ghosts.

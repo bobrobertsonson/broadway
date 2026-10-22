@@ -8,6 +8,8 @@ import { Level } from "./scenes/Level.js";
 import { Credits } from "./scenes/Credits.js";
 import { Intro } from "./scenes/Intro.js";
 import { Ending } from "./scenes/Ending.js";
+import { UI } from "./scenes/UI.js";
+import { state as uiState } from "./ui.js";
 
 // Internal resolution is dynamic: about 180 to 220 px tall, width fills the
 // screen. The whole-number zoom is picked in *device* pixels, so every game pixel
@@ -22,12 +24,7 @@ function viewSize() {
   return { w: Math.floor(W / zoom), h: Math.floor(H / zoom), zoom: zoom / dpr };
 }
 
-// DOM text (captions, HUD, menus) grows on big screens so it reads from the sofa.
-function uiScale() {
-  const k = Math.min(2, Math.max(1, window.innerHeight / 600));
-  document.documentElement.style.setProperty("--ui", k.toFixed(3));
-}
-uiScale();
+
 
 const v = viewSize();
 const config = {
@@ -43,11 +40,13 @@ const config = {
   physics: { default: "arcade", arcade: { gravity: { y: 900 }, debug: false, tileBias: 20 } },
   input: { activePointers: 3, gamepad: true },
   fps: { target: 60 },
-  scene: [Boot, Title, Intro, WorldMap, Level, Ending, Credits],
+  // UI is last so the text overlay renders above every other scene.
+  scene: [Boot, Title, Intro, WorldMap, Level, Ending, Credits, UI],
 };
 
 const phaser = new Phaser.Game(config);
 window.__game = phaser; // handy for debugging and automated tests
+window.__ui = uiState;
 
 let resizeTimer = 0;
 window.addEventListener("resize", () => {
@@ -56,7 +55,6 @@ window.addEventListener("resize", () => {
     const s = viewSize();
     phaser.scale.setZoom(s.zoom);
     phaser.scale.resize(s.w, s.h);
-    uiScale();
   }, 100);
 });
 
@@ -64,7 +62,13 @@ let muted = false;
 try { muted = localStorage.getItem("jg-muted") === "1"; } catch {}
 ui.setMuted(muted);
 setMuted(muted);
-ui.onMute(() => { muted = !muted; setMuted(muted); ui.setMuted(muted); });
+const toggleMute = () => { muted = !muted; setMuted(muted); ui.setMuted(muted); };
+ui.onMute(toggleMute);
+window.addEventListener("keydown", (e) => { if (e.code === "KeyM" && !e.repeat && !uiState.name.active) toggleMute(); });
+
+// Try to start audio right away: works when the browser allows autoplay (the Mac
+// launcher starts Chrome that way); otherwise the first key, click or tap does it.
+unlockAudio();
 
 initControls(() => { unlockAudio(); keepAwake(); }, phaser);
 
@@ -84,7 +88,7 @@ function toggleFullscreen() {
 const canFullscreen = !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
 ui.showFull(canFullscreen && !window.matchMedia("(pointer: coarse)").matches);
 ui.onFull(toggleFullscreen);
-window.addEventListener("keydown", (e) => { if (e.code === "KeyF" && !e.repeat && e.target?.tagName !== "INPUT") toggleFullscreen(); });
+window.addEventListener("keydown", (e) => { if (e.code === "KeyF" && !e.repeat && !uiState.name.active) toggleFullscreen(); });
 const syncFull = () => document.body.classList.toggle("fullscreen", !!(document.fullscreenElement || document.webkitFullscreenElement));
 document.addEventListener("fullscreenchange", syncFull);
 document.addEventListener("webkitfullscreenchange", syncFull);

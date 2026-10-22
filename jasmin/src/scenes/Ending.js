@@ -1,6 +1,6 @@
 import { controls } from "../controls.js";
 import { startMusic, sfx } from "../audio.js";
-import { ui, esc } from "../ui.js";
+import { ui } from "../ui.js";
 import { game, writeSave, worldTitle, t } from "../state.js";
 import { charKey, animKey } from "../art.js";
 import { makeEnvironmentTextures } from "../tiles.js";
@@ -21,7 +21,7 @@ export class Ending extends Phaser.Scene {
     makePropTextures(this);
     makeEnvironmentTextures(this, "day");
     this.makeEgg();
-    this.input.on("pointerdown", () => (this.tapped = true));
+    this.input.on("pointerdown", (ptr) => { if (!ui.hitsButton(ptr)) this.tapped = true; });
     startMusic("credits");
     this.cameras.main.setBackgroundColor("#2b2d63");
     this.inventory();
@@ -31,8 +31,10 @@ export class Ending extends Phaser.Scene {
     controls.update();
     this.updateLabelsFrame();
     if (this.naming) {
-      // Gamepad typing on the letter grid: d-pad/stick move, A types, X deletes, Start finishes.
-      if (controls.device === "gamepad") ui.namePicker(true, controls.hint("name"));
+      // Keyboard types directly (handled in ui.js); taps hit the letter grid (UI scene);
+      // the gamepad moves over the grid: d-pad/stick move, A types, X deletes, Start finishes.
+      ui.namePicker(true, controls.hint("name"));
+      if (controls.device !== "gamepad") { this.tapped = false; return; }
       if (controls.pressed("left")) ui.nameNav(-1, 0);
       if (controls.pressed("right")) ui.nameNav(1, 0);
       if (controls.pressed("up")) ui.nameNav(0, -1);
@@ -63,10 +65,9 @@ export class Ending extends Phaser.Scene {
       .filter((w) => w.levels.some((l) => l.skill))
       .map((w) => {
         const skill = w.levels.map((l) => l.skill).find(Boolean);
-        return `<li><span class="where">${esc(worldTitle(w))}</span> ${esc(t(skill))}</li>`;
-      })
-      .join("");
-    ui.panel(t(ending.inventoryTitle), `<ul class="inventory">${rows}</ul>`, `${controls.hint("confirm")} to continue`);
+        return [worldTitle(w), t(skill)];
+      });
+    ui.panel(t(ending.inventoryTitle), rows, `${controls.hint("confirm")} to continue`);
     this.wait(() => { ui.hideBanner(); this.fogMap(); }, 1200);
   }
 
@@ -89,7 +90,7 @@ export class Ending extends Phaser.Scene {
     this.fog = [];
     for (let i = 0; i < 26; i++) {
       const c = this.add.image(fogX + Math.random() * width * 1.6, height * (0.1 + Math.random() * 0.9), "bg-clouds")
-        .setScale(1 + Math.random() * 1.5).setAlpha(0.85).setTint(0xd8d8e8);
+        .setScale(Math.random() < 0.5 ? 1 : 2).setAlpha(0.85).setTint(0xd8d8e8);
       this.fog.push(c);
       this.tweens.add({ targets: c, x: c.x + 10, duration: 3000 + Math.random() * 2000, yoyo: true, repeat: -1 });
     }
@@ -100,11 +101,15 @@ export class Ending extends Phaser.Scene {
 
     const cam = this.cameras.main;
     cam.centerOn(last.x, last.y);
-    cam.setZoom(1.6);
-    this.tweens.add({ targets: cam, zoom: 0.55, duration: 3500, ease: "Sine.inOut" });
-    this.tweens.add({ targets: cam, scrollX: fogX - width / 2 + 60, duration: 3500, ease: "Sine.inOut" });
-    this.showLabels = true;
-    this.time.delayedCall(3600, () => {
+    // Zoom out in whole steps (3x, 2x, 1x) so pixels stay crisp, then pan into the fog.
+    cam.setZoom(3);
+    cam.centerOn(last.x, last.y - 10);
+    this.time.delayedCall(700, () => { cam.setZoom(2); cam.centerOn(last.x, last.y - 10); });
+    this.time.delayedCall(1400, () => { cam.setZoom(1); cam.centerOn(last.x, last.y - 10); this.showLabels = true; });
+    this.time.delayedCall(1600, () => {
+      this.tweens.add({ targets: cam, scrollX: Math.round(fogX - width / 2 + 40), duration: 2000, ease: "Sine.inOut" });
+    });
+    this.time.delayedCall(3700, () => {
       ui.caption("", t(game.content.ending?.fogCaption), 0);
       this.wait(() => this.nameWorld(), 1200);
     });
@@ -205,14 +210,15 @@ export class Ending extends Phaser.Scene {
     });
   }
 
-  // DOM labels for the fog map (question marks, cities and World 9).
+  // Labels for the fog map (question marks, cities and World 9), in screen pixels.
   updateLabelsFrame() {
     if (!this.showLabels) return;
-    const cam = this.cameras.main, z = cam.zoom * this.game.scale.zoom;
-    const r = this.game.canvas.getBoundingClientRect();
-    const toS = (x, y) => [r.left + (x - cam.worldView.x) * z, r.top + (y - cam.worldView.y) * z];
+    const cam = this.cameras.main;
+    const toS = (x, y) => [(x - cam.worldView.x) * cam.zoom, (y - cam.worldView.y) * cam.zoom];
     this.qmarks?.forEach((q, i) => { const [sx, sy] = toS(q.x, q.y); ui.label(`q${i}`, "?", sx, sy, "plain"); });
     if (this.world9) { const [sx, sy] = toS(this.world9.x, this.world9.y + 26); ui.label("w9", this.world9.name, sx, sy, "sel"); }
-    this.nodes?.forEach((p, i) => { const [sx, sy] = toS(p.x, p.y + (i % 2 ? 22 : -8)); ui.label(`e${i}`, worldTitle(p.w).replace(/^Brooklyn: /, ""), sx, sy, "plain small"); });
+    // Only the last city (Brooklyn) is labeled: the fog is the point here.
+    const last = this.nodes?.[this.nodes.length - 1];
+    if (last) { const [sx, sy] = toS(last.x, last.y - 8); ui.label("e-last", worldTitle(last.w).replace(/^Brooklyn: /, ""), sx, sy, "small"); }
   }
 }

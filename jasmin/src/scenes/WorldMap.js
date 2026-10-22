@@ -1,6 +1,6 @@
 import { controls } from "../controls.js";
 import { startMusic } from "../audio.js";
-import { ui, clean } from "../ui.js";
+import { ui } from "../ui.js";
 import { game, allLevels, isUnlocked, writeSave, worldTitle, t } from "../state.js";
 import { charKey, animKey } from "../art.js";
 import { makeEnvironmentTextures } from "../tiles.js";
@@ -41,7 +41,7 @@ export class WorldMap extends Phaser.Scene {
 
     this.scale.on("resize", this.layout, this);
     this.events.once("shutdown", () => { this.scale.off("resize", this.layout, this); ui.clearAll(); });
-    this.input.on("pointerdown", (p) => this.tap(p));
+    this.input.on("pointerdown", (p) => { if (!ui.hitsButton(p)) this.tap(p); });
     startMusic("map");
     this.refreshText();
   }
@@ -84,19 +84,17 @@ export class WorldMap extends Phaser.Scene {
     const outfitHint = unlocked.length > 1 ? `outfit: ${game.save.outfit} (${controls.device === "touch" ? "pen button" : controls.device === "gamepad" ? controls.padLabels().pen : "X"} to change)` : "";
     const skill = e.level.skill && game.save.done.includes(e.level.id) ? t(e.level.skill) : "";
     ui.banner(worldTitle(e.world), skill, controls.hint("choose"), "top");
-    ui.setHud(`<span class="item">${clean(outfitHint)}</span>`);
+    ui.setHud(outfitHint ? [{ text: outfitHint, tip: true }] : []);
     controls.setActionVisible(unlocked.length > 1);
     this.labelNodes();
   }
 
   labelNodes() {
-    const z = this.game.scale.zoom;
-    const r = this.game.canvas.getBoundingClientRect();
     const short = (w) => worldTitle(w).replace(/^Brooklyn: /, "").replace(/^NYC /, "");
     this.nodes.forEach((p, i) => {
       const below = i % 2 === 0;
       const sel = i === this.idx;
-      ui.label(`n${i}`, short(this.entries[i].world), r.left + p.x * z, r.top + (p.y + (below ? 22 : -34)) * z, sel ? "sel" : "plain small");
+      ui.label(`n${i}`, short(this.entries[i].world), p.x, p.y + (below ? 20 : -34), sel ? "sel" : "small");
     });
   }
 

@@ -76,7 +76,7 @@ export const controls = {
       pen: { touch: "Tap the pen button to write a platform", gamepad: `Press ${b.pen} to write a platform`, keyboard: "Press X to write a platform" },
       pause: { touch: "", gamepad: `${b.start} to resume, ${b.back} for the map`, keyboard: "Enter to resume, Esc for the map" },
       choose: { touch: "tap a city, then tap again to go", gamepad: `left/right to choose, ${b.jump} to go`, keyboard: "left/right to choose, jump to go" },
-      name: { touch: "", gamepad: `${b.jump} type, ${b.pen} delete, ${b.start} done`, keyboard: "" },
+      name: { touch: "tap the letters, then OK", gamepad: `${b.jump} type, ${b.pen} delete, ${b.start} done`, keyboard: "type the name, then Enter" },
     };
     return words[kind][d];
   },
@@ -171,6 +171,8 @@ export function initControls(onFirstGesture, game) {
   window.addEventListener("touchend", gesture, { passive: true });
   window.addEventListener("click", gesture);
 
+  drawTouchIcons();
+
   // Each button tracks its own pointers so multitouch (run + jump) works.
   document.querySelectorAll("#touch button").forEach((btn) => {
     const key = btn.dataset.key;
@@ -192,5 +194,27 @@ export function initControls(onFirstGesture, game) {
       if (e.pointerType === "touch" && e.buttons) { pointers.add(e.pointerId); sync(); }
     });
     btn.addEventListener("contextmenu", (e) => e.preventDefault());
+  });
+}
+
+// Pixel-art icons for the touch buttons (same chunky pixels as the game).
+const TOUCH_ICONS = {
+  left: ["....#...", "...##...", "..###...", ".####...", ".####...", "..###...", "...##...", "....#..."],
+  right: ["...#....", "...##...", "...###..", "...####.", "...####.", "...###..", "...##...", "...#...."],
+  jump: ["........", "...##...", "..####..", ".######.", "########", "...##...", "...##...", "........"],
+  pen: [".......#", "......##", ".....##.", "....##..", "...##...", "..##....", ".#.#....", "#.#....."],
+};
+
+function drawTouchIcons() {
+  document.querySelectorAll("#touch .px").forEach((el) => {
+    const rows = TOUCH_ICONS[el.dataset.icon];
+    if (!rows) return;
+    const c = document.createElement("canvas");
+    c.width = rows[0].length;
+    c.height = rows.length;
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = "rgba(255,255,255,0.9)";
+    rows.forEach((r, y) => [...r].forEach((ch, x) => ch === "#" && ctx.fillRect(x, y, 1, 1)));
+    el.style.backgroundImage = `url(${c.toDataURL()})`;
   });
 }

@@ -45,8 +45,8 @@ export class Title extends Phaser.Scene {
 
     const full = document.fullscreenElement || document.webkitFullscreenElement;
     ui.banner("", "", controls.isTouch ? "Tap to start" : "Press Start", "bottom");
-    if (!controls.isTouch && !full) ui.setHud(`<span class="item tip">F for full screen</span>`);
-    this.input.once("pointerdown", () => this.start());
+    if (!controls.isTouch && !full) ui.setHud([{ text: "F for full screen", tip: true }]);
+    this.input.on("pointerdown", (ptr) => { if (!ui.hitsButton(ptr)) this.start(); });
     const restart = () => this.scene.restart();
     this.scale.once("resize", restart);
     this.events.once("shutdown", () => this.scale.off("resize", restart));

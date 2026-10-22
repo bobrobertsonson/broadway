@@ -1,106 +1,95 @@
-// DOM overlay for all text: HUD, captions, banners, menus, world-space labels.
-// Text lives in HTML so it stays crisp at any zoom on a phone.
-
-const root = document.createElement("div");
-root.id = "ui";
-document.body.appendChild(root);
-root.innerHTML = `
-  <div id="hud"></div>
-  <div id="meter"><span class="eye">seen</span><div class="bar"><div class="fill"></div></div></div>
-  <div id="namebox"><div class="prompt"></div><input maxlength="24" autocomplete="off" spellcheck="false"><button>OK</button><div class="keys"></div><div class="keyhint"></div></div>
-  <div id="corner">
-    <button id="btn-mute" aria-label="sound">&#9834;</button>
-    <button id="btn-home" aria-label="map">&#8962;</button>
-    <button id="btn-full" aria-label="full screen">&#10530;</button>
-  </div>
-  <div id="caption"><div class="label"></div><div class="text"></div></div>
-  <div id="banner"><div class="title"></div><div class="sub"></div><div class="hint"></div></div>
-  <div id="labels"></div>
-  <div id="fade"></div>
-`;
-
-const $ = (sel) => root.querySelector(sel);
-const hud = $("#hud");
-const caption = $("#caption");
-const banner = $("#banner");
-const labels = $("#labels");
-const fadeEl = $("#fade");
-let captionTimer = 0;
+// All on-screen text and HUD, drawn in pixels by the UI scene (scenes/UI.js) at the
+// same scale as the game art. Game code calls this small API; it only records state,
+// and the UI scene, which always renders on top, draws that state every frame.
 
 // Removes em dashes from any on-screen string (spec rule), even if content has them.
-export function esc(s) {
-  return clean(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-}
-
 export function clean(s) {
   return String(s ?? "").replace(/—/g, ", ").replace(/–/g, "-");
 }
 
-export const ui = {
-  root,
+// World 9 letter grid.
+export const KEY_COLS = 10;
+export const KEYS = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ", "'", "space", "del", "ok"];
+export const KEY_LABEL = { space: "space", del: "⌫", ok: "OK" };
+const NAME_MAX = 24;
 
-  setHud(html) {
-    hud.innerHTML = html;
+let captionTimer = 0;
+let nameDone = null;
+
+// Everything the UI scene draws. `v` counters tell it what changed.
+export const state = {
+  hud: { items: [], v: 0 },            // [{ icon?: textureKey, text?: string, dim?: bool, tip?: bool }]
+  caption: { label: "", text: "", show: false, v: 0 },
+  banner: { title: "", sub: "", hint: "", cls: "", rows: null, show: false, v: 0 },
+  labels: new Map(),                   // id -> { text, x, y, cls } in game screen pixels
+  meter: { value: null, cloaked: false },
+  fade: { on: false, ms: 400, v: 0 },
+  name: { active: false, prompt: "", value: "", sel: 0, picker: false, hint: "", v: 0 },
+  buttons: { home: true, full: true, muted: false, rects: [] },
+  handlers: { home: null, full: null, mute: null },
+};
+
+const bump = (o) => { o.v++; };
+
+export const ui = {
+  // items: [{ icon, text, dim, tip }]
+  setHud(items = []) {
+    state.hud.items = items;
+    bump(state.hud);
   },
 
   caption(label, text, ms = 3800) {
-    caption.querySelector(".label").textContent = clean(label);
-    caption.querySelector(".text").textContent = clean(text);
-    caption.classList.add("show");
+    Object.assign(state.caption, { label: clean(label), text: clean(text), show: true });
+    bump(state.caption);
     clearTimeout(captionTimer);
-    if (ms > 0) captionTimer = setTimeout(() => caption.classList.remove("show"), ms);
+    if (ms > 0) captionTimer = setTimeout(() => this.hideCaption(), ms);
   },
 
   hideCaption() {
     clearTimeout(captionTimer);
-    caption.classList.remove("show");
+    if (!state.caption.show) return;
+    state.caption.show = false;
+    bump(state.caption);
   },
 
+  // cls: "" (centered), "top", "bottom" (above the title screen's Jasmin), "dim" (darkened backdrop)
   banner(title, sub = "", hint = "", cls = "") {
-    banner.className = cls;
-    banner.querySelector(".title").textContent = clean(title);
-    banner.querySelector(".sub").textContent = clean(sub);
-    banner.querySelector(".hint").textContent = clean(hint);
-    void banner.offsetWidth;
-    banner.classList.add("show");
+    Object.assign(state.banner, { title: clean(title), sub: clean(sub), hint: clean(hint), cls, rows: null, show: true });
+    bump(state.banner);
   },
 
-  // Banner whose body is trusted HTML built by the game (strings inside must be escaped).
-  panel(title, html, hint = "") {
+  // Banner with a two-column list: rows = [[left, right], ...]
+  panel(title, rows, hint = "") {
     this.banner(title, "", hint);
-    banner.querySelector(".sub").innerHTML = html;
+    state.banner.rows = rows.map(([a, b]) => [clean(a), clean(b)]);
+    bump(state.banner);
   },
 
   hideBanner() {
-    banner.classList.remove("show");
+    if (!state.banner.show) return;
+    state.banner.show = false;
+    bump(state.banner);
   },
 
-  // World-space label. Call every frame with screen coords in CSS px.
-  label(id, text, sx, sy, cls = "") {
-    let el = labels.querySelector(`[data-id="${id}"]`);
-    if (!el) {
-      el = document.createElement("div");
-      el.dataset.id = id;
-      labels.appendChild(el);
-    }
-    el.className = `wlabel ${cls}`;
-    el.style.display = text ? "" : "none";
-    if (el.textContent !== clean(text)) el.textContent = clean(text);
-    el.style.transform = `translate(${Math.round(sx)}px, ${Math.round(sy)}px) translate(-50%, -100%)`;
+  // Label anchored at its bottom center, in game screen pixels. Call every frame.
+  // cls: "plain" (no box), "sel" (gold box), "small" (no box, dimmer) or "" (dark box).
+  label(id, text, x, y, cls = "") {
+    if (!text) { state.labels.delete(id); return; }
+    state.labels.set(id, { text: clean(text), x: Math.round(x), y: Math.round(y), cls });
   },
 
   clearLabels() {
-    labels.innerHTML = "";
+    state.labels.clear();
   },
 
   fade(on, ms = 400) {
-    fadeEl.style.transitionDuration = `${ms}ms`;
-    fadeEl.classList.toggle("on", on);
+    Object.assign(state.fade, { on, ms });
+    bump(state.fade);
     return new Promise((r) => setTimeout(r, ms));
   },
 
   clearAll() {
-    this.setHud("");
+    this.setHud([]);
     this.meter(null);
     this.hideCaption();
     this.hideBanner();
@@ -109,123 +98,83 @@ export const ui = {
 
   // Ghost "seen" meter. value null hides it.
   meter(value, cloaked = false) {
-    const m = $("#meter");
-    m.style.display = value == null ? "none" : "flex";
-    if (value == null) return;
-    m.querySelector(".fill").style.width = `${Math.round(value * 100)}%`;
-    m.classList.toggle("cloaked", cloaked);
+    state.meter.value = value;
+    state.meter.cloaked = cloaked;
   },
 
-  // Text input for naming World 9. Resolves with the trimmed name.
-  // opts.picker shows an on-screen letter grid for gamepads (no OS keyboard on a TV).
+  // Naming World 9. Typing (keyboard), tapping/clicking letters, or the gamepad
+  // (nameNav/namePress/nameDelete/nameSubmit) all work. Resolves with the name.
   askName(prompt, opts = {}) {
-    const box = $("#namebox");
-    const input = box.querySelector("input");
-    box.querySelector(".prompt").textContent = clean(prompt);
-    input.value = "";
-    box.classList.add("show");
-    buildKeys();
-    this.namePicker(!!opts.picker, opts.hint);
-    if (!opts.picker) setTimeout(() => input.focus(), 50);
+    Object.assign(state.name, { active: true, prompt: clean(prompt), value: "", sel: 0, picker: true, hint: clean(opts.hint || "") });
+    bump(state.name);
     return new Promise((resolve) => {
-      const done = () => {
-        const v = input.value.replace(/\u2014/g, " ").trim().slice(0, 24);
+      nameDone = () => {
+        const v = state.name.value.trim().slice(0, NAME_MAX);
         if (!v) return;
-        box.classList.remove("show");
-        input.blur();
+        state.name.active = false;
+        bump(state.name);
+        nameDone = null;
         resolve(v);
       };
-      nameDone = done;
-      box.querySelector("button").onclick = done;
-      input.onkeydown = (e) => { e.stopPropagation(); if (e.key === "Enter") done(); };
-      input.onkeyup = (e) => e.stopPropagation();
     });
   },
 
-  // Letter grid: show/hide, move the highlight, press the highlighted key.
   namePicker(on, hint = "") {
-    const keys = $("#namebox .keys");
-    keys.classList.toggle("show", on);
-    $("#namebox .keyhint").textContent = on ? clean(hint) : "";
-    if (on) { $("#namebox input").blur(); highlight(); }
+    if (state.name.hint === clean(hint)) return;
+    state.name.hint = clean(hint);
+    bump(state.name);
   },
   nameNav(dx, dy) {
     const n = KEYS.length;
-    if (dx) keySel = (keySel + dx + n) % n;
-    if (dy) keySel = (keySel + dy * KEY_COLS + n) % n;
-    highlight();
+    let s = state.name.sel;
+    if (dx) s = (s + dx + n) % n;
+    if (dy) s = (s + dy * KEY_COLS + n) % n;
+    state.name.sel = s;
+    bump(state.name);
   },
-  namePress() { pressKey(KEYS[keySel]); },
-  nameDelete() { pressKey("del"); },
+  namePress() { this.nameKey(KEYS[state.name.sel]); },
+  nameDelete() { this.nameKey("del"); },
   nameSubmit() { nameDone?.(); },
 
-  onHome(fn) { $("#btn-home").onclick = fn; },
-  onFull(fn) { $("#btn-full").onclick = fn; },
-  showFull(v) { $("#btn-full").style.display = v ? "" : "none"; },
-  onMute(fn) { $("#btn-mute").onclick = fn; },
-  setMuted(m) { $("#btn-mute").classList.toggle("off", m); },
-  showHome(v) { $("#btn-home").style.display = v ? "" : "none"; },
+  // One key of the letter grid (or a typed character).
+  nameKey(k) {
+    if (!state.name.active) return;
+    let v = state.name.value;
+    if (k === "ok") return nameDone?.();
+    if (k === "del") v = v.slice(0, -1);
+    else if (v.length < NAME_MAX) {
+      const ch = k === "space" ? " " : k;
+      // Grid letters: capital at the start of each word, lowercase otherwise.
+      const startOfWord = v === "" || v.endsWith(" ");
+      v += KEYS.includes(k) && /^[A-Z]$/.test(ch) && !startOfWord ? ch.toLowerCase() : ch;
+    }
+    state.name.value = v;
+    bump(state.name);
+  },
+
+  // Corner buttons (drawn by the UI scene).
+  onHome(fn) { state.handlers.home = fn; },
+  onFull(fn) { state.handlers.full = fn; },
+  onMute(fn) { state.handlers.mute = fn; },
+  showHome(v) { state.buttons.home = v; },
+  showFull(v) { state.buttons.full = v; },
+  setMuted(m) { state.buttons.muted = m; },
+
+  // True when a pointer press landed on a UI button, so scenes don't also treat it as a tap.
+  hitsButton(p) {
+    return state.buttons.rects.some((r) => p.x >= r.x && p.x < r.x + r.w && p.y >= r.y && p.y < r.y + r.h)
+      || (state.name.active && !!state.name.gridRect && inRect(p, state.name.gridRect));
+  },
 };
 
-// ---------- World 9 letter grid ----------
-const KEY_COLS = 10;
-const KEYS = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ", "'", "space", "del", "ok"];
-const KEY_LABEL = { space: "space", del: "\u232B", ok: "OK" };
-let keySel = 0;
-let nameDone = null;
-
-function buildKeys() {
-  const wrap = $("#namebox .keys");
-  if (wrap.childElementCount) return;
-  KEYS.forEach((k, i) => {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.textContent = KEY_LABEL[k] || k;
-    b.onclick = () => { keySel = i; highlight(); pressKey(k); };
-    wrap.appendChild(b);
-  });
+function inRect(p, r) {
+  return p.x >= r.x && p.x < r.x + r.w && p.y >= r.y && p.y < r.y + r.h;
 }
 
-function highlight() {
-  $("#namebox .keys").querySelectorAll("button").forEach((b, i) => b.classList.toggle("sel", i === keySel));
-}
-
-// Letters are capitalized at the start of each word, lowercase otherwise.
-function pressKey(k) {
-  const input = $("#namebox input");
-  let v = input.value;
-  if (k === "ok") return nameDone?.();
-  if (k === "del") v = v.slice(0, -1);
-  else if (v.length < 24) {
-    const ch = k === "space" ? " " : k;
-    const startOfWord = v === "" || v.endsWith(" ");
-    v += /[A-Z]/.test(ch) && !startOfWord ? ch.toLowerCase() : ch;
-  }
-  input.value = v;
-}
-
-// Small pixel icon as an <img>, from a Phaser texture key.
-export function icon(game, key, scale = 2, frame) {
-  const url = iconCache(game, key, frame);
-  if (!url) return "";
-  const f = game.textures.getFrame(key, frame);
-  return `<img class="icon" src="${url}" style="width:calc(${f.width * scale}px * var(--ui, 1));height:calc(${f.height * scale}px * var(--ui, 1))">`;
-}
-
-const cache = new Map();
-function iconCache(game, key, frame) {
-  const ck = `${key}|${frame ?? ""}`;
-  if (cache.has(ck)) return cache.get(ck);
-  if (!game.textures.exists(key)) return null;
-  const f = game.textures.getFrame(key, frame);
-  const c = document.createElement("canvas");
-  c.width = f.width; c.height = f.height;
-  c.getContext("2d").drawImage(f.source.image, f.cutX, f.cutY, f.width, f.height, 0, 0, f.width, f.height);
-  const url = c.toDataURL();
-  cache.set(ck, url);
-  return url;
-}
-
-export function clearIconCache() {
-  cache.clear();
-}
+// Typing a name on a keyboard.
+window.addEventListener("keydown", (e) => {
+  if (!state.name.active) return;
+  if (e.key === "Enter") { e.preventDefault(); return nameDone?.(); }
+  if (e.key === "Backspace") { e.preventDefault(); return ui.nameKey("del"); }
+  if (e.key.length === 1 && !e.metaKey && !e.ctrlKey) { e.preventDefault(); ui.nameKey(e.key); }
+}, true);

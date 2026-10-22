@@ -21,7 +21,9 @@ Progress is saved in the browser. Reset: run `localStorage.clear()` in the brows
 
 ## Playing on a TV from a Mac (HDMI + controller)
 
-Set up once, in this order:
+**Easiest: double-click `Play on TV.command`** (in the `jasmin` folder). It serves the game from the folder and opens Google Chrome full screen with sound allowed, so the controller works straight away with no key press. Quit with Cmd+Q. Chrome opens on the Mac's main display, so first make the TV the main display: System Settings > Displays > Arrange, then drag the menu bar onto the TV. It needs Python 3 or Node.js on the Mac, or set `ONLINE_URL` inside the file to the game's GitHub Pages address. If macOS says it can't open the file, right-click it > Open once.
+
+Setup, once, in this order:
 
 1. **Display: extend, don't mirror.** System Settings > Displays: use the TV as a separate display (not "Mirror"), at its native resolution ("Default for display" or 1080p). Mirroring makes macOS rescale the picture and the pixel art goes soft.
 2. **TV picture size:** set the TV's HDMI input to "Just Scan", "Screen Fit", "PC" or "1:1" (the name varies by brand). Otherwise the TV crops the edges. The HUD keeps a 3.5% margin on large screens just in case.

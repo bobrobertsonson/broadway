@@ -1,6 +1,6 @@
 import { controls } from "../controls.js";
 import { sfx, startMusic } from "../audio.js";
-import { ui, icon, clearIconCache } from "../ui.js";
+import { ui } from "../ui.js";
 import { game, findLevel, nextLevelId, companionsAtStart, hasCharm, writeSave, arriveOutfit, worldTitle } from "../state.js";
 import { t, has, joinCaption } from "../content.js";
 import { MAPS } from "../maps.js";
@@ -37,7 +37,6 @@ export class Level extends Phaser.Scene {
   create() {
     ui.clearAll();
     controls.showPad(true);
-    clearIconCache();
     controls.release();
     this.mode = "play";
     this.cut = null;
@@ -83,7 +82,7 @@ export class Level extends Phaser.Scene {
       ui.clearAll();
     });
     this.events.on("charm-used", () => this.refreshHud());
-    this.input.on("pointerdown", () => { this.tapped = true; });
+    this.input.on("pointerdown", (ptr) => { if (!ui.hitsButton(ptr)) this.tapped = true; });
     ui.showHome(true);
     ui.onHome(() => this.leave());
 
@@ -526,9 +525,8 @@ export class Level extends Phaser.Scene {
   }
 
   updateLabels(andrewReady) {
-    const cam = this.cameras.main, z = cam.zoom * this.game.scale.zoom;
-    const canvas = this.game.canvas.getBoundingClientRect();
-    const toScreen = (x, y) => [canvas.left + (x - cam.worldView.x) * z, canvas.top + (y - cam.worldView.y) * z];
+    const cam = this.cameras.main;
+    const toScreen = (x, y) => [(x - cam.worldView.x) * cam.zoom, (y - cam.worldView.y) * cam.zoom];
     const andrew = this.trail.get("andrew");
     if (andrew && andrewReady && this.mode === "play" && !this.player.dead) {
       const [sx, sy] = toScreen(andrew.sprite.x, andrew.sprite.y - 33);
@@ -723,14 +721,12 @@ export class Level extends Phaser.Scene {
   }
 
   refreshHud() {
-    const g = this.game, p = this.player;
-    const parts = [];
-    parts.push(`<span class="item">${icon(g, "item-collectible", 2)}${this.score}</span>`);
-    parts.push(`<span class="item ${p.hasHat ? "" : "dim"}">${icon(g, "item-hat", 2)}</span>`);
-    if (this.penUses > 0 || this.penTaught) parts.push(`<span class="item">${icon(g, "item-pen", 2)}${this.penUses}</span>`);
-    if (hasCharm(this.world)) parts.push(`<span class="item ${p.charmReady ? "" : "dim"}">${icon(g, "item-charm", 2)}</span>`);
-    if (this.boss) parts.push(`<span class="item">${icon(g, "prop-valve-1", 1)}${this.boss.opened}/3</span>`);
-    ui.setHud(parts.join(""));
+    const p = this.player;
+    const items = [{ icon: "item-collectible", text: String(this.score) }, { icon: "item-hat", dim: !p.hasHat }];
+    if (this.penUses > 0 || this.penTaught) items.push({ icon: "item-pen", text: String(this.penUses) });
+    if (hasCharm(this.world)) items.push({ icon: "item-charm", dim: !p.charmReady });
+    if (this.boss) items.push({ icon: "prop-valve-1", text: `${this.boss.opened}/3` });
+    ui.setHud(items);
     controls.setActionVisible(this.penUses > 0);
   }
 
@@ -786,7 +782,7 @@ export class Level extends Phaser.Scene {
   startCut(finish) {
     this.freeze();
     this.cut = { finish, timers: [], tweens: [], age: 0 };
-    ui.label("skip", controls.hint("skip"), window.innerWidth - 70, window.innerHeight - 8, "plain");
+    ui.label("skip", controls.hint("skip"), this.scale.width - 40, this.scale.height - 4, "plain");
   }
 
   cutDelay(ms, fn) {

@@ -15,18 +15,15 @@
 
   <div id="touch" aria-hidden="true">
     <div class="pad left">
-      <button data-key="left" aria-label="left">&#9664;</button>
-      <button data-key="right" aria-label="right">&#9654;</button>
+      <button data-key="left" aria-label="left"><span class="px" data-icon="left"></span></button>
+      <button data-key="right" aria-label="right"><span class="px" data-icon="right"></span></button>
     </div>
     <div class="pad right">
-      <button data-key="action" class="small hidden" aria-label="pen">&#9998;</button>
-      <button data-key="jump" class="big" aria-label="jump">&#9650;</button>
+      <button data-key="action" class="small hidden" aria-label="pen"><span class="px" data-icon="pen"></span></button>
+      <button data-key="jump" class="big" aria-label="jump"><span class="px" data-icon="jump"></span></button>
     </div>
   </div>
 
-  <div id="rotate">
-    <div>Turn your phone sideways to play</div>
-  </div>
 
   <!-- Phaser from the CDN, with a local copy as fallback (offline, or CDN blocked). -->
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
