@@ -349,18 +349,27 @@ export class Level extends Phaser.Scene {
   // capitals, red stripe, on a post. Text is drawn in the pixel font's glyphs.
   buildSigns() {
     for (const sg of this.map.signs || []) {
-      const text = fontSafe(sg.text.toUpperCase());
-      const key = `sign-${text}`;
+      const park = sg.style === "park";
+      const text = fontSafe(park ? sg.text : sg.text.toUpperCase());
+      const key = `sign-${sg.style || "street"}-${text}`;
       const tw = measure(text);
       const w = tw + 8, h = 15, postH = 18;
       if (!this.textures.exists(key)) {
         const tex = this.textures.createCanvas(key, w, h + postH);
         const ctx = tex.getContext();
-        ctx.fillStyle = "#5a5a66"; ctx.fillRect(Math.floor(w / 2) - 1, h, 2, postH);     // post
-        ctx.fillStyle = "#2a2a34"; ctx.fillRect(1, 0, w - 2, h); ctx.fillRect(0, 1, w, h - 2); // frame
-        ctx.fillStyle = "#f8f6f0"; ctx.fillRect(1, 1, w - 2, h - 2);                        // plate
-        drawPlain(ctx, text, 4, 3, "#141012");
-        ctx.fillStyle = "#d8262a"; ctx.fillRect(2, h - 4, w - 4, 1);                        // red stripe
+        if (park) {
+          // Brown wooden park sign with cream lettering, on two posts.
+          ctx.fillStyle = "#4a3020"; ctx.fillRect(3, h, 2, postH); ctx.fillRect(w - 5, h, 2, postH);
+          ctx.fillStyle = "#3a2416"; ctx.fillRect(1, 0, w - 2, h); ctx.fillRect(0, 1, w, h - 2);
+          ctx.fillStyle = "#6b4528"; ctx.fillRect(1, 1, w - 2, h - 2);
+          drawPlain(ctx, text, 4, 4, "#f2e6c8");
+        } else {
+          ctx.fillStyle = "#5a5a66"; ctx.fillRect(Math.floor(w / 2) - 1, h, 2, postH);     // post
+          ctx.fillStyle = "#2a2a34"; ctx.fillRect(1, 0, w - 2, h); ctx.fillRect(0, 1, w, h - 2); // frame
+          ctx.fillStyle = "#f8f6f0"; ctx.fillRect(1, 1, w - 2, h - 2);                        // plate
+          drawPlain(ctx, text, 4, 3, "#141012");
+          ctx.fillStyle = "#d8262a"; ctx.fillRect(2, h - 4, w - 4, 1);                        // red stripe
+        }
         tex.refresh();
       }
       let row = this.rowsN - 1;

@@ -9,7 +9,8 @@
 //  b hiding spot  X exit sign  P picnic  R Rupert  I Isaac  Y Aya  N Nube
 //  u bus platform  o tortoise platform  L sea lion  Q iguana  c cop  T Tim  C hut  B boss door
 //  K London chicken shop front (decor)
-// Optional per map: signs: [{ col, text }] street signs standing on the ground at that column.
+// Optional per map: signs: [{ col, text, style }] signs standing on the ground at that column;
+//  style "park" is a brown wooden park sign, otherwise a London street sign.
 //  boss arena: V valve  Z fire boss
 
 export const MAPS = {
@@ -40,6 +41,8 @@ export const MAPS = {
     theme: "minneapolis",
     music: "level",
     ice: true,
+    // The picnic lake's name (from Andrew).
+    signs: [{ col: 109, text: "Lake Minne-no-thanks", style: "park" }],
     rows: [
       "..................................................................................................................................................................................................................",
       "..................................................................................................................................................................................................................",
