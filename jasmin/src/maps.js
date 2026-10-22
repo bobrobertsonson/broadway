@@ -9,12 +9,15 @@
 //  b hiding spot  X exit sign  P picnic  R Rupert  I Isaac  Y Aya  N Nube
 //  u bus platform  o tortoise platform  L sea lion  Q iguana  c cop  T Tim  C hut  B boss door
 //  K London chicken shop front (decor)
+// Optional per map: signs: [{ col, text }] street signs standing on the ground at that column.
 //  boss arena: V valve  Z fire boss
 
 export const MAPS = {
   "1-1": {
     theme: "london",
     music: "level",
+    // Her neighborhood (from Andrew), near the start of the level.
+    signs: [{ col: 7, text: "Ealing" }],
     rows: [
       "......................................................................................................................................................",
       "......................................................................................................................................................",

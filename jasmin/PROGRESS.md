@@ -72,6 +72,7 @@ Game lives in `jasmin/` on branch `jasmin-game`. Run: `npx http-server jasmin -c
   - A London chicken-shop storefront stands in the level, with a pixel "CHICKEN" sign. Map marker `K`.
   - Pickup order, left to right: Warpaint, Chicken shop, Bloc Party, Nando's.
   - The alarm-clock enemy by the shop was removed so the area stays calm.
+  - An EALING street sign near the start marks her neighborhood (from Andrew). It is London style: white plate, black capitals, red stripe, on a post. Signs are a reusable map option, `signs: [{ col, text }]`, lettered with the pixel font's glyphs without the outline (`drawPlain` in `font.js`).
   - Both captions are drafts written by Claude Code from Andrew's one-line answer: "You grew up on London chicken shops." and "Nando's. Extra hot?"
 
 ## Logo (Andrew's feedback)

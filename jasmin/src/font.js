@@ -332,3 +332,23 @@ export function measure(str, which = "small") {
   }
   return best;
 }
+
+// Paints text into a 2D canvas context with fill pixels only (no outline), for
+// lettering that is part of the art, like dark street-sign text on a white plate.
+// Returns the drawn width. y is the top of the cap height.
+export function drawPlain(ctx, str, x, y, color, which = "small") {
+  const src = which === "big" ? BIG : SMALL;
+  ctx.fillStyle = color;
+  let cx = x;
+  for (const ch of fontSafe(str, which)) {
+    if (ch === " ") { cx += SPACE[which]; continue; }
+    const def = src[ch];
+    if (!def) continue;
+    const g = parse(def);
+    g.rows.forEach((row, ry) => {
+      for (let rx = 0; rx < row.length; rx++) if (row[rx] === "X") ctx.fillRect(cx + rx, y + g.y0 + ry, 1, 1);
+    });
+    cx += g.w + 1;
+  }
+  return cx - x - 1;
+}

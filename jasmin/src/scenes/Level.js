@@ -12,7 +12,7 @@ import { makeEnemyAnims, spawnEnemy, updateEnemy, squash, ENEMY_CHARS } from "..
 import { Ghosts } from "../ghosts.js";
 import { Boss } from "../boss.js";
 import { charKey, animKey } from "../art.js";
-import { FONTS, fontSafe } from "../font.js";
+import { FONTS, fontSafe, drawPlain, measure } from "../font.js";
 
 const T = 16;
 const TILE = { ground: 0, top: 1, brick: 2, oneway: 3 };
@@ -65,6 +65,7 @@ export class Level extends Phaser.Scene {
 
     this.trail = new Trail(this, this.player, companionsAtStart(this.world), this.dark);
     this.buildObjects();
+    this.buildSigns();
     this.applyCompanionMods();
 
     this.physics.add.collider(this.player.sprite, this.layer);
@@ -342,6 +343,30 @@ export class Level extends Phaser.Scene {
     const s = this.add.sprite(x + 10, y, key, 0).setOrigin(0.5, 1).setDepth(7).setFlipX(true);
     s.play(animKey(key, "idle"));
     this.picnic = { x, y, sprite: s, done: false };
+  }
+
+  // Street signs from the map's `signs` list: London style, white plate, black
+  // capitals, red stripe, on a post. Text is drawn in the pixel font's glyphs.
+  buildSigns() {
+    for (const sg of this.map.signs || []) {
+      const text = fontSafe(sg.text.toUpperCase());
+      const key = `sign-${text}`;
+      const tw = measure(text);
+      const w = tw + 8, h = 15, postH = 18;
+      if (!this.textures.exists(key)) {
+        const tex = this.textures.createCanvas(key, w, h + postH);
+        const ctx = tex.getContext();
+        ctx.fillStyle = "#5a5a66"; ctx.fillRect(Math.floor(w / 2) - 1, h, 2, postH);     // post
+        ctx.fillStyle = "#2a2a34"; ctx.fillRect(1, 0, w - 2, h); ctx.fillRect(0, 1, w, h - 2); // frame
+        ctx.fillStyle = "#f8f6f0"; ctx.fillRect(1, 1, w - 2, h - 2);                        // plate
+        drawPlain(ctx, text, 4, 3, "#141012");
+        ctx.fillStyle = "#d8262a"; ctx.fillRect(2, h - 4, w - 4, 1);                        // red stripe
+        tex.refresh();
+      }
+      let row = this.rowsN - 1;
+      for (let r = 0; r < this.rowsN; r++) if ("#=-".includes(this.cell(sg.col, r))) { row = r; break; }
+      this.add.image(sg.col * T + 8, row * T, key).setOrigin(0.5, 1).setDepth(1);
+    }
   }
 
   // London chicken shop front (decor behind the action), sign lettered in the pixel font.
