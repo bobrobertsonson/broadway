@@ -3,7 +3,7 @@
 ## Play it locally
 
 ```
-npx http-server jasmin -p 8080 -c-1
+npx http-server . -p 8080 -c-1
 ```
 
 Open http://localhost:8080. On a phone on the same Wi-Fi: `http://<your-computer-ip>:8080`.
@@ -23,7 +23,7 @@ Progress is saved in the browser. Reset: run `localStorage.clear()` in the brows
 
 ## Playing on a TV from a Mac (HDMI + controller)
 
-**Easiest: double-click `Play on TV.command`** (in the `jasmin` folder). It serves the game from the folder and opens Google Chrome full screen with sound allowed, so the controller works straight away with no key press. Quit with Cmd+Q. Chrome opens on the Mac's main display, so first make the TV the main display: System Settings > Displays > Arrange, then drag the menu bar onto the TV. It needs Python 3 or Node.js on the Mac, or set `ONLINE_URL` inside the file to the game's GitHub Pages address. If macOS says it can't open the file, right-click it > Open once.
+**Easiest: double-click `Play on TV.command`** (in the game folder). It serves the game from the folder and opens Google Chrome full screen with sound allowed, so the controller works straight away with no key press. Quit with Cmd+Q. Chrome opens on the Mac's main display, so first make the TV the main display: System Settings > Displays > Arrange, then drag the menu bar onto the TV. It needs Python 3 or Node.js on the Mac, or set `ONLINE_URL` inside the file to the game's GitHub Pages address. If macOS says it can't open the file, right-click it > Open once.
 
 Setup, once, in this order:
 
@@ -39,7 +39,7 @@ The game asks the browser to keep the screen awake while it's open. Esc in full 
 
 ## Put it online (GitHub Pages)
 
-Repo Settings > Pages > Deploy from a branch > pick the branch and `/ (root)`. The game is then at `https://<user>.github.io/<repo>/jasmin/`.
+Repo Settings > Pages > Deploy from a branch > pick the branch and `/ (root)`. The game is then at `https://<user>.github.io/<repo>/`. Its pages carry a `noindex` tag so search engines skip them even if the link leaks.
 
 ## What to edit
 
