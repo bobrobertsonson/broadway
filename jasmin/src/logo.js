@@ -142,7 +142,7 @@ function buildLogo() {
   const x2 = cx - Math.floor(l2.width / 2);
   l2.items.forEach((it, i) => main.glyph(it.g, x2 + it.x, y2 + bounce[i], 3));
   // SUPER, perched to the right of the hat
-  const x1 = x2 + 16 + Math.floor((l2.width - 16 - l1.width) / 2);
+  const x1 = x2 + 26 + Math.floor((l2.width - 26 - l1.width) / 2); // right of the hat
   l1.items.forEach((it, i) => main.glyph(it.g, x1 + it.x, y1, 2));
   // WORLD 3:
   const x3 = cx - Math.floor(l3.width / 2);
@@ -153,9 +153,9 @@ function buildLogo() {
   const x4 = cx - Math.floor((l4.width + 3) / 2);
   l4.items.forEach((it, i) => sub.glyph(it.g, x4 + it.x, y4 + [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0][i], 2, sc));
 
-  // Witch hat hanging on the J: drawn upright (fill only), rotated with nearest
-  // sampling so it tilts down to the left, then outlined. The brim's right end hooks
-  // over the J's top bar and the hat hangs off the letter's left side.
+  // Witch hat worn by the J: drawn upright (fill only), rotated with nearest sampling
+  // for a jaunty tilt, then outlined. The brim's center sits on the J's top bar, with
+  // the bottom brim row covering the letter's outline so it rests on the letter.
   const HAT = [
     "..............PP.......",
     ".............PPP.......",
@@ -175,13 +175,13 @@ function buildLogo() {
     "BBBBBBBBBBBBBBBBBBBBBBB",
     ".BBBBBBBBBBBBBBBBBBBBB.",
   ];
-  const TILT = -0.42; // radians, counter-clockwise: left side hangs lower
-  const pivot = { x: 22, y: 15 }; // brim's right end (in HAT coordinates)
-  const anchor = { x: x2 + 11, y: y2 + bounce[0] - 1 }; // on top of the J's top bar
+  const TILT = -0.21; // radians, counter-clockwise: a jaunty tilt, left side lower
+  const pivot = { x: 11, y: 16 }; // bottom center of the brim (in HAT coordinates)
+  const anchor = { x: x2 + 10, y: y2 + bounce[0] }; // center of the J's top bar
   const hatFill = new Map();
   const cos = Math.cos(-TILT), sin = Math.sin(-TILT);
   for (let dy = -34; dy <= 12; dy++) {
-    for (let dx = -36; dx <= 6; dx++) {
+    for (let dx = -24; dx <= 24; dx++) {
       // inverse-rotate each destination pixel back into the upright bitmap
       const sx = Math.round(pivot.x + dx * cos - dy * sin);
       const sy = Math.round(pivot.y + dx * sin + dy * cos);
