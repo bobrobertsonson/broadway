@@ -4,6 +4,7 @@ import { ui, clean } from "../ui.js";
 import { game, t } from "../state.js";
 import { charKey, animKey } from "../art.js";
 import { makeEnvironmentTextures } from "../tiles.js";
+import { makeLogoTexture } from "../logo.js";
 
 // End credits: the rabbit, happy in his new yard, while the lines roll by.
 export class Credits extends Phaser.Scene {
@@ -62,8 +63,24 @@ export class Credits extends Phaser.Scene {
       return;
     }
     const line = this.lines[this.i++];
-    ui.banner(clean(line), "");
+    // The title line shows as the logo itself rather than plain text.
+    if (/^Super Jasmin World 3/i.test(clean(line))) {
+      ui.banner("", "");
+      this.showLogo(3200);
+    } else ui.banner(clean(line), "");
     this.time.delayedCall(line ? 3200 : 800, () => this.showNext());
+  }
+
+  showLogo(ms) {
+    const { width, height } = this.scale;
+    const logo = makeLogoTexture(this);
+    const room = height - 16 - 40;
+    const scale = logo.width > width - 16 || logo.height > room ? 0.5 : 1;
+    const y = Math.max(4, Math.round((room - logo.height * scale) / 2));
+    const img = this.add.image(Math.round(width / 2), y, "logo").setOrigin(0.5, 0).setScale(scale).setAlpha(0).setDepth(5);
+    this.tweens.add({ targets: img, alpha: 1, duration: 400 });
+    this.tweens.add({ targets: img, y: y + 3, duration: 1100, yoyo: true, repeat: -1, ease: "Sine.inOut" });
+    this.time.delayedCall(ms - 400, () => this.tweens.add({ targets: img, alpha: 0, duration: 400, onComplete: () => img.destroy() }));
   }
 
   update() {

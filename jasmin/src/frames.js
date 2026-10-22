@@ -150,6 +150,17 @@ function cloakBase(g) {
   return g;
 }
 
+// A lighter rim where the hood meets her face, so her glasses don't vanish into it.
+function hoodRim(g) {
+  const face = (r, c) => ["S", "s", "G"].includes(g[r]?.[c]);
+  const rim = [];
+  for (let r = 0; r <= 16; r++)
+    for (let c = 0; c < g[r].length; c++)
+      if (g[r][c] === "Kc" && (face(r + 1, c) || face(r, c - 1) || face(r, c + 1))) rim.push([r, c]);
+  for (const [r, c] of rim) g[r][c] = "Kr";
+  return g;
+}
+
 function buildJasmin(name) {
   const cloak = name === "jasminCloak";
   const base = rasterize(SPRITES[cloak ? "jasmin" : name]);
@@ -282,7 +293,7 @@ function buildJasmin(name) {
 
   if (cloak) {
     const keep = [0, 1, 2, 3, 4, 5, 6, 7, 10];
-    const out = keep.map((i) => frames[i].map((row) => row.map((s) => CLOAK_MAP[s] || s)));
+    const out = keep.map((i) => hoodRim(frames[i].map((row) => row.map((s) => CLOAK_MAP[s] || s))));
     return {
       w: 24,
       h: 32,

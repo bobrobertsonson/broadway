@@ -38,7 +38,7 @@ export const PALETTE = {
   Rd: "#4e3220", Ro: "#b0682f", Rt: "#c99a63", Rm: "#e2c393", Rk: "#0d0a08", Rn: "#d98a8a",
   // Added by Claude Code (engine needs): outline for dark levels, ghost cloak worn by Jasmin when seen.
   Ol: "#f4f1ea",
-  Kc: "#1c1a20", Kh: "#34313b",
+  Kc: "#1c1a20", Kh: "#34313b", Kr: "#5c5866",
 };
 
 // Outfit palettes: override only the slots that change.

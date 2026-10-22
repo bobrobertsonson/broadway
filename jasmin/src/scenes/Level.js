@@ -6,7 +6,7 @@ import { t, has, joinCaption } from "../content.js";
 import { MAPS } from "../maps.js";
 import { THEMES, makeEnvironmentTextures } from "../tiles.js";
 import { makePropTextures } from "../props.js";
-import { Player } from "../player.js";
+import { Player, PHYS } from "../player.js";
 import { Trail } from "../companions.js";
 import { makeEnemyAnims, spawnEnemy, updateEnemy, squash, ENEMY_CHARS } from "../enemies.js";
 import { Ghosts } from "../ghosts.js";
@@ -558,11 +558,31 @@ export class Level extends Phaser.Scene {
     } else if (this.glow) this.glow.setVisible(false);
   }
 
+  // True when a ledge is close by that a plain jump can't reach but Andrew's boost can,
+  // so the "boost!" hint only shows where it matters.
+  boostLedgeNear() {
+    const b = this.player.sprite.body;
+    if (!b.blocked.down && !b.touching.down) return false;
+    const feet = b.bottom;
+    const g2 = 2 * this.physics.world.gravity.y;
+    const plain = PHYS.jump ** 2 / g2 + 2;
+    const boosted = (PHYS.jump * PHYS.boostAndrew) ** 2 / g2;
+    const col = Math.floor(b.center.x / T);
+    for (let x = col - 5; x <= col + 5; x++) {
+      for (let y = 1; y < this.rowsN; y++) {
+        if (!"#=-".includes(this.cell(x, y)) || "#=-".includes(this.cell(x, y - 1))) continue;
+        const rise = feet - y * T;
+        if (rise > plain && rise <= boosted) return true;
+      }
+    }
+    return false;
+  }
+
   updateLabels(andrewReady) {
     const cam = this.cameras.main;
     const toScreen = (x, y) => [(x - cam.worldView.x) * cam.zoom, (y - cam.worldView.y) * cam.zoom];
     const andrew = this.trail.get("andrew");
-    if (andrew && andrewReady && this.mode === "play" && !this.player.dead) {
+    if (andrew && andrewReady && this.mode === "play" && !this.player.dead && this.boostLedgeNear()) {
       const [sx, sy] = toScreen(andrew.sprite.x, andrew.sprite.y - 33);
       ui.label("boost", "boost!", sx, sy, "plain");
     } else ui.label("boost", "", -999, -999, "plain");

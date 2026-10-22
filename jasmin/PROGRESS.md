@@ -136,17 +136,17 @@ Game lives in `jasmin/` on branch `jasmin-game`. Run: `npx http-server jasmin -c
 - **Untested on a real phone.** iOS audio unlock and the safe-area notch are the risks.
 - **Sound never heard.** All sound is synthesized and was only checked for errors, not listened to.
 - **Art:**
-  - The ghost cloak is dark on dark: it reads as a hood and cloak, but her glasses get lost.
+  - Fixed: the ghost cloak now has a lighter rim where the hood meets her face, so her glasses stay readable.
   - All art is procedural placeholder (no Kenney: unreachable from here).
 - **Layouts:** levels were designed against a validator, not playtested. Expect a few awkward jumps.
 - **Boss fairness:** the valves need Andrew's boost. If she can't figure out "stand still, then jump", she'll be stuck. Isaac's glow plus the "boost!" label over Andrew are the only hints.
-- **Credits:** the first line is the game title; the credits screen shows plain text, not the logo.
+- **Credits:** fixed. The title line now shows the logo itself, bobbing, then fades.
 
 ## Questions for Andrew
 
 1. Are the outfit colors right for each city? (`levels.json`, `palette` per world)
 2. The bribe cop: is "grumble grumble" over Andrew's head OK, or do you want a specific line?
-3. The boss needs Andrew's boost jump (stand still until he's beside you, then jump). Too hidden? I can add a hint caption.
+3. Boss hint: done. "boost!" over Andrew now shows only when a ledge nearby needs it, and if no valve opens for 30 seconds the boss shows "Stand still next to Andrew, then jump" (at most 3 times).
 4. Should the "Nairobi" intro show anything of her as a baby? Right now it's a star settling over the savanna. I didn't want to invent that.
 5. Do you want a real Kenney tileset dropped in, or keep the drawn placeholders?
 6. All 56 captions are still drafts. Which should I change before you approve them?

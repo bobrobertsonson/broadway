@@ -11,6 +11,7 @@ const REVEAL = 96;          // px from Isaac
 const SHIELD = 30;          // ember blocked within this distance of Isaac
 const SHIELD_FAMILY = 44;   // Isaac counts as "near the family" within this of Jasmin
 const SPIT_EVERY = 1.7;
+const STALL_HINT = 30;      // seconds without a new valve before the boost hint shows
 
 export class Boss {
   constructor(level, x, y) {
@@ -21,6 +22,8 @@ export class Boss {
     this.t = 0;
     this.spit = 2.5;
     this.done = false;
+    this.stall = 0;
+    this.hints = 0;
     if (!level.anims.exists("boss-fire")) {
       level.anims.create({ key: "boss-fire", frames: [0, 1, 2].map((i) => ({ key: `boss-fire-${i}` })), frameRate: 6, repeat: -1 });
     }
@@ -48,6 +51,14 @@ export class Boss {
     if (this.done) return;
     const L = this.level, p = L.player.sprite;
     this.t += dt;
+
+    // Stuck? Explain Andrew's boost, at most three times.
+    if (L.mode === "play" && !L.player.dead) this.stall += dt;
+    if (this.stall > STALL_HINT && this.hints < 3) {
+      this.stall = 0;
+      this.hints++;
+      ui.caption("boost", "Stand still next to Andrew, then jump", 3600);
+    }
 
     // The fire slowly grows (until the cloud knocks it back).
     this.size = Math.min(1.7, this.size + dt * 0.02);
@@ -150,6 +161,7 @@ export class Boss {
       this.size = Math.max(0.5, this.size - 0.35);
       if (this.opened >= 3) this.defeat();
     });
+    this.stall = 0;
     ui.caption("valve", `${this.opened} of 3`, 1800);
   }
 
