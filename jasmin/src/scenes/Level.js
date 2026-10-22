@@ -772,7 +772,7 @@ export class Level extends Phaser.Scene {
       return;
     }
     const sub = has(this.level.startCaption) ? t(this.level.startCaption) : "";
-    ui.banner(worldTitle(this.world), sub);
+    ui.banner(worldTitle(this.world), sub, "", "top");
     this.time.delayedCall(2600, () => ui.hideBanner());
     if (this.newOutfit) this.time.delayedCall(2900, () => ui.caption("new outfit", this.newOutfit, 2600));
     if (this.levelId === "3-1" && this.trail.has("andrew")) this.pairedWalk();
@@ -994,7 +994,7 @@ export class Level extends Phaser.Scene {
     writeSave();
     ui.hideCaption();
     const sub = has(this.level.endCaption) ? t(this.level.endCaption) : "";
-    ui.banner(`${worldTitle(this.world)} complete`, sub, `${controls.hint("confirm")} to continue`);
+    ui.banner(`${worldTitle(this.world)} complete`, sub, `${controls.hint("confirm")} to continue`, "top");
     this.time.delayedCall(600, () => {
       this.mode = "await";
       this.onConfirm = () => this.goTo("WorldMap", { select: nextLevelId(id) || id });

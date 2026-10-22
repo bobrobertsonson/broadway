@@ -72,8 +72,8 @@ export class UI extends Phaser.Scene {
   update() {
     const { W, H } = this;
     if (this.changed("hud", state.hud.v)) this.drawHud();
+    if (this.changed("banner", state.banner.v)) { this.drawBanner(); this.seen.caption = null; }
     if (this.changed("caption", state.caption.v)) this.drawCaption();
-    if (this.changed("banner", state.banner.v)) this.drawBanner();
     if (this.changed("name", state.name.v)) this.drawName();
     this.drawMeter();
     this.drawLabels();
@@ -130,7 +130,9 @@ export class UI extends Phaser.Scene {
     const w = Math.min(maxW, Math.max(...parts.map((p) => p.width)) + 12);
     let h = 5;
     for (const p of parts) h += p.height + 2;
-    const x = Math.round((this.W - w) / 2), y = s.y + 16;
+    // Below a top banner if one is showing, otherwise just under the HUD row.
+    const topBanner = state.banner.show && state.banner.cls === "top" ? this.bannerBottom : 0;
+    const x = Math.round((this.W - w) / 2), y = Math.max(s.y + 18, topBanner + 2);
     c.add(this.box(this.add.graphics(), x, y, w, h + 2, INK, 0.85, GOLD));
     let ty = y + 4;
     for (const p of parts) {
@@ -162,7 +164,7 @@ export class UI extends Phaser.Scene {
     const gap = 5;
     const total = items.reduce((a, it) => a + it.height, 0) + gap * (items.length - 1);
     let y;
-    if (b.cls === "top") y = this.safe.y + 2;
+    if (b.cls === "top") y = this.safe.y + 18; // under the HUD row and corner buttons
     else if (b.cls === "bottom") y = H - 13; // on the ground strip, below Jasmin
     else y = Math.round((H - total) / 2);
     for (const it of items) {
@@ -178,6 +180,7 @@ export class UI extends Phaser.Scene {
         c.addAt(g, 0);
       } else this.tweens.add({ targets: hint, alpha: 0.3, duration: 700, yoyo: true, repeat: -1 });
     }
+    this.bannerBottom = b.cls === "top" ? Math.round(y) : 0;
     c.setAlpha(0);
     this.tweens.add({ targets: c, alpha: 1, duration: 250 });
   }

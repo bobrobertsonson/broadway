@@ -64,11 +64,11 @@ export class Intro extends Phaser.Scene {
     });
     this.time.delayedCall(15500, () => {
       const london = findLevel("1-1");
-      ui.banner("North", london ? `to ${worldTitle(london.world)}` : "");
+      ui.banner("North", london ? `to ${worldTitle(london.world)}` : "", "", "top");
     });
     this.time.delayedCall(19500, () => this.finish());
 
-    ui.banner(worldTitle(entry.world), "");
+    ui.banner(worldTitle(entry.world), "", "", "top");
     this.time.delayedCall(2600, () => ui.hideBanner());
     ui.label("skip", controls.hint("skip"), width - 40, height - 4, "plain");
     this.input.on("pointerdown", (ptr) => { if (!ui.hitsButton(ptr)) this.tapped = true; });

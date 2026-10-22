@@ -75,6 +75,12 @@ Game lives in `jasmin/` on branch `jasmin-game`. Run: `npx http-server jasmin -c
   - An EALING street sign near the start marks her neighborhood (from Andrew). It is London style: white plate, black capitals, red stripe, on a post. Signs are a reusable map option, `signs: [{ col, text }]`, lettered with the pixel font's glyphs without the outline (`drawPlain` in `font.js`).
   - Both captions are drafts written by Claude Code from Andrew's one-line answer: Chicken shop is now Andrew's "The REAL Chicken Shop Connoisseur." (approved); "Nando's. Extra hot?" is still a draft.
 
+## On-screen copy placement (Andrew's feedback)
+
+- **Titles at the top:** the level start, level complete and Nairobi intro titles now sit at the top of the screen, under the HUD row, instead of in the middle over the action.
+- **Captions stack below:** a caption that arrives while a top title is showing is placed under it, then moves back up once the title goes.
+- **Still centered** where nothing is happening behind them: pause (dimmed), the ending inventory and the credits.
+
 ## Logo (Andrew's feedback)
 
 - **Flattened:** no drop shadow, highlight bands or glints. The letters are flat purple with a 1 px gold outline and a 1 px dark rim, the hat is flat-colored, and the subtitle is flat cream-gold.
