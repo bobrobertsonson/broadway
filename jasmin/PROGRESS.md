@@ -10,7 +10,7 @@ Game lives in `jasmin/` on branch `jasmin-game`. Run: `npx http-server jasmin -c
 | 2. Hat, glide, hits, checkpoints | Done (earlier session). |
 | 3. Companion trail with Andrew | Done. Trail now supports mid-level joins, leaving and rejoining. |
 | 4. levels.json, collectibles, outfit swaps | Done. See decisions. |
-| 5. World map and every level (rough) | In progress |
+| 5. World map and every level (rough) | Done. 8 maps + Nairobi intro scene; every level loads and plays at 844x390 with no page errors. |
 | 6. Ghosts, send-off, fire boss, ending | Code written, testing pending |
 | 7. Credits, polish, sound | Partly done (credits, synthesized sound exist) |
 
@@ -25,6 +25,9 @@ Game lives in `jasmin/` on branch `jasmin-game`. Run: `npx http-server jasmin -c
 - **Collectible counts:** levels.json has 1 or 2 collectibles per level (plus 7 passport stamps). I did not add filler collectibles, so the score counter stays small.
 - **Palette additions in sprites.js:** `Ol` (dark-level outline), `Kc`/`Kh` (ghost cloak). Nothing else in Andrew's file changed.
 - **Removed:** the old egg-hatch and "next level" door (Jennifer never hatches in this spec).
+- **Level layouts** were designed by a helper agent against a validator (marker counts, gap widths, enemy distance from checkpoints/joins). I removed the boss arena's low dodge platforms: a normal jump from them could reach the valve ledges, which would make Andrew's boost unnecessary.
+- **World 7 has no outfit** in levels.json, so she keeps whatever she wore last.
+- **Hats:** one in every level so she can glide in every world (spec: she starts each world hatless).
 - **No religious symbols anywhere:** removed a cross from the London dome silhouette.
 
 ## Broken or weak
