@@ -132,13 +132,15 @@ export class Ending extends Phaser.Scene {
 
     const floor = height - 16, cx = width / 2;
     const fam = [
-      ["andrew", cx - 46, false], ["jasmin", cx - 26, false], ["isaac", cx + 24, true], ["aya", cx + 42, true], ["nube", cx + 62, true],
+      ["andrew", cx - 46, false], ["jasmin", cx - 26, false], ["isaac", cx + 14, true], ["aya", cx + 42, true], ["nube", cx + 62, true],
     ];
     const sprites = fam.map(([n, x, flip]) => {
       const key = n === "jasmin" ? charKey("jasmin", { outfit: game.save.outfit }) : charKey(n);
       return this.add.sprite(x, floor, key).setOrigin(0.5, 1).setFlipX(flip).play(animKey(key, "idle"));
     });
-    const egg = this.add.image(cx, floor, "egg-big").setOrigin(0.5, 1);
+    // Isaac holds Jennifer up in front of him (covers the small egg in his sprite).
+    const isaac = sprites[2];
+    const egg = this.add.image(isaac.x - 8, floor - 5, "egg-big").setOrigin(0.5, 1).setDepth(3);
     const cracks = this.add.graphics().setDepth(5);
 
     this.tweens.add({ targets: egg, angle: { from: -10, to: 10 }, duration: 110, yoyo: true, repeat: 9, delay: 900, onStart: () => sfx.hatch(), onComplete: () => egg.setAngle(0) });
@@ -148,8 +150,8 @@ export class Ending extends Phaser.Scene {
       cracks.clear();
       if ((flick++ % 3) === 0) return;
       cracks.lineStyle(1, 0xfff6c8, 1);
-      const ex = egg.x, ey = egg.y - 12;
-      cracks.lineBetween(ex - 5, ey - 2, ex - 1, ey + 1).lineBetween(ex - 1, ey + 1, ex + 3, ey - 3).lineBetween(ex + 3, ey - 3, ex + 6, ey);
+      const ex = egg.x, ey = egg.y - 7;
+      cracks.lineBetween(ex - 4, ey - 1, ex - 1, ey + 1).lineBetween(ex - 1, ey + 1, ex + 2, ey - 2).lineBetween(ex + 2, ey - 2, ex + 4, ey);
     } });
     this.time.delayedCall(3800, () => {
       ev.remove();
@@ -162,19 +164,19 @@ export class Ending extends Phaser.Scene {
 
   makeEgg() {
     if (this.textures.exists("egg-big")) return;
-    const w = 14, h = 18;
+    const w = 10, h = 13;
     const tex = this.textures.createCanvas("egg-big", w, h);
     const ctx = tex.getContext();
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
         const nx = (x + 0.5 - w / 2) / (w / 2), ny = (y + 0.5 - h * 0.58) / (y < h * 0.58 ? h * 0.58 : h * 0.42);
         if (nx * nx + ny * ny > 1) continue;
-        ctx.fillStyle = x < 4 ? PALETTE.l : PALETTE.L;
+        ctx.fillStyle = x < 3 ? PALETTE.l : PALETTE.L;
         ctx.fillRect(x, y, 1, 1);
       }
     }
     ctx.fillStyle = PALETTE.A;
-    for (const [x, y] of [[5, 4], [9, 7], [4, 10], [8, 12], [10, 14], [6, 15]]) ctx.fillRect(x, y, 1, 1);
+    for (const [x, y] of [[4, 3], [7, 5], [3, 7], [6, 9], [7, 11], [4, 11]]) ctx.fillRect(x, y, 1, 1);
     tex.refresh();
   }
 
@@ -195,6 +197,6 @@ export class Ending extends Phaser.Scene {
     const toS = (x, y) => [r.left + (x - cam.worldView.x) * z, r.top + (y - cam.worldView.y) * z];
     this.qmarks?.forEach((q, i) => { const [sx, sy] = toS(q.x, q.y); ui.label(`q${i}`, "?", sx, sy, "plain"); });
     if (this.world9) { const [sx, sy] = toS(this.world9.x, this.world9.y + 26); ui.label("w9", this.world9.name, sx, sy, "sel"); }
-    this.nodes?.forEach((p, i) => { const [sx, sy] = toS(p.x, p.y - 8); ui.label(`e${i}`, worldTitle(p.w).replace(/^Brooklyn: /, ""), sx, sy, "plain small"); });
+    this.nodes?.forEach((p, i) => { const [sx, sy] = toS(p.x, p.y + (i % 2 ? 22 : -8)); ui.label(`e${i}`, worldTitle(p.w).replace(/^Brooklyn: /, ""), sx, sy, "plain small"); });
   }
 }

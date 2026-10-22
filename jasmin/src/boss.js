@@ -84,7 +84,7 @@ export class Boss {
     // Open a valve by touching it.
     for (const v of this.valves) {
       if (!v.revealed || v.open) continue;
-      if (Math.abs(v.x - p.x) < 12 && Math.abs(v.y - p.y) < 20) this.openValve(v);
+      if (Math.abs(v.x - p.x) < 16 && Math.abs(v.y - p.y) < 20) this.openValve(v);
     }
 
     for (const e of this.embers.getChildren()) if (e.y > L.mapH + 40) e.destroy();

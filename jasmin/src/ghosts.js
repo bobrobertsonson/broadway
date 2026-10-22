@@ -8,10 +8,10 @@ import { ui } from "./ui.js";
 import { sfx } from "./audio.js";
 import { t } from "./content.js";
 
-const CONE_LEN = 112;
+const CONE_LEN = 124;
 const CONE_HALF = 0.55;        // radians, about 32 degrees
-const FILL = 0.75;             // meter per second
-const DECAY = 0.35;
+const FILL = 0.9;              // meter per second
+const DECAY = 0.22;
 const UNCLOAK_AFTER = 5;       // seconds out of sight
 const DRIFT = 14;              // px/s
 const RANGE = 72;              // px each way from home
@@ -100,7 +100,7 @@ export class Ghosts {
         g.x = Math.min(g.x, this.exitX - 20);
       } else if (g.pause > 0) {
         g.pause -= dt;
-        if (g.pause <= 0) g.dir *= -1;
+        if (g.pause <= 0 && !g.staring) g.dir *= -1;
       } else {
         g.x += g.dir * DRIFT * dt;
         if (g.x > Math.min(g.home.x + RANGE, this.exitX - 20) || g.x < g.home.x - RANGE) { g.pause = 1.2; }
@@ -112,7 +112,8 @@ export class Ghosts {
 
       const hit = !hidden && !p.dead && this.sees(g, ps.x, ps.y - 18);
       const withHim = hit && andrew && !andrew.scripted && this.sees(g, andrew.sprite.x, andrew.sprite.y - 18);
-      if (hit) seen = true;
+      g.staring = hit;
+      if (hit) { seen = true; g.pause = Math.max(g.pause, 0.6); } // stop and stare
       if (withHim) together = true;
       this.drawCone(g, hit);
     }

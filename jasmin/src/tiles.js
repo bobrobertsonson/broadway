@@ -1082,9 +1082,16 @@ BG.savanna = {
 };
 
 // ---- main entry ----
-export function makeEnvironmentTextures(scene, theme) {
+// opts.themeOnly: rebuild only theme-dependent textures (tiles, backgrounds) and keep
+// items/props/enemies, so objects already in the scene keep valid textures (mid-level
+// theme switches: South America segments, Minneapolis night).
+export function makeEnvironmentTextures(scene, theme, opts = {}) {
   const T = typeof theme === 'string' ? THEMES[theme] : theme || THEMES.day;
-  const mk = (key, w, h, fn) => makeCanvas(scene, key, w, h, fn);
+  const themed = (key) => key.startsWith('tile-') || key.startsWith('bg-');
+  const mk = (key, w, h, fn) => {
+    if (opts.themeOnly && !themed(key) && scene.textures.exists(key)) return;
+    makeCanvas(scene, key, w, h, fn);
+  };
 
   // ===== tiles =====
   const dirt = (R, P, w, h, y0) => {

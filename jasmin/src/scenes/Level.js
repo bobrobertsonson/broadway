@@ -161,7 +161,7 @@ export class Level extends Phaser.Scene {
     this.far = this.add.tileSprite(0, 0, 10, 96, "bg-far").setOrigin(0, 1).setScrollFactor(0).setDepth(-9);
     this.hills = this.add.tileSprite(0, 0, 10, 64, "bg-hills").setOrigin(0, 1).setScrollFactor(0).setDepth(-8);
     this.clouds = this.add.tileSprite(0, 8, 10, 32, "bg-clouds").setOrigin(0, 0).setScrollFactor(0).setDepth(-9);
-    this.night = this.add.rectangle(0, 0, 10, 10, 0x0a0a28, 0).setOrigin(0).setScrollFactor(0).setDepth(30);
+    this.night = this.add.rectangle(0, 0, 10, 10, 0x0a0a28, 1).setOrigin(0).setScrollFactor(0).setDepth(30).setAlpha(0);
     this.rain = [];
     this.layoutBackground();
     this.drawSky();
@@ -197,7 +197,7 @@ export class Level extends Phaser.Scene {
     if (this.themeName === name || !THEMES[name]) return;
     this.themeName = name;
     this.theme = THEMES[name];
-    makeEnvironmentTextures(this, this.theme);
+    makeEnvironmentTextures(this, this.theme, { themeOnly: true });
     this.composeTileset();
     this.hills.setTexture("bg-hills");
     this.far.setTexture("bg-far");
@@ -235,8 +235,9 @@ export class Level extends Phaser.Scene {
     const collectibles = this.level.collectibles || [];
     const segments = this.level.segments || [];
 
-    for (let y = 0; y < this.rowsN; y++) {
-      for (let x = 0; x < this.colsN; x++) {
+    // Column-major so collectible and stamp slots fill left to right.
+    for (let x = 0; x < this.colsN; x++) {
+      for (let y = 0; y < this.rowsN; y++) {
         const c = this.cell(x, y);
         const wx = x * T + 8, wy = (y + 1) * T;
         if (ENEMY_CHARS.includes(c)) spawnEnemy(this, this.enemies, c, wx, wy);
@@ -426,9 +427,13 @@ export class Level extends Phaser.Scene {
     p.update(dt, { andrewReady, inWater: this.inWater() });
     this.trail.update(dt);
     for (const e of this.enemies.getChildren()) updateEnemy(e, dt, this.layer);
+    const pb = p.sprite.body;
     for (const m of this.movers.getChildren()) {
       if (m.x > m.home + m.range) m.body.setVelocityX(-m.speed);
       if (m.x < m.home - m.range) m.body.setVelocityX(m.speed);
+      // Carry Jasmin when she stands on a moving platform (bus, tortoise).
+      const riding = Math.abs(pb.bottom - m.body.top) < 2 && pb.right > m.body.left && pb.left < m.body.right && pb.velocity.y >= 0;
+      if (riding && !p.dead) p.sprite.x += m.body.deltaX();
       m.setFlipX(m.body.velocity.x < 0 && m.texture.key !== "plat-bus");
     }
     this.ghosts?.update(dt);
@@ -685,7 +690,17 @@ export class Level extends Phaser.Scene {
     for (const tr of this.triggers) {
       if (!tr.done && Math.abs(x - tr.x) < 10 && this.player.onGround) { tr.done = true; return tr.fn(); }
     }
-    if (this.goal && Math.abs(x - this.goal.x) < 10 && s.y > this.goal.y - 48) return this.reachGoal();
+    if (this.goal && Math.abs(x - this.goal.x) < 10 && s.y > this.goal.y - 48) {
+      // The ghosts sent Andrew back: she has to go and get him first.
+      if (this.andrewWaiting) {
+        if (!this.toldAndrew || this.time.now - this.toldAndrew > 5000) {
+          this.toldAndrew = this.time.now;
+          ui.caption("", "Andrew is waiting at the last checkpoint", 3000);
+        }
+        return;
+      }
+      return this.reachGoal();
+    }
     if (this.gate && x > this.gate.x - 36) return this.sendoff();
   }
 
@@ -718,12 +733,15 @@ export class Level extends Phaser.Scene {
   // ---------- flow ----------
 
   intro() {
+    if (this.boss) {
+      this.time.delayedCall(600, () => this.boss.intro());
+      return;
+    }
     const sub = has(this.level.startCaption) ? t(this.level.startCaption) : "";
     ui.banner(worldTitle(this.world), sub);
     this.time.delayedCall(2600, () => ui.hideBanner());
     if (this.newOutfit) this.time.delayedCall(2900, () => ui.caption("new outfit", this.newOutfit, 2600));
-    if (this.boss) this.time.delayedCall(800, () => this.boss.intro());
-    if (this.levelId === "3-1" && this.trail.has("andrew") && !this.boss) this.pairedWalk();
+    if (this.levelId === "3-1" && this.trail.has("andrew")) this.pairedWalk();
   }
 
   freeze() {
@@ -968,6 +986,8 @@ export class Level extends Phaser.Scene {
     const past = gate.x + 30;
     const dest = this.otherRabbit ? this.otherRabbit.x - 22 : gate.x + 90;
     const finish = () => {
+      this.night.setAlpha(0).setFillStyle(0x0a0a28);
+      this.setTheme("garden");
       if (rabbit) { rabbit.setPosition(dest, gate.y).setFlipX(false); rabbit.play(animKey(m.key, "idle")); }
       gate.setTexture("prop-gate-closed");
       p.forcedAnim = null;
@@ -981,6 +1001,10 @@ export class Level extends Phaser.Scene {
     if (!rabbit) { this.cutDelay(1000, () => this.endCut()); return; }
     m.scripted = true;
     rabbit.setDepth(12);
+    // The big sunny yard: the light changes as they reach the gate.
+    this.night.setFillStyle(0xffffff);
+    this.cutTween({ targets: this.night, alpha: 0.8, duration: 350, yoyo: true, onYoyo: () => this.setTheme("garden"),
+      onComplete: () => this.night.setFillStyle(0x0a0a28) });
     this.cutDelay(900, () => {
       rabbit.play(animKey(m.key, "hop"));
       rabbit.setFlipX(false);
