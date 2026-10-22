@@ -422,6 +422,9 @@ export class Level extends Phaser.Scene {
     const dt = Math.min(deltaMs, 50) / 1000;
     controls.update();
     if (controls.pressed("back")) return this.leave();
+    // Start (gamepad) or Enter/P (keyboard) pauses during play.
+    if (controls.pressed("start") && (this.mode === "play" || this.mode === "paused") && !this.cut) this.togglePause();
+    if (this.mode === "paused") return;
 
     const p = this.player;
     const andrewReady = this.trail.isNext("andrew");
@@ -616,7 +619,7 @@ export class Level extends Phaser.Scene {
         sfx.hat();
         if (!this.penTaught) {
           this.penTaught = true;
-          ui.caption("pen", controls.isTouch ? "Tap the pen button to write a platform" : "Press X to write a platform", 3200);
+          ui.caption("pen", controls.hint("pen"), 3200);
         }
       }
       this.refreshHud();
@@ -745,6 +748,25 @@ export class Level extends Phaser.Scene {
     if (this.levelId === "3-1" && this.trail.has("andrew")) this.pairedWalk();
   }
 
+  togglePause() {
+    const on = this.mode !== "paused";
+    this.mode = on ? "paused" : "play";
+    if (on) {
+      this.physics.pause();
+      this.tweens.pauseAll();
+      this.anims.pauseAll();
+      this.time.paused = true;
+      const hint = controls.device === "gamepad" ? "Start to resume, B for the map" : "Enter to resume, Esc for the map";
+      ui.banner("Paused", "", hint, "dim");
+    } else {
+      this.physics.resume();
+      this.tweens.resumeAll();
+      this.anims.resumeAll();
+      this.time.paused = false;
+      ui.hideBanner();
+    }
+  }
+
   freeze() {
     this.mode = "cutscene";
     const p = this.player;
@@ -765,7 +787,7 @@ export class Level extends Phaser.Scene {
   startCut(finish) {
     this.freeze();
     this.cut = { finish, timers: [], tweens: [], age: 0 };
-    ui.label("skip", controls.isTouch ? "tap to skip" : "jump to skip", window.innerWidth - 70, window.innerHeight - 8, "plain");
+    ui.label("skip", controls.hint("skip"), window.innerWidth - 70, window.innerHeight - 8, "plain");
   }
 
   cutDelay(ms, fn) {
@@ -943,7 +965,7 @@ export class Level extends Phaser.Scene {
     writeSave();
     ui.hideCaption();
     const sub = has(this.level.endCaption) ? t(this.level.endCaption) : "";
-    ui.banner(`${worldTitle(this.world)} complete`, sub, controls.isTouch ? "tap to continue" : "press jump to continue");
+    ui.banner(`${worldTitle(this.world)} complete`, sub, `${controls.hint("confirm")} to continue`);
     this.time.delayedCall(600, () => {
       this.mode = "await";
       this.onConfirm = () => this.goTo("WorldMap", { select: nextLevelId(id) || id });
@@ -965,6 +987,7 @@ export class Level extends Phaser.Scene {
 
   leave() {
     if (this.leaving) return;
+    if (this.mode === "paused") this.togglePause();
     this.goTo("WorldMap", { select: this.levelId });
   }
 

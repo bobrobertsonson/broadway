@@ -37,6 +37,22 @@ Game lives in `jasmin/` on branch `jasmin-game`. Run: `npx http-server jasmin -c
 - **Minneapolis:** I filled a 2-wide pit 13 tiles from the start. On ice it killed every test run.
 - **No religious symbols anywhere:** removed a cross from the London dome silhouette.
 
+## After the overnight run: gamepad and TV
+
+- **Gamepad:**
+  - Read through Phaser's gamepad plugin (`input.gamepad: true`) in `src/controls.js`, merged with keyboard and touch.
+  - Controls: d-pad or left stick moves (stick press past 0.5, release under 0.3), A jumps and glides, X writes with the pen, Start pauses (and confirms in menus), B goes to the map while paused.
+  - Hints follow the last device used ("press A", "tap", "press jump").
+- **Pause:** a new feature, since there was none. It freezes physics, tweens, timers and animations under a dimmed "Paused" banner. Keyboard: Enter or P.
+- **World 9 naming:** gamepad players get an on-screen letter grid. Without it, a TV player with only a pad would be stuck at the very end.
+- **Scaling:**
+  - The whole-number zoom is now chosen in device pixels, then divided by `devicePixelRatio` for Phaser.
+  - Checked at 1920x1080 @1x, 1280x720 @1.5x, 960x540 @2x and 844x390 @3x: every game pixel is exactly 6x6 device pixels, and the canvas fills the screen.
+  - Before this, a 1.5x screen got uneven pixels.
+  - DOM text scales with screen height (`--ui`, 1x to 2x).
+- **Tested with a mocked standard gamepad** behind `navigator.getGamepads()`, which drives Phaser's real gamepad plugin. Not tested with a physical controller.
+- **Audio unlock with a pad:** if the browser doesn't count a pad press as a user gesture, music stays off until a key, click or tap. [Guessing] that most TV browsers behave this way.
+
 ## Step 6 verification (headless Chromium, 844x390, scripted input)
 
 - **Minneapolis:** a ghost that sees her stops and stares, the meter fills, and she gets the cloak. Standing on a hiding spot hides her, and the cloak comes off after 5 s out of sight. At the picnic the level turns to night and Andrew joins. If a ghost sees them together, Andrew is sent back to the checkpoint and the goal waits until she fetches him. The exit sign ends the ghosts.

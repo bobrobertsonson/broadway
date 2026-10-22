@@ -10,7 +10,12 @@ Open http://localhost:8080. On a phone on the same Wi-Fi: `http://<your-computer
 
 Test shortcuts: `?level=5-1` jumps into a level, `?level=7-1&map=7-boss` into the fire boss, `?scene=Ending` or `?scene=Credits` into those scenes.
 
-Controls: arrows or A/D to move, Space/Up/Z to jump (hold to glide with the hat), X or Shift for the pen, Esc for the map, M to mute. On a phone the buttons appear automatically.
+Controls:
+- **Keyboard:** arrows or A/D to move, Space/Up/Z to jump (hold to glide with the hat), X or Shift for the pen, Enter or P to pause, Esc for the map, M to mute.
+- **Gamepad** (any standard-mapping pad, through Phaser's gamepad plugin): d-pad or left stick to move, A to jump (hold to glide), X for the pen, Start to pause (and to confirm in menus), B for the map while paused. When naming World 9, an on-screen letter grid appears: d-pad to move, A to type, X to delete, Start to finish. Browsers only expose a pad after one of its buttons has been pressed on the page.
+- **Phone:** on-screen buttons appear automatically.
+
+On a TV or any big screen the game picks the largest whole-number zoom in real screen pixels, so pixels stay square and sharp: a 1920x1080 screen shows 320x180 game pixels at exactly 6x. Captions and menus scale up with the screen. For a true full screen on a TV browser, use the browser's own full-screen mode.
 
 Progress is saved in the browser. Reset: run `localStorage.clear()` in the browser console.
 

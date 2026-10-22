@@ -70,7 +70,7 @@ export class Intro extends Phaser.Scene {
 
     ui.banner(worldTitle(entry.world), "");
     this.time.delayedCall(2600, () => ui.hideBanner());
-    ui.label("skip", controls.isTouch ? "tap to skip" : "jump to skip", window.innerWidth - 70, window.innerHeight - 8, "plain");
+    ui.label("skip", controls.hint("skip"), window.innerWidth - 70, window.innerHeight - 8, "plain");
     this.input.on("pointerdown", () => (this.tapped = true));
     startMusic("credits");
   }

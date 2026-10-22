@@ -30,6 +30,19 @@ export class Ending extends Phaser.Scene {
   update() {
     controls.update();
     this.updateLabelsFrame();
+    if (this.naming) {
+      // Gamepad typing on the letter grid: d-pad/stick move, A types, X deletes, Start finishes.
+      if (controls.device === "gamepad") ui.namePicker(true);
+      if (controls.pressed("left")) ui.nameNav(-1, 0);
+      if (controls.pressed("right")) ui.nameNav(1, 0);
+      if (controls.pressed("up")) ui.nameNav(0, -1);
+      if (controls.pressed("down")) ui.nameNav(0, 1);
+      if (controls.pressed("jump")) ui.namePress();
+      if (controls.pressed("action")) ui.nameDelete();
+      if (controls.pressed("start")) ui.nameSubmit();
+      this.tapped = false;
+      return;
+    }
     const go = this.tapped || controls.confirmed();
     this.tapped = false;
     if (go && this.waiting) {
@@ -53,7 +66,7 @@ export class Ending extends Phaser.Scene {
         return `<li><span class="where">${esc(worldTitle(w))}</span> ${esc(t(skill))}</li>`;
       })
       .join("");
-    ui.panel(t(ending.inventoryTitle), `<ul class="inventory">${rows}</ul>`, controls.isTouch ? "tap to continue" : "press jump to continue");
+    ui.panel(t(ending.inventoryTitle), `<ul class="inventory">${rows}</ul>`, `${controls.hint("confirm")} to continue`);
     this.wait(() => { ui.hideBanner(); this.fogMap(); }, 1200);
   }
 
@@ -104,7 +117,9 @@ export class Ending extends Phaser.Scene {
     const pen = this.add.image(spot.x, spot.y - 60, "item-pen").setScale(3).setAlpha(0);
     this.tweens.add({ targets: pen, alpha: 1, y: spot.y - 20, duration: 800, ease: "Back.out" });
     sfx.pen();
-    const name = await ui.askName(t(game.content.ending?.namePrompt));
+    this.naming = true;
+    const name = await ui.askName(t(game.content.ending?.namePrompt), { picker: controls.device === "gamepad" });
+    this.naming = false;
     game.save.world9 = name;
     try { localStorage.setItem("jg-world9", name); } catch {}
     writeSave();

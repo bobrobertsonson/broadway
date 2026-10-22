@@ -43,7 +43,7 @@ export class Title extends Phaser.Scene {
     const key = charKey("jasmin", { outfit: game.save.outfit });
     this.add.sprite(width / 2, height - 16, key).setOrigin(0.5, 1).play(animKey(key, "idle"));
 
-    ui.banner("", "", controls.isTouch ? "Tap to start" : "Press jump to start", "bottom");
+    ui.banner("", "", controls.isTouch ? "Tap to start" : "Press Start", "bottom");
     this.input.once("pointerdown", () => this.start());
     const restart = () => this.scene.restart();
     this.scale.once("resize", restart);

@@ -58,7 +58,7 @@ export class Credits extends Phaser.Scene {
   showNext() {
     if (this.i >= this.lines.length) {
       this.finished = true;
-      ui.banner("The end", "", controls.isTouch ? "tap to return to the map" : "press jump to return to the map");
+      ui.banner("The end", "", `${controls.hint("confirm")} to return to the map`);
       return;
     }
     const line = this.lines[this.i++];
