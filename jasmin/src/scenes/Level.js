@@ -446,7 +446,7 @@ export class Level extends Phaser.Scene {
 
   intro() {
     const w = this.world;
-    ui.banner(text(w.title).replace("TODO: caption", `World ${w.id}`), `Level ${this.levelId}`);
+    ui.banner(text(w.title), `Level ${this.levelId}`);
     this.time.delayedCall(1600, () => ui.hideBanner());
     const firstOfWorld = w.levels[0].id === this.levelId;
     if (firstOfWorld && (w.companionsJoin || []).length) {

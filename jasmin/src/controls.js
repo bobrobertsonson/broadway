@@ -45,8 +45,9 @@ export const controls = {
 };
 
 export function initControls(onFirstGesture) {
-  let gestured = false;
-  const gesture = () => { if (!gestured) { gestured = true; onFirstGesture?.(); } };
+  // Called on every gesture: iOS only unlocks audio from certain events, and the
+  // callback (unlockAudio) is cheap and idempotent.
+  const gesture = () => onFirstGesture?.();
 
   window.addEventListener("keydown", (e) => {
     const k = KEYMAP[e.code];
@@ -66,6 +67,8 @@ export function initControls(onFirstGesture) {
   if (window.matchMedia("(pointer: coarse)").matches) enableTouch();
   window.addEventListener("touchstart", () => { enableTouch(); gesture(); }, { passive: true });
   window.addEventListener("pointerdown", gesture);
+  window.addEventListener("touchend", gesture, { passive: true });
+  window.addEventListener("click", gesture);
 
   // Each button tracks its own pointers so multitouch (run + jump) works.
   document.querySelectorAll("#touch button").forEach((btn) => {
