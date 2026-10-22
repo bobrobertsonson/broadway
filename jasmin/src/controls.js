@@ -12,6 +12,8 @@ const KEYMAP = {
 const held = { left: false, right: false, jump: false, action: false, start: false, back: false, mute: false };
 const touchHeld = { left: false, right: false, jump: false, action: false };
 let prev = { ...held };
+// Presses are latched so a tap shorter than one frame is never lost.
+const latch = {};
 let edges = {};
 
 export const controls = {
@@ -22,7 +24,8 @@ export const controls = {
     const now = {};
     for (const k of Object.keys(held)) now[k] = held[k] || !!touchHeld[k];
     edges = {};
-    for (const k of Object.keys(now)) edges[k] = now[k] && !prev[k];
+    for (const k of Object.keys(now)) edges[k] = (now[k] && !prev[k]) || !!latch[k];
+    for (const k of Object.keys(latch)) delete latch[k];
     prev = now;
     this.left = now.left; this.right = now.right; this.jump = now.jump; this.action = now.action;
   },
@@ -51,7 +54,7 @@ export function initControls(onFirstGesture) {
 
   window.addEventListener("keydown", (e) => {
     const k = KEYMAP[e.code];
-    if (k) { held[k] = true; e.preventDefault(); }
+    if (k) { if (!e.repeat) latch[k] = true; held[k] = true; e.preventDefault(); }
     gesture();
   });
   window.addEventListener("keyup", (e) => {
@@ -78,6 +81,7 @@ export function initControls(onFirstGesture) {
     btn.addEventListener("pointerdown", (e) => {
       e.preventDefault();
       pointers.add(e.pointerId);
+      latch[key] = true;
       try { btn.releasePointerCapture(e.pointerId); } catch {}
       sync();
     });

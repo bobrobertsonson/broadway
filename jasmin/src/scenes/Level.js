@@ -14,7 +14,7 @@ const TILE = { ground: 0, top: 1, brick: 2, oneway: 3 };
 const ENEMY_CHARS = "itla";
 const PEN_WIDTH = 4;     // tiles per pen line
 const PEN_PER_PICKUP = 3;
-const REVEAL_RADIUS = 60;
+const REVEAL_RADIUS = 84;
 
 export class Level extends Phaser.Scene {
   constructor() { super("Level"); }
