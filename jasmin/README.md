@@ -1,4 +1,4 @@
-# Jasmin's Game
+# Super Jasmin World 3: A New Magic
 
 ## Play it locally
 
@@ -6,13 +6,13 @@
 npx http-server jasmin -p 8080 -c-1
 ```
 
-Then open http://localhost:8080. To test on your phone, it must be on the same Wi-Fi: open `http://<your-computer-ip>:8080`.
+Open http://localhost:8080. On a phone on the same Wi-Fi: `http://<your-computer-ip>:8080`.
 
-Shortcut for testing: `?level=3-2` jumps straight into a level.
+Test shortcuts: `?level=5-1` jumps into a level, `?level=7-1&map=7-boss` into the fire boss, `?scene=Ending` or `?scene=Credits` into those scenes.
 
-Controls: arrows or A/D to move, Space/Up/Z to jump (hold to glide with the hat), X or Shift for the pen, Esc for the map, M to mute. On a phone, on-screen buttons appear automatically.
+Controls: arrows or A/D to move, Space/Up/Z to jump (hold to glide with the hat), X or Shift for the pen, Esc for the map, M to mute. On a phone the buttons appear automatically.
 
-Progress is saved in the browser. To reset it, run `localStorage.clear()` in the browser console.
+Progress is saved in the browser. Reset: run `localStorage.clear()` in the browser console.
 
 ## Put it online (GitHub Pages)
 
@@ -22,15 +22,15 @@ Repo Settings > Pages > Deploy from a branch > pick the branch and `/ (root)`. T
 
 | You want to change | Edit |
 |---|---|
-| Captions, titles, names, credits, outfit names/colors, what the egg hatches into | `levels.json` |
+| Captions, titles, skills, credits, outfit names | `levels.json` (set `"draft": false` once approved) |
+| Outfit colors | a `palette` object in `levels.json` (slots C, c, P, K), or `DEFAULT_OUTFIT_PALETTES` in `src/content.js` |
 | Level layouts | `src/maps.js` (legend in `ARCHITECTURE.md`) |
 | Character pixels and palette | `src/sprites.js` |
-| Swap a character for a hand-drawn Aseprite sheet | add an entry to `ART_OVERRIDES` in `src/art.js` (example in the comment there) |
-| Swap placeholder tiles for a Kenney tileset | `src/tiles.js` (all environment art is created in `makeEnvironmentTextures`) |
-| Jump height, speed, glide | `PHYS` in `src/player.js` |
+| Swap a character for an Aseprite sheet | `ART_OVERRIDES` in `src/art.js` (example in the comment) |
+| City looks, tiles, backgrounds | `THEMES` in `src/tiles.js` |
+| Items, props, enemies, the fire | `src/props.js` |
+| Jump height, speed, glide, ice, swimming | `PHYS` in `src/player.js` |
+| Ghost difficulty | constants at the top of `src/ghosts.js` |
+| Boss difficulty | constants at the top of `src/boss.js` |
 
-Search `levels.json` for `TODO` to find every placeholder that still needs real content. Any text left as `TODO` shows up in the game exactly like that, so nothing gets invented.
-
-### Collectibles
-
-Each `*` in a map is a collectible slot. The collectibles in `levels.json` fill those slots in order. To place one at an exact tile instead, give it a non-zero `x` (column) and `y` (row).
+See `PROGRESS.md` for what was decided overnight and the open questions.

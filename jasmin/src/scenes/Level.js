@@ -36,6 +36,7 @@ export class Level extends Phaser.Scene {
 
   create() {
     ui.clearAll();
+    controls.showPad(true);
     clearIconCache();
     controls.release();
     this.mode = "play";

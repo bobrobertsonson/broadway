@@ -12,7 +12,7 @@ Game lives in `jasmin/` on branch `jasmin-game`. Run: `npx http-server jasmin -c
 | 4. levels.json, collectibles, outfit swaps | Done. See decisions. |
 | 5. World map and every level (rough) | Done. 8 maps + Nairobi intro scene; every level loads and plays at 844x390 with no page errors. |
 | 6. Ghosts, send-off, fire boss, ending | Done. Every set piece verified in-engine with scripted input (see below). |
-| 7. Credits, polish, sound | Partly done (credits, synthesized sound exist) |
+| 7. Credits, polish, sound | Done as a first pass: the credits roll with Rupert in his yard, every scene has music and sound effects, and the touch buttons only show during play and on the map. A tap-only run from the title through the intro and map into London works. |
 
 ## Decisions (and why)
 
@@ -33,6 +33,8 @@ Game lives in `jasmin/` on branch `jasmin-game`. Run: `npx http-server jasmin -c
 - **Send-off yard:** the scene turns to the sunny garden theme as Rupert reaches the gate.
 - **Boss:** one arena screen after the 7-1 climb, entered through a door (`B`). Embers and touching the fire hurt like enemies do (they knock the hat off, then restart her). The fire grows slowly, and each open valve shrinks it.
 - **Jennifer in the ending:** Isaac holds a larger egg drawn from the egg's palette slots (L, l, A).
+- **Palettes written into levels.json:** the palette TODOs were addressed to me, so the chosen colors now live in `levels.json`, each with a `paletteNote`. `levels.json` has no TODOs left. 56 captions are still `"draft": true`.
+- **Minneapolis:** I filled a 2-wide pit 13 tiles from the start. On ice it killed every test run.
 - **No religious symbols anywhere:** removed a cross from the London dome silhouette.
 
 ## Step 6 verification (headless Chromium, 844x390, scripted input)
@@ -60,10 +62,21 @@ Game lives in `jasmin/` on branch `jasmin-game`. Run: `npx http-server jasmin -c
 
 ## Broken or weak
 
-- Ghost cloak sprite is dark on dark: reads as a hood and cloak, but glasses get lost.
-- Sound has never been listened to by a human.
-- Nothing tested on a real phone yet.
+- **Not played end to end by a human.** Every set piece passed scripted tests in a headless browser, but no one has played a whole level for feel and difficulty. The ice and the ghosts need a human pass most.
+- **Untested on a real phone.** iOS audio unlock and the safe-area notch are the risks.
+- **Sound never heard.** All sound is synthesized and was only checked for errors, not listened to.
+- **Art:**
+  - The ghost cloak is dark on dark: it reads as a hood and cloak, but her glasses get lost.
+  - All art is procedural placeholder (no Kenney: unreachable from here).
+- **Layouts:** levels were designed against a validator, not playtested. Expect a few awkward jumps.
+- **Boss fairness:** the valves need Andrew's boost. If she can't figure out "stand still, then jump", she'll be stuck. Isaac's glow plus the "boost!" label over Andrew are the only hints.
+- **Credits:** the first line is the game title; the credits screen shows plain text, not the logo.
 
 ## Questions for Andrew
 
-- Are the outfit colors right for each city?
+1. Are the outfit colors right for each city? (`levels.json`, `palette` per world)
+2. The bribe cop: is "grumble grumble" over Andrew's head OK, or do you want a specific line?
+3. The boss needs Andrew's boost jump (stand still until he's beside you, then jump). Too hidden? I can add a hint caption.
+4. Should the "Nairobi" intro show anything of her as a baby? Right now it's a star settling over the savanna. I didn't want to invent that.
+5. Do you want a real Kenney tileset dropped in, or keep the drawn placeholders?
+6. All 56 captions are still drafts. Which should I change before you approve them?

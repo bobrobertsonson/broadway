@@ -11,6 +11,7 @@ export class Credits extends Phaser.Scene {
 
   create() {
     ui.clearAll();
+    controls.showPad(false);
     ui.showHome(false);
     controls.setActionVisible(false);
     makeEnvironmentTextures(this, "garden");

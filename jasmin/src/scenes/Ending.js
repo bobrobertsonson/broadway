@@ -14,6 +14,7 @@ export class Ending extends Phaser.Scene {
 
   create() {
     ui.clearAll();
+    controls.showPad(false);
     ui.showHome(false);
     controls.release();
     controls.setActionVisible(false);

@@ -16,6 +16,7 @@ export class WorldMap extends Phaser.Scene {
 
   create() {
     ui.clearAll();
+    controls.showPad(true);
     ui.showHome(false);
     controls.release();
     makeEnvironmentTextures(this, "day");

@@ -35,6 +35,11 @@ export const controls = {
   // Any "confirm" press: jump, start, or a tap (tap edges are set by the scene via tapped()).
   confirmed() { return this.pressed("jump") || this.pressed("start"); },
 
+  // Movement buttons only during play; menus and cutscene screens use taps.
+  showPad(visible) {
+    document.getElementById("touch")?.classList.toggle("off", !visible);
+  },
+
   setActionVisible(visible) {
     const b = document.querySelector('#touch button[data-key="action"]');
     if (b) b.classList.toggle("hidden", !visible);

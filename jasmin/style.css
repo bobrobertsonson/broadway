@@ -234,3 +234,5 @@ body.touch #touch {
 #labels .wlabel.small { font-size: 11px; opacity: 0.9; }
 #banner.bottom .hint { background: rgba(20, 16, 18, 0.6); padding: 4px 14px; border-radius: 999px; }
 #ui .inventory li { display: grid; grid-template-columns: minmax(8em, max-content) 1fr; column-gap: 1em; }
+
+body.touch #touch.off { display: none; }
