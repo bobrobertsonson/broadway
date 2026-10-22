@@ -142,8 +142,8 @@ export class Player {
     if (this.swimming) {
       this.swimming = false;
       b.setGravityY(0);
-      // Leaving the water at the surface: a little hop out.
-      if (controls.jump && b.velocity.y < 0) b.setVelocityY(-PHYS.jump * 0.9);
+      // Any upward stroke through the surface hops out, held jump or not.
+      if (b.velocity.y < 0) b.setVelocityY(-PHYS.jump * 0.9);
     }
 
     // Jump with coyote time and input buffering.

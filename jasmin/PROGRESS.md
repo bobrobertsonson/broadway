@@ -142,6 +142,15 @@ Game lives in `jasmin/` on branch `jasmin-game`. Run: `npx http-server jasmin -c
 - **Boss fairness:** the valves need Andrew's boost. If she can't figure out "stand still, then jump", she'll be stuck. Isaac's glow plus the "boost!" label over Andrew are the only hints.
 - **Credits:** fixed. The title line now shows the logo itself, bobbing, then fades.
 
+## Reachability audit (helper, frame-accurate physics port plus in-engine checks)
+
+Plain jump: 3.6 tiles high, 7-tile gap max (3 px slack). Boost: 6.2 tiles high. Every map's goal and every collectible is reachable. Fixed from the audit:
+- 1-1: a second hat after the checkpoint (col 92), so a death past it can't leave her hatless with no ink before the 8-tile pit.
+- 5-1: any upward stroke through the water surface now hops her out (before, jump had to be held at the exact moment or she bobbed forever). Removed an unreachable floating platform (cols 378-380).
+- 7-1: added a checkpoint (col 60); moved the inbox off head height before the boss door.
+- Boss: the third valve ledge moved left of the fire (cols 21-23). It used to sit behind the fire, which grows too big to jump after about 15 seconds.
+Left as is (minor): several patrol enemies reach the takeoff edge of a pit; the bus and tortoise gaps can mean a few seconds' wait.
+
 ## Questions for Andrew
 
 1. Are the outfit colors right for each city? (`levels.json`, `palette` per world)
