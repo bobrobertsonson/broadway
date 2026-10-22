@@ -1,0 +1,479 @@
+{
+  "gameTitle": "Jasmin's Game",
+  "names": {
+    "jasmin": "Jasmin",
+    "andrew": "Andrew",
+    "rabbit": "TODO: rabbit name",
+    "son": "TODO: son name",
+    "daughter": "TODO: daughter name"
+  },
+  "worlds": [
+    {
+      "id": 1,
+      "title": "TODO: world 1 title",
+      "companionsJoin": [],
+      "companionsLeave": [],
+      "outfitUnlock": {
+        "name": "purple",
+        "palette": {}
+      },
+      "levels": [
+        {
+          "id": "1-1",
+          "dark": false,
+          "collectibles": [
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            }
+          ],
+          "endCaption": "TODO: end caption"
+        },
+        {
+          "id": "1-2",
+          "dark": false,
+          "collectibles": [
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            }
+          ],
+          "endCaption": "TODO: end caption"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "TODO: world 2 title",
+      "companionsJoin": [
+        "andrew"
+      ],
+      "companionsLeave": [],
+      "outfitUnlock": {
+        "name": "forest",
+        "palette": {
+          "C": "#2f5a3e",
+          "c": "#1f3d2a",
+          "P": "#e0a43a",
+          "K": "#3b2a5c"
+        }
+      },
+      "levels": [
+        {
+          "id": "2-1",
+          "dark": false,
+          "collectibles": [
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            }
+          ],
+          "endCaption": "TODO: end caption"
+        },
+        {
+          "id": "2-2",
+          "dark": true,
+          "collectibles": [
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            }
+          ],
+          "endCaption": "TODO: end caption"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "TODO: world 3 title",
+      "companionsJoin": [
+        "rabbit"
+      ],
+      "companionsLeave": [
+        "rabbit"
+      ],
+      "outfitUnlock": {
+        "name": "wine",
+        "palette": {
+          "C": "#6e2233",
+          "c": "#4a1622",
+          "P": "#e8c26a",
+          "K": "#2a1f3d"
+        }
+      },
+      "levels": [
+        {
+          "id": "3-1",
+          "dark": false,
+          "collectibles": [
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            }
+          ],
+          "endCaption": "TODO: end caption"
+        },
+        {
+          "id": "3-2",
+          "dark": false,
+          "collectibles": [
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            }
+          ],
+          "endCaption": "TODO: end caption"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "TODO: world 4 title",
+      "companionsJoin": [
+        "son"
+      ],
+      "companionsLeave": [],
+      "outfitUnlock": {
+        "name": "midnight",
+        "palette": {
+          "C": "#1e2d55",
+          "c": "#131d38",
+          "P": "#d9d9e8",
+          "K": "#1a1a2e"
+        }
+      },
+      "levels": [
+        {
+          "id": "4-1",
+          "dark": false,
+          "collectibles": [
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            }
+          ],
+          "endCaption": "TODO: end caption"
+        },
+        {
+          "id": "4-2",
+          "dark": false,
+          "collectibles": [
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            }
+          ],
+          "endCaption": "TODO: end caption"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "TODO: world 5 title",
+      "companionsJoin": [
+        "daughter"
+      ],
+      "companionsLeave": [],
+      "outfitUnlock": {
+        "name": "gold",
+        "palette": {
+          "C": "#2a262e",
+          "c": "#4a4552",
+          "P": "#f5d342",
+          "K": "#5c2a4a"
+        }
+      },
+      "levels": [
+        {
+          "id": "5-1",
+          "dark": false,
+          "collectibles": [
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            }
+          ],
+          "endCaption": "TODO: end caption"
+        },
+        {
+          "id": "5-2",
+          "dark": false,
+          "collectibles": [
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            },
+            {
+              "x": 0,
+              "y": 0,
+              "label": "TODO: label",
+              "caption": "TODO: caption"
+            }
+          ],
+          "endCaption": "TODO: end caption"
+        }
+      ]
+    }
+  ],
+  "eggHatchesInto": "TODO: what the egg hatches into",
+  "rabbitSendoffCaption": "TODO: send-off caption",
+  "credits": [
+    "TODO: credits line 1",
+    "TODO: credits line 2",
+    "TODO: credits line 3"
+  ]
+}
