@@ -58,7 +58,7 @@ class Gallery extends Phaser.Scene {
     for (const outfit of Object.keys(outfits)) {
       const key = charKey("jasmin", { outfit });
       this.add.sprite(x + 12, y + 34, key).setOrigin(0.5, 1).play(animKey(key, "run"));
-      this.text(outfit.replace(/ look$/i, ""), x + 12, y + 35, "small", true);
+      this.text(outfit.replace(/ look$/i, "").split(" ")[0].replace(/\W+$/, ""), x + 12, y + 35, "small", true);
       x += 48;
     }
     this.ground(6, y + 34, x - 6);

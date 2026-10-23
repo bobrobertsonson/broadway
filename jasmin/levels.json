@@ -31,7 +31,8 @@
           "P": "#8a5a2b",
           "K": "#3b2a5c"
         },
-        "paletteNote": "Double Jeans (name from Andrew): denim dress and rim, brown leather belt and hat band. Colors picked by Claude Code. Slots: C dress, c rim, P belt and hat band, K hat."
+        "paletteNote": "Double Jeans (name from Andrew): denim dress and rim, brown leather belt and hat band. Colors picked by Claude Code. Slots: C dress, c rim, P belt and hat band, K hat.",
+        "style": "jeans"
       },
       "companionsJoin": [],
       "levels": [
@@ -97,7 +98,8 @@
           "P": "#f5d342",
           "K": "#3b2a5c"
         },
-        "paletteNote": "Picked by Claude Code overnight. Slots: C dress, c rim, P belt and hat band, K hat."
+        "paletteNote": "Picked by Claude Code overnight. Slots: C dress, c rim, P belt and hat band, K hat.",
+        "style": "puffy"
       },
       "companionsJoin": [
         "andrew"
@@ -158,9 +160,11 @@
           "C": "#1f8a8a",
           "c": "#146363",
           "P": "#f2b43a",
-          "K": "#3b2a5c"
+          "K": "#3b2a5c",
+          "C2": "#f4f1ea"
         },
-        "paletteNote": "Picked by Claude Code overnight. Slots: C dress, c rim, P belt and hat band, K hat."
+        "paletteNote": "Picked by Claude Code overnight. Slots: C dress, c rim, P belt and hat band, K hat.",
+        "style": "twotone"
       },
       "companionsJoin": [
         "rupert"
@@ -208,7 +212,8 @@
           "P": "#e8c26a",
           "K": "#2a1f3d"
         },
-        "paletteNote": "Picked by Claude Code overnight. Slots: C dress, c rim, P belt and hat band, K hat."
+        "paletteNote": "Picked by Claude Code overnight. Slots: C dress, c rim, P belt and hat band, K hat.",
+        "style": "scarf"
       },
       "companionsJoin": [
         "isaac"
@@ -263,7 +268,8 @@
           "P": "#f5e0a0",
           "K": "#3b2a5c"
         },
-        "paletteNote": "Picked by Claude Code overnight. Slots: C dress, c rim, P belt and hat band, K hat."
+        "paletteNote": "Picked by Claude Code overnight. Slots: C dress, c rim, P belt and hat band, K hat.",
+        "style": "trainers"
       },
       "companionsJoin": [],
       "levels": [
@@ -354,9 +360,11 @@
           "C": "#4a2e22",
           "c": "#33201a",
           "P": "#e0a43a",
-          "K": "#3b2a5c"
+          "K": "#3b2a5c",
+          "C2": "#e9d8b8"
         },
-        "paletteNote": "Picked by Claude Code overnight. Slots: C dress, c rim, P belt and hat band, K hat."
+        "paletteNote": "Picked by Claude Code overnight. Slots: C dress, c rim, P belt and hat band, K hat.",
+        "style": "cardigan"
       },
       "companionsJoin": [
         "aya",

@@ -219,6 +219,18 @@ Asked: more varied levels with real environmental things from each place, a powe
 
 **Not checked:** a human playing it. That is the most useful next step.
 
+## Outfits change shape, not just color (Andrew: "the puffy jacket needs to be big")
+
+An outfit in `levels.json` can name a `style` (`src/outfits.js`). The style reshapes her clothes in every animation frame, with the hat on or off:
+- London `jeans`: jacket and jeans; the skirt becomes two legs.
+- Minneapolis `puffy`: a big round quilted parka, puffy sleeve with a mitten, cream fur collar, down past the hips.
+- Chicago `twotone`: white top over the skirt.
+- New York `scarf`: a chunky scarf with a long tail flying behind.
+- South America `trainers`: white sneakers and a big green travel backpack with a rolled mat.
+- Brooklyn `cardigan`: an open cardigan over a cream top.
+
+Colors still come from each outfit's palette (new slots: C2 for a second color, Tw/Tg sneakers, Bp/Bp2 backpack).
+
 ## Questions for Andrew
 
 1. Are the outfit colors right for each city? (`levels.json`, `palette` per world)

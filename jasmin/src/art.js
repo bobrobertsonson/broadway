@@ -14,6 +14,7 @@
 import { PALETTE, OUTFITS } from "./sprites.js";
 import { buildFrames } from "./frames.js";
 import { worldOutfit } from "./content.js";
+import { styleFrames, STYLE_DEFAULTS } from "./outfits.js";
 
 export const ART_OVERRIDES = {};
 
@@ -42,10 +43,10 @@ export function buildCharacterArt(scene, outfits) {
     buildOne(scene, name, PALETTE, charKey(name, { outline: true }), true);
   }
   for (const [outfit, pal] of Object.entries(outfits)) {
-    const palette = { ...PALETTE, ...pal };
+    const palette = { ...PALETTE, ...STYLE_DEFAULTS, ...pal };
     for (const name of ["jasmin", "jasminHat"]) {
-      buildOne(scene, name, palette, charKey(name, { outfit }), false);
-      buildOne(scene, name, palette, charKey(name, { outfit, outline: true }), true);
+      buildOne(scene, name, palette, charKey(name, { outfit }), false, pal._style);
+      buildOne(scene, name, palette, charKey(name, { outfit, outline: true }), true, pal._style);
     }
   }
 }
@@ -56,12 +57,12 @@ export function collectOutfits(content) {
   for (const [name, pal] of Object.entries(OUTFITS)) out[name] = pal;
   for (const w of content.worlds || []) {
     const u = worldOutfit(w);
-    if (u) out[u.name] = { ...OUTFITS.black, ...u.palette };
+    if (u) out[u.name] = { ...OUTFITS.black, ...u.palette, _style: u.style };
   }
   return out;
 }
 
-function buildOne(scene, name, palette, key, outline) {
+function buildOne(scene, name, palette, key, outline, style) {
   if (scene.textures.exists(key)) scene.textures.remove(key);
   const o = ART_OVERRIDES[name];
   if (o && scene.textures.exists(`override-${name}`)) {
@@ -72,7 +73,9 @@ function buildOne(scene, name, palette, key, outline) {
     return;
   }
 
-  const { w, h, frames, anims } = buildFrames(name);
+  const built = buildFrames(name);
+  const { w, h, anims } = built;
+  const frames = style ? styleFrames(built.frames, style) : built.frames;
   const pad = outline ? 1 : 0;
   const fw = w + pad * 2, fh = h + pad * 2;
   const tex = scene.textures.createCanvas(key, fw * frames.length, fh);

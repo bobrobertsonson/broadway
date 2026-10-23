@@ -32,7 +32,7 @@ export function worldOutfit(world) {
   if (!o) return null;
   const name = t(o.name, `World ${world.id} look`);
   const palette = o.palette && typeof o.palette === "object" ? o.palette : DEFAULT_OUTFIT_PALETTES[world.id] || {};
-  return { name, palette };
+  return { name, palette, style: o.style || null };
 }
 
 // Captions for a companion joining mid-level, by marker.
