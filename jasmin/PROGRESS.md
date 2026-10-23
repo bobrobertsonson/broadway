@@ -172,6 +172,51 @@ Longer captions now stay up longer (about 45 ms per character), and captions dro
 Pipeline for real songs: a MIDI file of the song goes through `tools/midi2song.mjs` (`--list` shows the parts; it picks lead, harmony, bass and drums, makes each one monophonic like a chip channel, and can cut to a range of bars). It writes `src/songs/<key>.js`; register it in `src/songs/index.js` and set a map's `music` to the key. Songs play on NES-style pulse waves (12.5% and 25% duty), a triangle bass and noise drums, and loop.
 Why MIDI: Claude can't listen to audio and doesn't know these songs note for note, so a from-memory version would come out wrong. First request: "New Song" by Warpaint for Chicago. Waiting on a MIDI from Andrew.
 
+## Second overnight: powers, bricks, richer cities (Andrew asleep)
+
+Asked: more varied levels with real environmental things from each place, a power beyond the hat in every level, breakable bricks, "make it very verbose" (read as dense with place detail, not more text).
+
+**Engine (src/powers.js, places/):**
+- Powers, one per level, on the action button; a new pickup replaces the old one; kept on death.
+  - Pen: London.
+  - Bullshitometer: Minneapolis and South America.
+  - Dash: Chicago and Brooklyn.
+  - Magic spark: Chinatown and the new building.
+- Cut on purpose: ground pound and bubble shield (Andrew picked all options; argued in chat they duplicate the spark and the hat). Easy to add later if he still wants them.
+- Bullshitometer: HUD needle rises near fakes; the button marks them for 6 s and Jasmin says "Nope."
+- Fakes: `~` fake brick and `_` fake ground crumble a moment after she stands on them and come back on respawn. `?` mimics look like collectibles and bite; she can stomp them.
+- Cracked bricks `%`: they break from below, from a spark (one spark opens the whole cracked column) or from a dash.
+- Secrets `+`: hidden sweets, 3 per level (5 in South America). The world map shows "Secrets n of N" and the level's power. The pause screen names the current power and its button.
+- Place modules, `src/places/<city>.js`: each city's scenery, markers and mechanics, kept out of Level.js. Four Sonnet helpers each built cities in their own worktree; all merged.
+  - London: phone and post boxes, black cab, zebra crossing, pigeons, puddles, tube gusts to a rooftop route, a bouncy market awning.
+  - Minneapolis: skyways that hide her from ghosts, thin ice and fake stairs for the Bullshitometer, snow, plow, fountains, ice-fishing shanties, a giant spoon and cherry by the picnic.
+  - Chicago: lift bridge, L train and water taxi rides, wind over the river and lake, a mirror bean, deep-dish stand, street signs.
+  - Chinatown: lantern strings that light when a spark passes, bounce awnings, steam vents, storefronts, Henry St sign; the send-off ending untouched.
+  - South America: tourist traps for the Bullshitometer, plus one thing per country.
+    - Mexico: papel picado and macaws.
+    - Panama: a canal lock raft.
+    - Colombia: coffee terraces.
+    - Galapagos: crabs, with shorter tortoise waits.
+    - Chile: Valparaiso hillside and funicular.
+    - Argentina: gusts.
+    - Brazil: wave pavement and bouncy umbrellas.
+  - Brooklyn: chocolate conveyors, telegraphed chocolate drips, stoops, cats, water towers, a school with a flag.
+  - New building: elevator, furniture platforms, plaster closets with secrets, floorboards over a wall cross-section, ceiling lights.
+- Nairobi intro: the skyline beyond the savanna, giraffes, acacias, birds.
+- Balanced line breaks for all captions and banners.
+- Real songs as chiptunes: MIDI converter and song player (see above), waiting on files.
+
+**Bug found by a full-game run:** Phaser reuses each scene object, so per-visit flags carried over. This was the "map froze after Minneapolis" report: the map ignored the start button on every visit after the first. Nube's once-per-level cloud stayed spent and secret counts kept adding up. Fix: `src/scenes/fresh.js` clears per-visit state at the start of every visit.
+
+**Checks:**
+- No errors in any level at phone and TV size.
+- Every secret can be picked up.
+- 60 fps with the CPU throttled 4x in every level.
+- All cutscenes run to the end (each helper ran its own; the proposal and cop in South America; picnic; paired walk; send-off).
+- Reachability checked with the physics sim per level.
+
+**Not checked:** a human playing it. That is the most useful next step.
+
 ## Questions for Andrew
 
 1. Are the outfit colors right for each city? (`levels.json`, `palette` per world)
