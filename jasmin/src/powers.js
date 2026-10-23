@@ -100,6 +100,13 @@ export class Powers {
     this.mimics.push(m);
   }
 
+  // One line for the pause screen.
+  describe() {
+    if (!this.kind) return "";
+    if (this.kind === "pen") return `Power: the pen, ${this.L.penUses} left (${controls.actionName()})`;
+    return `Power: ${NAMES[this.kind]} (${controls.actionName()})`;
+  }
+
   hudItems() {
     if (!this.kind) return [];
     if (this.kind === "pen") return this.L.penUses > 0 || this.L.penTaught ? [{ icon: "item-pen", text: String(this.L.penUses) }] : [];
@@ -380,6 +387,21 @@ export function makePowerTextures(scene) {
   ] : [
     "......", "..Y...", ".YWY..", "YWWWY.", ".YWY..", "..Y...",
   ], { W: WHITE, Y: GOLD_LIGHT })));
+  // Hidden secret: a wrapped sweet with a sparkle (3 per level, tucked behind bricks and high routes).
+  M("item-secret", 12, 12, ({ A }) => A([
+    "....w.......",
+    "...wYw......",
+    "....w.......",
+    "............",
+    "o..oooooo..o",
+    "oooPPPPPPooo",
+    "oPoPWPPPPoPo",
+    "oooPPPPPPooo",
+    "o..oooooo..o",
+    "............",
+    "........w...",
+    ".......wYw..",
+  ], { o: INK, P: "#b07ae0", W: WHITE, w: WHITE, Y: GOLD_LIGHT }));
   M("fx-bit", 4, 4, ({ R }) => { R(0, 0, 4, 4, "#ffffff"); R(0, 3, 4, 1, "#9a9a9a"); R(3, 0, 1, 4, "#bdbdbd"); });
   M("fx-fake", 16, 16, ({ R, P }) => {
     R(0, 0, 16, 1, RED); R(0, 15, 16, 1, RED); R(0, 0, 1, 16, RED); R(15, 0, 1, 16, RED);

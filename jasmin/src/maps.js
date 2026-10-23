@@ -16,6 +16,8 @@
 //  % cracked brick (breaks from below, by spark or dash; never put one where only a
 //    ground pound could reach it)  ~ fake brick  _ fake ground (crumble when stood on;
 //    the Bullshitometer exposes them)  ? mimic (looks like a collectible, bites)
+//  + secret (a hidden sweet; aim for 3 per level, tucked behind cracked bricks, up high
+//    routes, or where a power is needed; the map shows how many were found)
 // Optional per map: place: "<name>" loads src/places/<name>.js, which may define its
 //  own marker characters for that map only (see src/places/index.js).
 
@@ -222,7 +224,7 @@ export const MAPS = {
       "..........%%%%..........................=~~~=...................................",
       "................................................................................",
       "................................................................................",
-      "..S..^......>.....%.....!......?....l.............l.............................F",
+      "..S..^......>.....%.....!......?....l.....+.......l.............................F",
       "######################%%%%#####____###......############........#################",
       "################################################################################",
       "################################################################################",

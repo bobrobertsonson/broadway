@@ -9,6 +9,11 @@ import { POWER_ITEMS } from "../powers.js";
 
 const POWER_NAMES = { pen: "the pen", spark: "the magic spark", dash: "the dash", bs: "the Bullshitometer" };
 
+// Hidden secrets (+) in a level's map.
+function levelSecrets(id) {
+  return (MAPS[id]?.rows || []).join("").split("+").length - 1;
+}
+
 // The power waiting in a level: the first power marker in its map.
 function levelPower(id) {
   const rows = MAPS[id]?.rows || [];
@@ -97,7 +102,11 @@ export class WorldMap extends Phaser.Scene {
     const outfitHint = unlocked.length > 1 ? `outfit: ${game.save.outfit} (${controls.device === "touch" ? "pen button" : controls.device === "gamepad" ? controls.padLabels().pen : "X"} to change)` : "";
     const done = game.save.done.includes(e.level.id);
     const power = levelPower(e.level.id);
-    const sub = done && e.level.skill ? t(e.level.skill) : power ? `Power here: ${POWER_NAMES[power]}` : "";
+    const secrets = levelSecrets(e.level.id);
+    const found = game.save.secrets?.[e.level.id] || 0;
+    const parts = [done && e.level.skill ? t(e.level.skill) : power ? `Power here: ${POWER_NAMES[power]}` : ""];
+    if (secrets && isUnlocked(e.level.id)) parts.push(`Secrets ${found} of ${secrets}`);
+    const sub = parts.filter(Boolean).join(". ");
     ui.banner(worldTitle(e.world), sub, controls.hint("choose"), "top");
     ui.setHud(outfitHint ? [{ text: outfitHint, tip: true }] : []);
     controls.setActionVisible(unlocked.length > 1);

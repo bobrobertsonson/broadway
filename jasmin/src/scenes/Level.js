@@ -263,6 +263,7 @@ export class Level extends Phaser.Scene {
         } else if (c === "H") this.hatPickups.push(this.addItem(wx, wy - 2, "item-hat", "hat"));
         else if (POWER_ITEMS[c]) this.addItem(wx, wy - 2, `item-${POWER_ITEMS[c]}`, "power").power = POWER_ITEMS[c];
         else if (c === "?") this.powers.addMimic(wx, wy - 2);
+        else if (c === "+") { this.addItem(wx, wy - 2, "item-secret", "secret"); this.secretsTotal = (this.secretsTotal || 0) + 1; }
         else if (c === "k") {
           const k = this.add.image(wx, wy, "prop-checkpoint-off").setOrigin(0.5, 1).setDepth(3);
           this.checkpoints.push({ sprite: k, x: wx, y: wy, on: false });
@@ -698,6 +699,13 @@ export class Level extends Phaser.Scene {
           this.hatTaught = true;
           ui.caption("witch hat", this.player.cloaked ? "Hold jump to glide (not while cloaked)" : "Hold jump while falling to glide", 3000);
         }
+      } else if (it.type === "secret") {
+        this.secretsFound = (this.secretsFound || 0) + 1;
+        const best = game.save.secrets || (game.save.secrets = {});
+        best[this.levelId] = Math.max(best[this.levelId] || 0, this.secretsFound);
+        writeSave();
+        sfx.hat();
+        ui.caption("secret", `${this.secretsFound} of ${this.secretsTotal} found here`, 2000);
       } else if (it.type === "power") {
         if (it.power === "pen") { this.penUses += PEN_PER_PICKUP; this.penTaught = true; }
         sfx.hat();
@@ -841,7 +849,7 @@ export class Level extends Phaser.Scene {
       this.tweens.pauseAll();
       this.anims.pauseAll();
       this.time.paused = true;
-      ui.banner("Paused", "", controls.hint("pause"), "dim");
+      ui.banner("Paused", this.powers?.describe() || "", controls.hint("pause"), "dim");
     } else {
       this.physics.resume();
       this.tweens.resumeAll();

@@ -12,8 +12,16 @@ Test shortcuts: `?level=5-1` jumps into a level, `?level=7-1&map=7-boss` into th
 
 **Character gallery:** open `gallery.html` (e.g. http://localhost:8080/gallery.html) to see every character, outfit, enemy and NPC playing all of its animations, drawn exactly as the game draws them. Useful after editing `sprites.js` or swapping in Aseprite sheets.
 
+Powers: every level offers one power besides the witch hat, and the action button (X, the pad's left face button, or the on-screen button) uses it. A new pickup replaces the old one; powers are kept on death.
+- **Pen:** writes a short platform (limited ink).
+- **Magic spark:** throws a sparkle that knocks out pests and smashes cracked bricks.
+- **Dash:** a quick sideways burst, in the air too; smashes cracked bricks and bowls over pests.
+- **Bullshitometer:** a needle in the top bar that rises near anything fake (floors that crumble, collectibles that bite). Press the button to call it out: fakes are marked for a few seconds.
+
+Cracked bricks also break when she jumps into them from below. Each level hides secrets (wrapped sweets); the world map shows how many were found. `?level=1-1&map=x-test` opens a small playground with every power and trick.
+
 Controls:
-- **Keyboard:** arrows or A/D to move, Space/Up/Z to jump (hold to glide with the hat), X or Shift for the pen, Enter or P to pause, Esc for the map, M to mute.
+- **Keyboard:** arrows or A/D to move, Space/Up/Z to jump (hold to glide with the hat), X or Shift for the power, Enter or P to pause, Esc for the map, M to mute.
 - **Gamepad** (any standard-mapping pad, through Phaser's gamepad plugin): d-pad or left stick to move, A to jump (hold to glide), X for the pen, Start to pause (and to confirm in menus), B for the map while paused. When naming World 9, an on-screen letter grid appears: d-pad to move, A to type, X to delete, Start to finish. Browsers only expose a pad after one of its buttons has been pressed on the page.
 - **Phone:** on-screen buttons appear automatically.
 
