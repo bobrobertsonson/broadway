@@ -352,3 +352,28 @@ export function drawPlain(ctx, str, x, y, color, which = "small") {
   }
   return cx - x - 1;
 }
+
+// Breaks text into lines no wider than maxW, balanced so the lines come out about
+// equal (no single word left alone on the last line). Returns the text with "\n".
+export function balanceLines(str, maxW, which = "small") {
+  const words = fontSafe(str, which).split(/\s+/).filter(Boolean);
+  const greedy = (w) => {
+    const lines = [];
+    let cur = "";
+    for (const word of words) {
+      const next = cur ? `${cur} ${word}` : word;
+      if (cur && measure(next, which) > w) { lines.push(cur); cur = word; } else cur = next;
+    }
+    if (cur) lines.push(cur);
+    return lines;
+  };
+  const first = greedy(maxW);
+  if (first.length < 2) return first.join("\n");
+  // Narrowest width that still fits in the same number of lines.
+  let lo = Math.ceil(measure(words.join(" "), which) / first.length), hi = maxW;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (greedy(mid).length <= first.length) hi = mid; else lo = mid + 1;
+  }
+  return greedy(hi).join("\n");
+}

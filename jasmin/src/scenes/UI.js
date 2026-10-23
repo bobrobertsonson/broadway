@@ -1,5 +1,5 @@
 import { state, KEYS, KEY_COLS, ui } from "../ui.js";
-import { FONTS, makeFonts, fontSafe } from "../font.js";
+import { FONTS, makeFonts, fontSafe, balanceLines } from "../font.js";
 import { controls } from "../controls.js";
 
 // Overlay scene: all text, HUD and buttons, drawn in pixels at the game's own scale.
@@ -39,6 +39,11 @@ export class UI extends Phaser.Scene {
     const t = this.add.bitmapText(0, 0, FONTS[which], fontSafe(str, which));
     if (tint !== 0xffffff) t.setTint(tint);
     return t;
+  }
+
+  // Centered text broken into evenly balanced lines (see balanceLines).
+  wrapped(str, maxW, which = "small", tint = 0xffffff) {
+    return this.text(balanceLines(str, maxW, which), which, tint).setCenterAlign();
   }
 
   // Pixel box with clipped corners: fill plus optional 1px border.
@@ -126,7 +131,7 @@ export class UI extends Phaser.Scene {
     const maxW = Math.min(this.W - s.x * 2, 300);
     const parts = [];
     if (cap.label) parts.push(this.text(cap.label.toUpperCase(), "small", GOLD));
-    const body = this.text(cap.text).setMaxWidth(maxW - 12).setCenterAlign();
+    const body = this.wrapped(cap.text, maxW - 12);
     parts.push(body);
     const w = Math.min(maxW, Math.max(...parts.map((p) => p.width)) + 12);
     let h = 5;
@@ -157,12 +162,12 @@ export class UI extends Phaser.Scene {
     const { W, H } = this;
     if (b.cls === "dim") c.add(this.add.rectangle(0, 0, W, H, INK, 0.6).setOrigin(0));
     const items = [];
-    if (b.title) items.push(this.text(b.title, "big").setMaxWidth(W - 24).setCenterAlign());
-    if (b.sub) items.push(this.text(b.sub).setMaxWidth(Math.round(W * 0.8)).setCenterAlign());
+    if (b.title) items.push(this.wrapped(b.title, W - 24, "big"));
+    if (b.sub) items.push(this.wrapped(b.sub, Math.round(W * 0.8)));
     if (b.rows) items.push(this.rowsBlock(b.rows));
     let hint = null;
     if (b.hint) {
-      hint = this.text(b.hint, "small", b.cls === "dim" ? 0xffffff : CREAM).setMaxWidth(W - 24).setCenterAlign();
+      hint = this.wrapped(b.hint, W - 24, "small", b.cls === "dim" ? 0xffffff : CREAM);
       items.push(hint);
     }
     const gap = 5;
@@ -364,7 +369,7 @@ export class UI extends Phaser.Scene {
     this.rotate.removeAll(true);
     if (!show) return;
     this.rotate.add(this.add.rectangle(0, 0, this.W, this.H, INK, 1).setOrigin(0));
-    const t = this.text("Turn your phone sideways to play").setMaxWidth(this.W - 20).setCenterAlign();
+    const t = this.wrapped("Turn your phone sideways to play", this.W - 20);
     t.setPosition(Math.round((this.W - t.width) / 2), Math.round((this.H - t.height) / 2));
     this.rotate.add(t);
   }
