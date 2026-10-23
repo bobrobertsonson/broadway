@@ -58,7 +58,7 @@ const GLOW_PURPLE = [150, 90, 220], GLOW_GOLD = [255, 220, 110];
 const SPARKLE = '#fff6b0', SPARKLE_CORE = '#ffffff';
 
 // ---- canvas helper ----
-function mk(scene, key, w, h, draw) {
+export function mk(scene, key, w, h, draw) {
   if (scene.textures.exists(key)) return;
   const tex = scene.textures.createCanvas(key, w, h);
   const ctx = tex.getContext('2d');

@@ -86,6 +86,20 @@ export const controls = {
     document.getElementById("touch")?.classList.toggle("off", !visible);
   },
 
+  // Name of the action button for captions ("X", the pad's pen button, or "the action button").
+  actionName() {
+    const d = this.device === "touch" || (this.isTouch && this.device !== "gamepad") ? "touch" : this.device;
+    return d === "gamepad" ? this.padLabels().pen : d === "touch" ? "The action button" : "X";
+  },
+
+  // The touch action button's icon follows the power she holds.
+  setActionIcon(kind) {
+    const el = document.querySelector('#touch button[data-key="action"] .px');
+    if (!el || !TOUCH_ICONS[kind] || el.dataset.icon === kind) return;
+    el.dataset.icon = kind;
+    drawTouchIcons();
+  },
+
   setActionVisible(visible) {
     const b = document.querySelector('#touch button[data-key="action"]');
     if (b) b.classList.toggle("hidden", !visible);
@@ -203,6 +217,9 @@ const TOUCH_ICONS = {
   right: ["...#....", "...##...", "...###..", "...####.", "...####.", "...###..", "...##...", "...#...."],
   jump: ["........", "...##...", "..####..", ".######.", "########", "...##...", "...##...", "........"],
   pen: [".......#", "......##", ".....##.", "....##..", "...##...", "..##....", ".#.#....", "#.#....."],
+  spark: ["...#....", "...#....", ".#.#.#..", "..###...", "#######.", "..###...", ".#.#.#..", "...#...."],
+  dash: ["........", "##..##..", "...####.", "##.#####", "...####.", "##..##..", "........", "........"],
+  bs: ["........", "..####..", ".#....#.", "#.....##", "#....#.#", "#...#..#", "########", "........"],
 };
 
 function drawTouchIcons() {

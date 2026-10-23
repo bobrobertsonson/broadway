@@ -76,6 +76,12 @@ const defs = {
   hat: (t) => arp([76, 79, 83, 88, 91, 95, 100, 103], t, 0.055, 'triangle', 0.16, 0.4),
   hit: (t) => { tone('square', 340, 70, t, 0.35, 0.3); tone('square', 330, 66, t, 0.35, 0.2); noise(t, 0.12, 0.25, 1200); },
   stomp: (t) => { tone('triangle', 200, 45, t, 0.14, 0.7); noise(t, 0.05, 0.2, 700); },
+  brick: (t) => { noise(t, 0.12, 0.6, 900, 'bandpass', 1.2); tone('square', 180, 60, t, 0.12, 0.35); noise(t + 0.06, 0.08, 0.3, 2500, 'highpass'); },
+  crumble: (t) => { for (let i = 0; i < 4; i++) noise(t + i * 0.05, 0.07, 0.35, 500 + i * 200, 'bandpass', 2); },
+  spark: (t) => { tone('square', 1400, 2600, t, 0.08, 0.18); tone('triangle', 2000, 900, t + 0.04, 0.1, 0.2); },
+  dash: (t) => { noise(t, 0.18, 0.45, 1500, 'bandpass', 0.7); tone('triangle', 300, 700, t, 0.12, 0.3); },
+  // Bullshitometer: a skeptical "hmm?" then a needle twang.
+  bs: (t) => { tone('square', 220, 330, t, 0.16, 0.22); tone('square', 330, 196, t + 0.16, 0.22, 0.22); tone('triangle', 1200, 300, t + 0.4, 0.18, 0.25); },
   pen: (t) => { for (let i = 0; i < 5; i++) noise(t + i * 0.07, 0.06, 0.35, 2500 + Math.random() * 3000, 'bandpass', 3); },
   checkpoint: (t) => arp([72, 76, 79], t, 0.1, 'square', 0.2, 0.28),
   win: (t) => {

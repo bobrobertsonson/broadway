@@ -22,6 +22,8 @@ export const PHYS = {
   waterGravity: 260,
   waterSink: 70,
   swimStroke: 170,
+  dash: 340,
+  dashTime: 0.17,
 };
 
 // Hitbox inside the 24 x 32 Jasmin frame (feet on the bottom row).
@@ -116,6 +118,16 @@ export class Player {
     }
     if (this.locked) { this.updateAnim(); return; }
 
+    // Dash: a short flat burst that ignores gravity and steering.
+    if (this.dashT > 0) {
+      this.dashT -= dt;
+      b.setVelocity(this.dashDir * PHYS.dash, 0);
+      if (this.dashT <= 0) { b.setAllowGravity(true); b.setVelocityX(this.dashDir * PHYS.run); }
+      this.updateAnim();
+      return;
+    }
+    if (this.onGround) this.airDashed = false;
+
     const dir = (controls.right ? 1 : 0) - (controls.left ? 1 : 0);
     const max = PHYS.run * this.mods.speed;
     const ground = this.onGround;
@@ -184,6 +196,17 @@ export class Player {
     this.updateAnim();
   }
 
+  // Starts a dash in the facing direction; one per jump in the air. Returns true if it started.
+  dash() {
+    if (this.dashT > 0 || this.swimming || this.dead || this.locked) return false;
+    if (!this.onGround) { if (this.airDashed) return false; this.airDashed = true; }
+    this.dashT = PHYS.dashTime;
+    this.dashDir = this.facing;
+    this.sprite.body.setAllowGravity(false);
+    this.gliding = false;
+    return true;
+  }
+
   updateAnim() {
     const b = this.sprite.body;
     if (this.forcedAnim) return this.play(this.forcedAnim);
@@ -212,8 +235,10 @@ export class Player {
   die() {
     if (this.dead) return;
     this.dead = true;
+    this.dashT = 0;
     sfx.hit();
     const s = this.sprite;
+    s.body.setAllowGravity(true);
     s.body.setVelocity(0, -220);
     s.body.checkCollision.none = true;
     this.forcedAnim = null;
@@ -222,6 +247,8 @@ export class Player {
 
   respawn(x, y) {
     const s = this.sprite;
+    this.dashT = 0;
+    s.body.setAllowGravity(true);
     this.dead = false;
     this.forcedAnim = null;
     s.body.checkCollision.none = false;

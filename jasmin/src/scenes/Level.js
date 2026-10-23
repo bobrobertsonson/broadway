@@ -7,6 +7,7 @@ import { MAPS } from "../maps.js";
 import { THEMES, makeEnvironmentTextures } from "../tiles.js";
 import { makePropTextures } from "../props.js";
 import { Player, PHYS } from "../player.js";
+import { Powers, POWER_ITEMS, TILE_CRACK, TILE_FAKE_BRICK, TILE_FAKE_TOP } from "../powers.js";
 import { Trail } from "../companions.js";
 import { makeEnemyAnims, spawnEnemy, updateEnemy, squash, ENEMY_CHARS } from "../enemies.js";
 import { Ghosts } from "../ghosts.js";
@@ -116,12 +117,13 @@ export class Level extends Phaser.Scene {
   }
 
   composeTileset() {
-    const ts = this.textures.exists("tileset") ? this.textures.get("tileset") : this.textures.createCanvas("tileset", T * 4, T);
+    const ts = this.textures.exists("tileset") ? this.textures.get("tileset") : this.textures.createCanvas("tileset", T * 7, T);
     const ctx = ts.getContext();
-    ctx.clearRect(0, 0, T * 4, T);
+    ctx.clearRect(0, 0, T * 7, T);
     ["tile-ground", "tile-ground-top", "tile-brick", "tile-oneway"].forEach((k, i) => {
       ctx.drawImage(this.textures.get(k).getSourceImage(), i * T, 0);
     });
+    Powers.composeTiles(this, ctx);
     ts.refresh();
   }
 
@@ -138,6 +140,9 @@ export class Level extends Phaser.Scene {
         if (c === "#") row.push(this.cell(x, y - 1) === "#" ? TILE.ground : TILE.top);
         else if (c === "=") row.push(TILE.brick);
         else if (c === "-") row.push(TILE.oneway);
+        else if (c === "%") row.push(TILE_CRACK);
+        else if (c === "~") row.push(TILE_FAKE_BRICK);
+        else if (c === "_") row.push(TILE_FAKE_TOP);
         else {
           if (c === "h") this.hidden.push({ x, y, revealed: false });
           if (c === "w") this.water.push({ x, y });
@@ -149,7 +154,7 @@ export class Level extends Phaser.Scene {
     const map = this.make.tilemap({ data, tileWidth: T, tileHeight: T });
     const tileset = map.addTilesetImage("tileset", "tileset", T, T, 0, 0);
     this.layer = map.createLayer(0, tileset, 0, 0).setDepth(2);
-    this.layer.setCollision([TILE.ground, TILE.top, TILE.brick, TILE.oneway]);
+    this.layer.setCollision([TILE.ground, TILE.top, TILE.brick, TILE.oneway, TILE_CRACK, TILE_FAKE_BRICK, TILE_FAKE_TOP]);
     this.layer.forEachTile((tile) => {
       if (tile.index === TILE.oneway) tile.setCollision(false, false, true, false);
     });
@@ -223,6 +228,7 @@ export class Level extends Phaser.Scene {
 
   buildObjects() {
     this.enemies = this.physics.add.group();
+    this.powers = new Powers(this);
     this.penLines = this.physics.add.staticGroup();
     this.movers = this.physics.add.group({ allowGravity: false, immovable: true });
     this.items = [];
@@ -250,7 +256,8 @@ export class Level extends Phaser.Scene {
           const seg = segments[stamp++];
           if (seg) this.addCollectible(wx, wy - 2, "item-stamp", t(seg.country), t(seg.stampCaption));
         } else if (c === "H") this.hatPickups.push(this.addItem(wx, wy - 2, "item-hat", "hat"));
-        else if (c === "p") this.addItem(wx, wy - 2, "item-pen", "pen");
+        else if (POWER_ITEMS[c]) this.addItem(wx, wy - 2, `item-${POWER_ITEMS[c]}`, "power").power = POWER_ITEMS[c];
+        else if (c === "?") this.powers.addMimic(wx, wy - 2);
         else if (c === "k") {
           const k = this.add.image(wx, wy, "prop-checkpoint-off").setOrigin(0.5, 1).setDepth(3);
           this.checkpoints.push({ sprite: k, x: wx, y: wy, on: false });
@@ -510,7 +517,7 @@ export class Level extends Phaser.Scene {
       return;
     }
 
-    if (controls.pressed("action")) this.usePen();
+    this.powers.update(dt);
     this.checkItems();
     this.checkCheckpoints();
     this.revealHidden();
@@ -579,7 +586,7 @@ export class Level extends Phaser.Scene {
     const col = Math.floor(b.center.x / T);
     for (let x = col - 5; x <= col + 5; x++) {
       for (let y = 1; y < this.rowsN; y++) {
-        if (!"#=-".includes(this.cell(x, y)) || "#=-".includes(this.cell(x, y - 1))) continue;
+        if (!"#=-%~_".includes(this.cell(x, y)) || "#=-%~_".includes(this.cell(x, y - 1))) continue;
         const rise = feet - y * T;
         if (rise > plain && rise <= boosted) return true;
       }
@@ -603,12 +610,20 @@ export class Level extends Phaser.Scene {
 
   // ---------- interactions ----------
 
+  // A short speech line over someone's head (drawn by updateLabels).
+  say(sprite, text, ms = 1500) {
+    this.speech = { sprite, text };
+    this.time.delayedCall(ms, () => { if (this.speech?.text === text) this.speech = null; });
+  }
+
   touchEnemy(e) {
     const p = this.player, b = p.sprite.body;
     if (p.dead || e.squashed || this.mode !== "play") return;
-    if (b.velocity.y > 0 && b.bottom - e.body.top < 10) {
+    // A stomp from above, or bowling into it mid-dash.
+    if (p.dashT > 0 || (b.velocity.y > 0 && b.bottom - e.body.top < 10)) {
       squash(this, e);
       sfx.stomp();
+      if (p.dashT > 0) return;
       b.setVelocityY(controls.jump ? -330 : -220);
       p.cut = !controls.jump;
       return;
@@ -675,13 +690,10 @@ export class Level extends Phaser.Scene {
           this.hatTaught = true;
           ui.caption("witch hat", this.player.cloaked ? "Hold jump to glide (not while cloaked)" : "Hold jump while falling to glide", 3000);
         }
-      } else if (it.type === "pen") {
-        this.penUses += PEN_PER_PICKUP;
+      } else if (it.type === "power") {
+        if (it.power === "pen") { this.penUses += PEN_PER_PICKUP; this.penTaught = true; }
         sfx.hat();
-        if (!this.penTaught) {
-          this.penTaught = true;
-          ui.caption("pen", controls.hint("pen"), 3200);
-        }
+        this.powers.set(it.power);
       }
       this.refreshHud();
     }
@@ -779,6 +791,7 @@ export class Level extends Phaser.Scene {
     this.time.delayedCall(900, async () => {
       await ui.fade(true, 250);
       this.player.respawn(this.checkpoint.x, this.checkpoint.y);
+      this.powers.reset();
       this.trail.reset();
       for (const h of this.hatPickups) { h.taken = false; h.sprite.setVisible(true); }
       this.cameras.main.centerOn(this.checkpoint.x, this.checkpoint.y);
@@ -791,11 +804,11 @@ export class Level extends Phaser.Scene {
   refreshHud() {
     const p = this.player;
     const items = [{ icon: "item-collectible", text: String(this.score) }, { icon: "item-hat", dim: !p.hasHat }];
-    if (this.penUses > 0 || this.penTaught) items.push({ icon: "item-pen", text: String(this.penUses) });
+    if (this.powers) items.push(...this.powers.hudItems());
     if (hasCharm(this.world)) items.push({ icon: "item-charm", dim: !p.charmReady });
     if (this.boss) items.push({ icon: "prop-valve-1", text: `${this.boss.opened}/3` });
     ui.setHud(items);
-    controls.setActionVisible(this.penUses > 0);
+    controls.setActionVisible(!!this.powers?.actionReady());
   }
 
   // ---------- flow ----------
