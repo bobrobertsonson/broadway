@@ -215,6 +215,8 @@ Asked: more varied levels with real environmental things from each place, a powe
 - All cutscenes run to the end (each helper ran its own; the proposal and cop in South America; picnic; paired walk; send-off).
 - Reachability checked with the physics sim per level.
 
+**Full-game run (headless, scripted):** title, Nairobi, then every level from London to the new building through the world map, the fire boss, the ending (inventory, fog, naming World 9, Jennifer), all credits and back to the map. Zero errors.
+
 **Not checked:** a human playing it. That is the most useful next step.
 
 ## Questions for Andrew
