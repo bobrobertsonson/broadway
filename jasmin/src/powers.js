@@ -147,8 +147,12 @@ export class Powers {
     }
   }
 
+  // A spark opens the whole cracked column it hits (walls are often two tiles tall).
   sparkHit(sp, tile) {
-    if (tile && tile.index === TILE_CRACK) this.breakAt(tile.x, tile.y);
+    if (tile && tile.index === TILE_CRACK) {
+      this.breakAt(tile.x, tile.y);
+      for (const d of [-1, 1]) for (let y = tile.y + d; this.breakAt(tile.x, y); y += d);
+    }
     this.fizzle(sp);
   }
 
