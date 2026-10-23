@@ -15,6 +15,10 @@ export class Boot extends Phaser.Scene {
     game.content = this.cache.json.get("content");
     game.outfits = collectOutfits(game.content);
     loadSave();
+    // Outfits renamed after saves already existed.
+    const RENAMED = { "London look": "Double Jeans" };
+    game.save.outfitsUnlocked = game.save.outfitsUnlocked.map((n) => RENAMED[n] || n);
+    game.save.outfit = RENAMED[game.save.outfit] || game.save.outfit;
     if (!game.outfits[game.save.outfit]) game.save.outfit = "black";
     buildCharacterArt(this, game.outfits);
     makeEnvironmentTextures(this, "day");

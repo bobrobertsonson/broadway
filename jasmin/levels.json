@@ -22,16 +22,16 @@
       "title": "London",
       "outfit": {
         "name": {
-          "text": "London look",
-          "draft": true
+          "text": "Double Jeans",
+          "draft": false
         },
         "palette": {
-          "C": "#7a2430",
-          "c": "#4f1620",
-          "P": "#d9b45a",
+          "C": "#3f6496",
+          "c": "#2a4468",
+          "P": "#8a5a2b",
           "K": "#3b2a5c"
         },
-        "paletteNote": "Picked by Claude Code overnight. Slots: C dress, c rim, P belt and hat band, K hat."
+        "paletteNote": "Double Jeans (name from Andrew): denim dress and rim, brown leather belt and hat band. Colors picked by Claude Code. Slots: C dress, c rim, P belt and hat band, K hat."
       },
       "companionsJoin": [],
       "levels": [
