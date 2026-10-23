@@ -74,7 +74,7 @@ export const MAPS = {
   "3-1": {
     place: "chicago",
     theme: "chicago",
-    music: "chicago",
+    music: "new-song",
     // Public street names along the way.
     signs: [{ col: 7, text: "Michigan Ave" }, { col: 40, text: "State St" }, { col: 81, text: "Wacker Dr" }, { col: 160, text: "Lake Shore Dr" }],
     rows: [

@@ -4,4 +4,9 @@
 //   or { role: "drums", vol, hits: [[beat, "k"|"s"|"h"|"m"], ...] }
 // Register a song here, then use its key as a map's `music` (src/maps.js) or any startMusic() call.
 
-export const SONGS = {};
+import newSong from "./new-song.js";
+
+export const SONGS = {
+  // Chicago. Warpaint, from a MIDI Andrew found; vocal line as the lead, clean guitar as harmony.
+  "new-song": newSong,
+};
