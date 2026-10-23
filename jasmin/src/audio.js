@@ -352,3 +352,8 @@ export function musicState() {
   const c = cur;
   return c && { name: c.name, t0: c.t0, now: ctx && ctx.currentTime, voices: c.voices && c.voices.map((v) => v.i) };
 }
+
+// Every playable track: the original tracks and the real songs (for the music player page).
+export function trackList() {
+  return [...Object.keys(SONGS).map((k) => ({ key: k, title: SONGS[k].title, song: true })), ...Object.keys(TRACKS).map((k) => ({ key: k, title: k, song: false }))];
+}
