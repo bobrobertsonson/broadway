@@ -54,13 +54,13 @@ function tone(type, f0, f1, t, dur, vol, dest, set) {
 }
 
 // Filtered noise burst.
-function noise(t, dur, vol, freq, ftype, q) {
+function noise(t, dur, vol, freq, ftype, q, dest) {
   const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
   s.buffer = noiseBuf;
   f.type = ftype || 'lowpass'; f.frequency.value = freq; f.Q.value = q || 1;
   g.gain.setValueAtTime(vol, t);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  s.connect(f); f.connect(g); g.connect(sfxBus);
+  s.connect(f); f.connect(g); g.connect(dest || sfxBus);
   s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.02);
 }
 
@@ -107,20 +107,81 @@ for (const k of Object.keys(defs)) {
 
 // ---------- music ----------
 // Each bar is 8 eighth-note steps. Tokens: note name = new note, "-" = hold, "." = rest.
-// Bass: one root per bar plus a shared 8-step pattern of semitone offsets from that root.
+// Bass: one root per bar plus an 8-step pattern of semitone offsets from that root
+// (`pat`: one string for every bar, or one per bar). Optional per track:
+//   bw/bv   bass wave and volume (default triangle, 0.9)
+//   harm    a second voice, written like mel; hw/hv its wave and volume
+//   drum    8 steps per bar (one string for every bar, or one per bar):
+//           k kick, s snare, h hat, m shaker, w woodblock, . rest
 const TRACKS = {
   map: { bpm: 120, wave: 'square', mv: 0.5,
     mel: ['c5 - d5 e5 g5 - e5 -', 'd5 - b4 - g4 - . .', 'a4 - c5 - f5 - e5 -', 'd5 - - - . . g4 .',
           'g4 - c5 - e5 - g5 -', 'f5 - d5 - b4 - d5 -', 'e5 - c5 - a4 - f4 -', 'g4 - - - c5 - - .'],
     roots: ['c3', 'g2', 'f2', 'g2', 'c3', 'g2', 'f2', 'g2'], pat: '0 . 7 . 0 . 7 .' },
+  // Fallback for maps without their own track.
   level: { bpm: 152, wave: 'square', mv: 0.45,
     mel: ['d5 . g5 . b5 . g5 .', 'a5 . f#5 . d5 - - .', 'e5 . g5 . c6 . b5 .', 'a5 - g5 - - . d5 .',
           'd5 . g5 . b5 . d6 .', 'c6 . a5 . f#5 . a5 .', 'b5 . g5 . e5 . g5 .', 'a5 - - . g5 - - .'],
     roots: ['g2', 'd3', 'c3', 'd3', 'g2', 'c3', 'e3', 'd3'], pat: '0 . 7 . 0 . 7 12' },
+  // London: driving indie guitar band, E minor (i VI III VII).
+  london: { bpm: 150, wave: 'square', mv: 0.4,
+    mel: ['e5 . g5 . b5 - a5 g5', 'g5 - e5 - c5 - . .', 'd5 . g5 . b5 . d6 -', 'c6 - b5 a5 f#5 - . .',
+          'e5 e5 g5 . b5 . e6 -', 'd6 c6 b5 . g5 . e5 .', 'd5 . g5 b5 d6 - b5 .', 'a5 - f#5 - d5 - . .'],
+    roots: ['e2', 'c2', 'g2', 'd2', 'e2', 'c2', 'g2', 'd2'], pat: '0 0 12 0 0 0 12 0', bv: 0.8,
+    drum: 'k h s h k k s h' },
+  // Minneapolis: evil and sad. A slow D minor lament over a bass that sinks a half step
+  // at a time, a ghostly high voice grinding a half step against it, and a heartbeat.
+  minneapolis: { bpm: 66, wave: 'triangle', mv: 0.75,
+    mel: ['a4 - - - d5 - c#5 -', 'd5 - - - - - . .', 'f5 - - - e5 - d5 -', 'e5 - - - - - . .',
+          'd5 - - - bb4 - a4 -', 'g#4 - - - a4 - - -', 'bb4 - a4 - g4 - f4 -', 'e4 - - - c#4 - - .'],
+    roots: ['d2', 'c#2', 'c2', 'b1', 'bb1', 'a1', 'g1', 'a1'],
+    pat: ['0 - - - 7 - - -', '0 - - - 6 - - -', '0 - - - 7 - - -', '0 - - - 6 - - -',
+          '0 - - - 7 - - -', '0 - - - 1 - - -', '0 - - - 7 - - -', '0 - - - 6 - - -'],
+    harm: ['a5 - - - bb5 - - -', 'a5 - - - bb5 - - -', 'a5 - - - - - - -', 'bb5 - - - a5 - - -',
+           'a5 - - - bb5 - - -', 'a5 - - - g#5 - - -', 'a5 - - - bb5 - - -', 'a5 - - - - - - .'],
+    hw: 'square', hv: 0.12, drum: 'k k . . . . . .' },
   night: { bpm: 84, wave: 'triangle', mv: 0.8,
     mel: ['a4 - - - c5 - - -', 'e5 - - - d5 - c5 -', 'b4 - - - d5 - - -', 'c5 - - - a4 - - -',
           'f4 - - - a4 - - -', 'c5 - - - b4 - a4 -', 'g4 - b4 - d5 - - -', 'e5 - - - - - - .'],
     roots: ['a2', 'e2', 'g2', 'a2', 'f2', 'c3', 'g2', 'e2'], pat: '0 - - - 7 - - -' },
+  // Chicago: warm and open after the gray. F major, relaxed.
+  chicago: { bpm: 128, wave: 'square', mv: 0.38,
+    mel: ['c5 . f5 . a5 - g5 f5', 'e5 - c5 - a4 - c5 .', 'd5 . f5 . bb5 - a5 g5', 'g5 - - - c5 - - .',
+          'c5 . f5 . a5 . c6 -', 'a5 - f5 - d5 - f5 .', 'bb5 - a5 - g5 - f5 -', 'f5 - - - . . . .'],
+    harm: ['a4 - - - c5 - - -', 'c5 - - - e4 - - -', 'bb4 - - - d5 - - -', 'c5 - - - e4 - - -',
+           'a4 - - - c5 - - -', 'f4 - - - a4 - - -', 'd5 - - - c5 - - -', 'a4 - - - - - - .'],
+    hv: 0.3, roots: ['f2', 'a2', 'bb2', 'c3', 'f2', 'd2', 'bb2', 'c3'], pat: '0 . 7 . 12 . 7 .',
+    drum: 'k . h . s . h .' },
+  // NYC Chinatown: G major pentatonic, woodblock.
+  chinatown: { bpm: 138, wave: 'square', mv: 0.38,
+    mel: ['g5 . a5 . b5 d6 b5 .', 'a5 . g5 . e5 - - .', 'd5 . e5 . g5 . a5 .', 'b5 - a5 - g5 - - .',
+          'e6 . d6 . b5 . a5 .', 'g5 . a5 b5 d6 - - .', 'e5 . g5 . a5 . b5 .', 'g5 - - - . . d5 .'],
+    roots: ['g2', 'e2', 'c3', 'd3', 'g2', 'e2', 'c3', 'd3'], pat: '0 . . 7 . . 12 .',
+    drum: 'k . w . s . w w' },
+  // South America: tresillo bass and shaker, A minor.
+  southamerica: { bpm: 112, wave: 'square', mv: 0.36,
+    mel: ['e5 . a5 . . c6 . b5', 'a5 . f#5 . . a5 . .', 'g5 . b5 . . d6 . c6', 'b5 - g5 - e5 . . .',
+          'f5 . a5 . . c6 . a5', 'g#5 - - . e5 . . .', 'a5 . c6 . b5 . a5 .', 'a5 - - - . . . .'],
+    roots: ['a2', 'd3', 'g2', 'c3', 'f2', 'e2', 'a2', 'a2'], pat: '0 . . 7 . . 12 .',
+    drum: 'k m m s m k s m' },
+  // Brooklyn, Chocolate Factory: bouncy and cute, C major.
+  brooklyn: { bpm: 160, wave: 'square', mv: 0.36,
+    mel: ['e5 g5 c6 . g5 . e5 .', 'a5 . e5 . c5 . e5 .', 'f5 a5 c6 . a5 . f5 .', 'g5 . b5 . d6 - . .',
+          'e6 d6 c6 . g5 . e5 .', 'a5 b5 c6 . e5 . c5 .', 'd5 f5 a5 . d6 . c6 .', 'b5 - g5 - c6 - . .'],
+    roots: ['c3', 'a2', 'f2', 'g2', 'c3', 'a2', 'd3', 'g2'], pat: '0 . 7 . 12 . 7 .',
+    drum: 'k h s h k h s h' },
+  // The new building: a tense climb, E minor, rising.
+  building: { bpm: 140, wave: 'square', mv: 0.36,
+    mel: ['b4 . e5 . g5 . e5 .', 'b4 . e5 . a5 . g5 .', 'c5 . e5 . g5 . c6 .', 'd5 . f#5 . a5 . d6 .',
+          'e5 - - . b5 - - .', 'c6 - - . a5 - f5 .', 'd#5 . f#5 . a5 . b5 .', 'd#6 - - - b5 - - .'],
+    roots: ['e2', 'e2', 'c2', 'd2', 'e2', 'f2', 'b1', 'b1'], pat: '0 0 12 0 0 0 12 0', bv: 0.75,
+    drum: 'k . k . s . k .' },
+  // Fire boss: comic panic, C minor oom-pah.
+  boss: { bpm: 176, wave: 'square', mv: 0.36,
+    mel: ['c5 . eb5 . g5 . f#5 g5', 'ab5 . g5 . eb5 . c5 .', 'b4 . d5 . f5 . e5 f5', 'ab5 . g5 . f5 . d5 .',
+          'c5 . eb5 . g5 . c6 .', 'c6 b5 bb5 a5 ab5 . g5 .', 'f5 . d5 . b4 . g4 .', 'g4 ab4 a4 bb4 b4 . . .'],
+    roots: ['c2', 'c2', 'g1', 'g1', 'c2', 'ab1', 'g1', 'g1'], pat: '0 . 7 . 0 . 7 .', bw: 'square', bv: 0.3,
+    drum: 'k h s h k k s h' },
   sendoff: { bpm: 66, wave: 'triangle', mv: 0.8,
     mel: ['e5 - - - g5 - - -', 'a5 - - - g5 - e5 -', 'd5 - - - f5 - - -', 'e5 - - - - - - .',
           'c5 - - - e5 - - -', 'f5 - e5 - d5 - - -', 'ab4 - c5 - f5 - - -', 'e5 - - - c5 - - .'],
@@ -156,10 +217,23 @@ function tick() {
       const i = c.i % c.mel.length, t = c.next, d = c.def;
       const m = c.mel[i], b = c.bass[i];
       if (m) tone(d.wave, hz(m.m), hz(m.m), t, Math.max(0.06, m.len * c.step * 0.92), d.mv, c.tg, c.oscs);
-      if (b) tone('triangle', hz(b.m), hz(b.m), t, Math.max(0.06, b.len * c.step * 0.9), 0.9, c.tg, c.oscs);
+      if (b) tone(d.bw || 'triangle', hz(b.m), hz(b.m), t, Math.max(0.06, b.len * c.step * 0.9), d.bv ?? 0.9, c.tg, c.oscs);
+      const h = c.harm && c.harm[i % c.harm.length];
+      if (h) tone(d.hw || 'triangle', hz(h.m), hz(h.m), t, Math.max(0.06, h.len * c.step * 0.92), d.hv ?? 0.4, c.tg, c.oscs);
+      const k = c.drum && c.drum[i % c.drum.length];
+      if (k) drum(k, t, c);
       c.next += c.step; c.i++;
     }
   } catch (e) { /* ignore */ }
+}
+
+// One percussion hit into the track's gain (so it fades with the track).
+function drum(k, t, c) {
+  if (k === 'k') tone('sine', 150, 45, t, 0.14, 1, c.tg, c.oscs);
+  else if (k === 's') noise(t, 0.1, 0.5, 1800, 'bandpass', 0.8, c.tg);
+  else if (k === 'h') noise(t, 0.03, 0.25, 7000, 'highpass', 1, c.tg);
+  else if (k === 'm') noise(t, 0.05, 0.18, 5000, 'highpass', 1, c.tg);
+  else if (k === 'w') tone('square', 1250, 1150, t, 0.035, 0.22, c.tg, c.oscs);
 }
 
 export function stopMusic() {
@@ -184,12 +258,15 @@ export function startMusic(track) {
     if (!ctx) { pending = track; return; }
     if (cur && cur.name === track) return;
     stopMusic();
-    const pat = def.pat.split(/\s+/);
+    const pats = Array.isArray(def.pat) ? def.pat : def.roots.map(() => def.pat);
+    const drums = def.drum && (Array.isArray(def.drum) ? def.drum : def.roots.map(() => def.drum));
     const c = {
       name: track, def, oscs: new Set(), step: 60 / def.bpm / 2, i: 0, next: ctx.currentTime + 0.06,
       tg: ctx.createGain(),
       mel: expand(def.mel, (tok) => midi(tok)),
-      bass: expand(def.roots.map(() => pat.join(' ')), (tok, bi) => midi(def.roots[bi]) + Number(tok)),
+      bass: expand(pats, (tok, bi) => midi(def.roots[bi]) + Number(tok)),
+      harm: def.harm && expand(def.harm, (tok) => midi(tok)),
+      drum: drums && drums.flatMap((bar) => bar.trim().split(/\s+/).slice(0, 8).map((x) => (x === '.' ? null : x))),
     };
     c.tg.connect(musBus);
     cur = c;

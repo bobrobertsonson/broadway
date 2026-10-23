@@ -161,6 +161,12 @@ Longer captions now stay up longer (about 45 ms per character), and captions dro
 - Andrew's walk: on ice his speed hovered at the run/idle threshold, so the run cycle kept restarting on its first frame (frozen legs). Followers now keep running through brief slow frames. A jump in place no longer drags followers onto Jasmin (it used to make Andrew jump inside her), and huddled followers stand at her ground height instead of hanging on the tail of a fall. The path is reset when Andrew joins at the picnic (he briefly floated before).
 - "Level reset": falling in a pit returns to the last checkpoint, and the last one was col 114 with 75 icy tiles and a 2-tile gap before the flag. Added checkpoints at col 152 (mid gauntlet) and col 184 (just past the exit sign).
 
+## Music per level, map labels (Andrew's feedback)
+
+- Every level has its own synthesized track (`TRACKS` in `src/audio.js`, picked by `music` in `src/maps.js`): London indie (E minor, drums), Minneapolis a slow D minor lament (bass sinking by half steps, a ghostly high voice a half step off, heartbeat kick), Chicago warm F major, Chinatown pentatonic with woodblock, South America tresillo bass and shaker, Brooklyn bouncy C major, the building a tense rising E minor, the boss a comic C minor oom-pah. After the picnic Minneapolis still switches to the quieter night track. The engine gained optional drums, a second voice, and per-bar bass patterns. Not heard by a human yet.
+- World map: names only for places already reached, set right next to their circles; the selected place is named in the banner only. Clicking the map pulls keyboard focus back into the game.
+- Reported freeze on the map after Minneapolis: not reproduced (keyboard, Enter, X, arrows all worked with Andrew's save).
+
 ## Questions for Andrew
 
 1. Are the outfit colors right for each city? (`levels.json`, `palette` per world)

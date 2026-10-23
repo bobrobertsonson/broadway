@@ -41,7 +41,8 @@ export class WorldMap extends Phaser.Scene {
 
     this.scale.on("resize", this.layout, this);
     this.events.once("shutdown", () => { this.scale.off("resize", this.layout, this); ui.clearAll(); });
-    this.input.on("pointerdown", (p) => { if (!ui.hitsButton(p)) this.tap(p); });
+    // A click also pulls keyboard focus back into the game (the page can lose it).
+    this.input.on("pointerdown", (p) => { try { window.focus(); } catch {} if (!ui.hitsButton(p)) this.tap(p); });
     startMusic("map");
     this.refreshText();
   }
@@ -53,7 +54,7 @@ export class WorldMap extends Phaser.Scene {
     const usable = width - margin * 2;
     this.nodes = this.entries.map((e, i) => ({
       x: Math.round(margin + (usable * i) / Math.max(1, n - 1)),
-      y: Math.round(height * 0.6 + Math.sin(i * 1.3) * height * 0.1),
+      y: Math.round(height * 0.64 + Math.sin(i * 1.3) * height * 0.08),
     }));
     this.hills.setSize(width, 64).setPosition(0, height);
     const g = this.g.clear();
@@ -89,12 +90,14 @@ export class WorldMap extends Phaser.Scene {
     this.labelNodes();
   }
 
+  // Names sit right next to their circles, alternating below and above. Places not
+  // reached yet stay nameless, and the selected one is named in the banner instead.
   labelNodes() {
     const short = (w) => worldTitle(w).replace(/^Brooklyn: /, "").replace(/^NYC /, "");
     this.nodes.forEach((p, i) => {
+      const show = i !== this.idx && isUnlocked(this.entries[i].level.id);
       const below = i % 2 === 0;
-      const sel = i === this.idx;
-      ui.label(`n${i}`, short(this.entries[i].world), p.x, p.y + (below ? 20 : -34), sel ? "sel" : "small");
+      ui.label(`n${i}`, show ? short(this.entries[i].world) : "", p.x, p.y + (below ? 16 : -7), "small");
     });
   }
 
