@@ -1,4 +1,5 @@
 // Jasmin's Game audio: pure WebAudio, no assets. Every export is a safe no-op until unlockAudio().
+import { SONGS } from "./songs/index.js";
 let ctx = null, master, sfxBus, musBus, noiseBuf;
 let muted = false;
 try { muted = localStorage.getItem('jg-muted') === '1'; } catch (e) { /* storage unavailable */ }
@@ -218,6 +219,7 @@ let pending = null;  // track requested before unlockAudio
 function tick() {
   const c = cur;
   if (!c || !ctx) return;
+  if (c.song) { try { songTick(c); } catch (e) { /* ignore */ } return; }
   try {
     while (c.next < ctx.currentTime + 0.1) {
       const i = c.i % c.mel.length, t = c.next, d = c.def;
@@ -231,6 +233,60 @@ function tick() {
       c.next += c.step; c.i++;
     }
   } catch (e) { /* ignore */ }
+}
+
+// ---------- songs (note lists from MIDI, see src/songs/) ----------
+// NES-style pulse waves: narrow duty cycles sound more "chip" than a plain square.
+const pulses = {};
+function wave(o, type) {
+  if (type === 'pulse12' || type === 'pulse25') {
+    if (!pulses[type]) {
+      const d = type === 'pulse12' ? 0.125 : 0.25, n = 48;
+      const re = new Float32Array(n), im = new Float32Array(n);
+      for (let k = 1; k < n; k++) re[k] = (2 / (k * Math.PI)) * Math.sin(k * Math.PI * d);
+      pulses[type] = ctx.createPeriodicWave(re, im);
+    }
+    o.setPeriodicWave(pulses[type]);
+  } else o.type = type;
+}
+
+// A held note: quick attack, sustain, short release (songs want sustain, not a pluck).
+function held(type, f, t, dur, vol, dest, set) {
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  wave(o, type);
+  o.frequency.setValueAtTime(f, t);
+  const end = t + Math.max(0.04, dur);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(vol, t + 0.006);
+  g.gain.setValueAtTime(vol * 0.8, Math.max(t + 0.007, end - 0.03));
+  g.gain.linearRampToValueAtTime(0.0001, end);
+  o.connect(g); g.connect(dest);
+  set.add(o); o.onended = () => { set.delete(o); g.disconnect(); };
+  o.start(t); o.stop(end + 0.02);
+}
+
+function songTick(c) {
+  const spb = 60 / c.song.bpm, now = ctx.currentTime, horizon = now + 0.12;
+  for (let guard = 0; guard < 4; guard++) {
+    let pending = false;
+    for (const v of c.voices) {
+      const ev = v.notes || v.hits;
+      while (v.i < ev.length) {
+        const e = ev[v.i], t = c.t0 + e[0] * spb;
+        if (t >= horizon) { pending = true; break; }
+        if (t > now - 0.05) {
+          if (v.hits) drum(e[1], t, c);
+          else held(v.wave || 'square', hz(e[2]), t, e[1] * spb * 0.95, v.vol ?? 0.4, c.tg, c.oscs);
+        }
+        v.i++;
+      }
+    }
+    if (pending) return;
+    const end = c.t0 + c.song.loopBeats * spb;
+    if (end >= horizon) return;
+    c.t0 = end;
+    for (const v of c.voices) v.i = 0;
+  }
 }
 
 // One percussion hit into the track's gain (so it fades with the track).
@@ -260,10 +316,20 @@ export function stopMusic() {
 export function startMusic(track) {
   try {
     const def = TRACKS[track];
-    if (!def) return;
+    const song = SONGS[track];
+    if (!def && !song) return;
     if (!ctx) { pending = track; return; }
     if (cur && cur.name === track) return;
     stopMusic();
+    if (song) {
+      const c = { name: track, song, oscs: new Set(), tg: ctx.createGain(), t0: ctx.currentTime + 0.08,
+        voices: song.voices.map((v) => ({ ...v, i: 0 })) };
+      c.tg.connect(musBus);
+      cur = c;
+      tick();
+      c.timer = setInterval(tick, 25);
+      return;
+    }
     const pats = Array.isArray(def.pat) ? def.pat : def.roots.map(() => def.pat);
     const drums = def.drum && (Array.isArray(def.drum) ? def.drum : def.roots.map(() => def.drum));
     const c = {
@@ -279,4 +345,10 @@ export function startMusic(track) {
     tick();
     c.timer = setInterval(tick, 25);
   } catch (e) { /* ignore */ }
+}
+
+// Test hook: what the music engine is doing.
+export function musicState() {
+  const c = cur;
+  return c && { name: c.name, t0: c.t0, now: ctx && ctx.currentTime, voices: c.voices && c.voices.map((v) => v.i) };
 }

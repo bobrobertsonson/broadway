@@ -167,6 +167,11 @@ Longer captions now stay up longer (about 45 ms per character), and captions dro
 - World map: names only for places already reached, set right next to their circles; the selected place is named in the banner only. Clicking the map pulls keyboard focus back into the game.
 - Reported freeze on the map after Minneapolis: not reproduced (keyboard, Enter, X, arrows all worked with Andrew's save).
 
+## Real songs as chiptunes (Andrew: the game is only for the two of them)
+
+Pipeline for real songs: a MIDI file of the song goes through `tools/midi2song.mjs` (`--list` shows the parts; it picks lead, harmony, bass and drums, makes each one monophonic like a chip channel, and can cut to a range of bars). It writes `src/songs/<key>.js`; register it in `src/songs/index.js` and set a map's `music` to the key. Songs play on NES-style pulse waves (12.5% and 25% duty), a triangle bass and noise drums, and loop.
+Why MIDI: Claude can't listen to audio and doesn't know these songs note for note, so a from-memory version would come out wrong. First request: "New Song" by Warpaint for Chicago. Waiting on a MIDI from Andrew.
+
 ## Questions for Andrew
 
 1. Are the outfit colors right for each city? (`levels.json`, `palette` per world)
