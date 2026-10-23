@@ -151,6 +151,11 @@ Plain jump: 3.6 tiles high, 7-tile gap max (3 px slack). Boost: 6.2 tiles high. 
 - Boss: the third valve ledge moved left of the fire (cols 21-23). It used to sit behind the fire, which grows too big to jump after about 15 seconds.
 Left as is (minor): several patrol enemies reach the takeoff edge of a pit; the bus and tortoise gaps can mean a few seconds' wait.
 
+## Caption sign-off (Andrew, via the review page)
+
+Andrew reviews captions on a private page; answers are synced into `levels.json` with a script (approved keeps the text, rewrite replaces it, both set `draft: false`). First sync: 34 applied, 2 held for questions (London skill, South America start), 20 not reviewed yet. Two typos fixed while applying: "Where is all" became "Where it all", "deswrved" became "deserved". London outfit is "Double Jeans" (Andrew, in chat; overrides the page's "London leggings").
+Longer captions now stay up longer (about 45 ms per character), and captions drop below the ghost meter instead of covering it.
+
 ## Questions for Andrew
 
 1. Are the outfit colors right for each city? (`levels.json`, `palette` per world)

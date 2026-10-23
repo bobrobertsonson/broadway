@@ -42,7 +42,8 @@ export const ui = {
     Object.assign(state.caption, { label: clean(label), text: clean(text), show: true });
     bump(state.caption);
     clearTimeout(captionTimer);
-    if (ms > 0) captionTimer = setTimeout(() => this.hideCaption(), ms);
+    // Long lines stay up long enough to read.
+    if (ms > 0) captionTimer = setTimeout(() => this.hideCaption(), Math.max(ms, 1200 + (state.caption.label.length + state.caption.text.length) * 45));
   },
 
   hideCaption() {

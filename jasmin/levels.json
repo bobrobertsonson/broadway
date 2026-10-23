@@ -11,8 +11,8 @@
           "id": "0-1",
           "intro": true,
           "endCaption": {
-            "text": "Born in Nairobi.",
-            "draft": true
+            "text": "Where it all first popped off.",
+            "draft": false
           }
         }
       ]
@@ -47,8 +47,8 @@
               "type": "record",
               "label": "Warpaint",
               "caption": {
-                "text": "Warpaint on repeat.",
-                "draft": true
+                "text": "The beast hits the street with Warpaint on repeat.",
+                "draft": false
               }
             },
             {
@@ -63,8 +63,8 @@
               "type": "record",
               "label": "Bloc Party",
               "caption": {
-                "text": "Bloc Party, loud.",
-                "draft": true
+                "text": "Bloc Party, partly.",
+                "draft": false
               }
             },
             {
@@ -72,7 +72,7 @@
               "label": "Nando's",
               "caption": {
                 "text": "Nando's. Extra hot?",
-                "draft": true
+                "draft": false
               }
             }
           ],
@@ -88,8 +88,8 @@
       "title": "Minneapolis",
       "outfit": {
         "name": {
-          "text": "Puffy coat",
-          "draft": true
+          "text": "Arctic Expedition Rated Puffy Jacket",
+          "draft": false
         },
         "palette": {
           "C": "#e2453a",
@@ -108,40 +108,40 @@
           "setting": "Gray, icy daytime city full of binocular ghosts. Andrew joins at a night picnic by a lake, then the rest of the level is at night (dark: true from that point).",
           "startCaption": {
             "text": "Minneapolis. Just passing through.",
-            "draft": true
+            "draft": false
           },
           "ghostFirstSeenCaption": {
-            "text": "They are always watching.",
-            "draft": true
+            "text": "Their eyes are everywhere. Always watching. Their ears always open. Always listening.",
+            "draft": false
           },
           "andrewJoinScene": {
             "description": "Night. A blanket by the lake, a bottle of wine, a loaf of bread. Andrew is sitting there. He stands up and joins her.",
             "caption": {
-              "text": "Wine, bread, a lake at night. That was the start.",
-              "draft": true
+              "text": "A trip to the art museum and then some wine, bread and a lake at night.",
+              "draft": false
             }
           },
           "togetherCaughtCaption": {
             "text": "Not in public. Not here.",
-            "draft": true
+            "draft": false
           },
           "collectibles": [
             {
               "type": "message",
               "label": "First message",
               "caption": {
-                "text": "A message from a guy just back from a year in Malaysia.",
-                "draft": true
+                "text": "A message from a guy as jet lagged as you.",
+                "draft": false
               }
             }
           ],
           "endCaption": {
-            "text": "You liked me enough to stick around.",
-            "draft": true
+            "text": "Against your best judgement, you stuck around for a bit.",
+            "draft": false
           },
           "skill": {
-            "text": "Staying power",
-            "draft": true
+            "text": "Staying power.",
+            "draft": false
           }
         }
       ]
@@ -170,12 +170,12 @@
           "id": "3-1",
           "setting": "Big, busy, colorful city. Crowds, food stalls, music, elevated train tracks as platforms. Warm colors after the gray.",
           "startCaption": {
-            "text": "Chicago. Out in the open, together.",
-            "draft": true
+            "text": "Chicago. Baby’s bandaid begins.",
+            "draft": false
           },
           "rabbitJoinCaption": {
             "text": "Rupert. Mane first, questions later.",
-            "draft": true
+            "draft": false
           },
           "collectibles": [
             {
@@ -183,13 +183,13 @@
               "label": "The city",
               "caption": {
                 "text": "Big city, big energy, everyone welcome. Finally.",
-                "draft": true
+                "draft": false
               }
             }
           ],
           "skill": {
             "text": "Freedom",
-            "draft": true
+            "draft": false
           }
         }
       ]
@@ -221,30 +221,30 @@
           "id": "4-1",
           "setting": "Henry Street. Strung lanterns, fire escapes, storefront signs, a dumpling shop across the street from home.",
           "startCaption": {
-            "text": "New York. You finally made it.",
-            "draft": true
+            "text": "New York. You finally made it. Only a small detour.",
+            "draft": false
           },
           "isaacJoinCaption": {
-            "text": "Isaac. And Jennifer.",
-            "draft": true
+            "text": "Isaac Laith the little lion.",
+            "draft": false
           },
           "collectibles": [
             {
               "type": "dumpling",
               "label": "Dumpling shop",
               "caption": {
-                "text": "Henry Street. Dumplings across the street, any time.",
-                "draft": true
+                "text": "Henry Street. Dumplings across the street, any time you like. (Never)",
+                "draft": false
               }
             }
           ],
           "rabbitSendoffCaption": {
-            "text": "Rupert got the yard he deserved.",
-            "draft": true
+            "text": "Rupert got the life he deserved.",
+            "draft": false
           },
           "skill": {
             "text": "A whole new kind of love",
-            "draft": true
+            "draft": false
           }
         }
       ]
@@ -254,8 +254,8 @@
       "title": "South America",
       "outfit": {
         "name": {
-          "text": "Travel look",
-          "draft": true
+          "text": "Travel trainers",
+          "draft": false
         },
         "palette": {
           "C": "#d07a3a",
@@ -278,32 +278,32 @@
               "country": "Mexico",
               "setting": "Jungle cenote: a short underwater swim section. A corrupt cop blocks the path. When Jasmin reaches him, Andrew steps forward, pays the bribe, and grumbles; the cop steps aside. Jasmin does nothing.",
               "stampCaption": {
-                "text": "Cenotes in the morning. I handled the mordida.",
-                "draft": true
+                "text": "Cenotes by morning. Mordidas by night.",
+                "draft": false
               }
             },
             {
               "country": "Panama",
               "setting": "Green mountain valley (El Valle), then the Panama City skyline.",
               "stampCaption": {
-                "text": "El Valle, then the big city.",
-                "draft": true
+                "text": "El Valle, then the big city. Shawarma on fleek.",
+                "draft": false
               }
             },
             {
               "country": "Colombia",
               "setting": "Short pass-through. Background swap only.",
               "stampCaption": {
-                "text": "Colombia.",
-                "draft": true
+                "text": "Colombia. It was fine?",
+                "draft": false
               }
             },
             {
               "country": "Ecuador: Galapagos",
               "setting": "Most detailed segment. Giant tortoises as slow moving platforms, sea lions sunbathing on rocks, black iguanas. Tim (friend visiting from Seattle) appears as a cameo NPC.",
               "stampCaption": {
-                "text": "Tortoises, sea lions, black iguanas, and Tim all the way from Seattle.",
-                "draft": true
+                "text": "Tortoises, sea lions, swimming iguanas and a mean old visitor.",
+                "draft": false
               }
             },
             {
@@ -311,7 +311,7 @@
               "setting": "Valparaiso: a vertical climb up a hillside packed with colorful houses. A beautiful home at the top.",
               "stampCaption": {
                 "text": "A house on a hill made of houses.",
-                "draft": true
+                "draft": false
               }
             },
             {
@@ -319,11 +319,11 @@
               "setting": "A cold, beautiful city and a beautiful apartment, but hazards everywhere: cold snaps, germ clouds, bad food (enemies are food and germs, never people). Ends in the wine mountains at a candlelit hut, where a short cutscene plays: Andrew proposes again.",
               "stampCaption": {
                 "text": "Cold, sick, and badly fed. Still the best place to ask you again.",
-                "draft": true
+                "draft": false
               },
               "proposalCaption": {
                 "text": "I asked again. You said yes again.",
-                "draft": true
+                "draft": false
               }
             },
             {
@@ -331,13 +331,13 @@
               "setting": "Relief. Warm colors, beaches, food stalls, friendly crowds. Easiest segment.",
               "stampCaption": {
                 "text": "Brazil. Warm again, fed again, saved.",
-                "draft": true
+                "draft": false
               }
             }
           ],
           "skill": {
             "text": "Fearlessness",
-            "draft": true
+            "draft": false
           }
         }
       ]
@@ -347,8 +347,8 @@
       "title": "Brooklyn: Chocolate Factory",
       "outfit": {
         "name": {
-          "text": "Brooklyn look",
-          "draft": true
+          "text": "Lookin’ good in Brooklyn.",
+          "draft": false
         },
         "palette": {
           "C": "#4a2e22",
@@ -371,8 +371,8 @@
             "draft": true
           },
           "ayaJoinCaption": {
-            "text": "Aya.",
-            "draft": true
+            "text": "Aya arrival. A baby revival.",
+            "draft": false
           },
           "nubeJoinCaption": {
             "text": "Nube. Part of the family.",

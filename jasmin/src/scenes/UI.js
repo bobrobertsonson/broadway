@@ -73,6 +73,7 @@ export class UI extends Phaser.Scene {
     const { W, H } = this;
     if (this.changed("hud", state.hud.v)) this.drawHud();
     if (this.changed("banner", state.banner.v)) { this.drawBanner(); this.seen.caption = null; }
+    if (this.changed("meterOn", state.meter.value != null)) this.seen.caption = null;
     if (this.changed("caption", state.caption.v)) this.drawCaption();
     if (this.changed("name", state.name.v)) this.drawName();
     this.drawMeter();
@@ -132,7 +133,10 @@ export class UI extends Phaser.Scene {
     for (const p of parts) h += p.height + 2;
     // Below a top banner if one is showing, otherwise just under the HUD row.
     const topBanner = state.banner.show && state.banner.cls === "top" ? this.bannerBottom : 0;
-    const x = Math.round((this.W - w) / 2), y = Math.max(s.y + 18, topBanner + 2);
+    const x = Math.round((this.W - w) / 2);
+    // Drop below the ghost meter when the box would reach over it.
+    const underMeter = state.meter.value != null && x < s.x + 124 ? s.y + 30 : 0;
+    const y = Math.max(s.y + 18, topBanner + 2, underMeter);
     c.add(this.box(this.add.graphics(), x, y, w, h + 2, INK, 0.85, GOLD));
     let ty = y + 4;
     for (const p of parts) {
