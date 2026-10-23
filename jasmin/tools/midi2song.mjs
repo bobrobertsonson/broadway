@@ -14,7 +14,7 @@
 //   --transpose N                shift every pitched note by N semitones
 //   --bpm N                      override the tempo
 //   --lead-wave W --harm-wave W --bass-wave W   pulse12 pulse25 square triangle sawtooth
-//   --beat house|dembow          add a generated beat when the MIDI has no drum part
+//   --beat house|dembow|hiphop   add a generated beat when the MIDI has no drum part
 //
 // Each voice is made monophonic like a real chip channel: on chords the lead and harmony
 // keep the top note and the bass keeps the bottom one, and a new note cuts the previous.
@@ -147,14 +147,16 @@ if (harm) voices.push({ role: "harm", wave: opt("harm-wave", "pulse12"), vol: 0.
 if (bass) voices.push({ role: "bass", wave: opt("bass-wave", "triangle"), vol: 0.75, notes: mono(bass, false, 31, 55) });
 if (drums) voices.push({ role: "drums", vol: 1, hits: drumHits(drums) });
 
-// --beat house|dembow: a generated beat for MIDIs without drums, from the first note to the end.
+// --beat house|dembow|hiphop: a generated beat for MIDIs without drums, from the first note to the end.
 const beat = opt("beat", "");
 if (beat && !drums) {
   const first = Math.min(...voices.flatMap((v) => v.notes.map((e) => e[0])));
   const end = Math.max(...voices.flatMap((v) => v.notes.map((e) => e[0] + e[1])));
   const bar = { house: [[0, "k"], [0.5, "h"], [1, "k"], [1, "s"], [1.5, "h"], [2, "k"], [2.5, "h"], [3, "k"], [3, "s"], [3.5, "h"]],
-    dembow: [[0, "k"], [0.75, "s"], [1, "k"], [1.5, "s"], [2, "k"], [2.75, "s"], [3, "k"], [3.5, "s"]] }[beat];
-  if (!bar) throw new Error("--beat must be house or dembow");
+    dembow: [[0, "k"], [0.75, "s"], [1, "k"], [1.5, "s"], [2, "k"], [2.75, "s"], [3, "k"], [3.5, "s"]],
+    // half-time hip hop: kick on 1, a pickup kick, one snare on 3, steady eighth-note hats
+    hiphop: [[0, "k"], [0, "h"], [0.5, "h"], [1, "h"], [1.5, "h"], [1.75, "k"], [2, "s"], [2, "h"], [2.5, "k"], [2.5, "h"], [3, "h"], [3.5, "h"]] }[beat];
+  if (!bar) throw new Error("--beat must be house, dembow or hiphop");
   const hits = [];
   for (let b0 = Math.floor(first / beatsPerBar) * beatsPerBar; b0 < end; b0 += beatsPerBar) for (const [o, k] of bar) hits.push([q(b0 + o), k]);
   voices.push({ role: "drums", vol: 1, hits });

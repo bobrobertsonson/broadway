@@ -6,6 +6,7 @@
 
 import newSong from "./new-song.js";
 import bzrp53 from "./bzrp53.js";
+import bzrp53Hiphop from "./bzrp53-hiphop.js";
 
 export const SONGS = {
   // Chicago. Warpaint, from a MIDI Andrew found; vocal line as the lead, clean guitar as harmony.
@@ -13,4 +14,6 @@ export const SONGS = {
   // Shakira and Bizarrap. Melody and bass from Andrew's MIDI, plus a generated house beat
   // (the MIDI has no drums). Not assigned to a level yet.
   bzrp53,
+  // The same song over a half-time hip hop beat.
+  "bzrp53-hiphop": bzrp53Hiphop,
 };
