@@ -309,7 +309,7 @@ export class Powers {
 const INK = "#2a2038", WHITE = "#fffaf0", GOLD = "#e0a43a", GOLD_LIGHT = "#fff0a0";
 const RED = "#ff5a4a", PINK = "#ff8fb0", TEAL = "#3fc1c9", TEAL_DARK = "#24828a";
 
-function makePowerTextures(scene) {
+export function makePowerTextures(scene) {
   const M = (key, w, h, fn) => mk(scene, key, w, h, fn);
   M("item-spark", 12, 12, ({ A }) => A([
     ".....o......",

@@ -4,6 +4,18 @@ import { ui } from "../ui.js";
 import { game, allLevels, isUnlocked, writeSave, worldTitle, t } from "../state.js";
 import { charKey, animKey } from "../art.js";
 import { makeEnvironmentTextures } from "../tiles.js";
+import { MAPS } from "../maps.js";
+import { POWER_ITEMS } from "../powers.js";
+
+const POWER_NAMES = { pen: "the pen", spark: "the magic spark", dash: "the dash", bs: "the Bullshitometer" };
+
+// The power waiting in a level: the first power marker in its map.
+function levelPower(id) {
+  const rows = MAPS[id]?.rows || [];
+  const w = Math.max(0, ...rows.map((r) => r.length));
+  for (let x = 0; x < w; x++) for (const r of rows) if (POWER_ITEMS[r[x]]) return POWER_ITEMS[r[x]];
+  return null;
+}
 
 // One node per level along a winding path. Left/right to choose, jump to play,
 // pen/action to change outfit.
@@ -83,8 +95,10 @@ export class WorldMap extends Phaser.Scene {
     const e = this.entries[this.idx];
     const unlocked = game.save.outfitsUnlocked.filter((o) => game.outfits[o]);
     const outfitHint = unlocked.length > 1 ? `outfit: ${game.save.outfit} (${controls.device === "touch" ? "pen button" : controls.device === "gamepad" ? controls.padLabels().pen : "X"} to change)` : "";
-    const skill = e.level.skill && game.save.done.includes(e.level.id) ? t(e.level.skill) : "";
-    ui.banner(worldTitle(e.world), skill, controls.hint("choose"), "top");
+    const done = game.save.done.includes(e.level.id);
+    const power = levelPower(e.level.id);
+    const sub = done && e.level.skill ? t(e.level.skill) : power ? `Power here: ${POWER_NAMES[power]}` : "";
+    ui.banner(worldTitle(e.world), sub, controls.hint("choose"), "top");
     ui.setHud(outfitHint ? [{ text: outfitHint, tip: true }] : []);
     controls.setActionVisible(unlocked.length > 1);
     this.labelNodes();

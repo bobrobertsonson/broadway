@@ -8,8 +8,9 @@ import { makePropTextures } from "./props.js";
 import { makeEnvironmentTextures } from "./tiles.js";
 import { makeEnemyAnims } from "./enemies.js";
 import { makeFonts, FONTS, fontSafe } from "./font.js";
+import { makePowerTextures } from "./powers.js";
 
-const W = 400, H = 580;
+const W = 400, H = 630;
 const CELL = 30;
 const LABEL_W = 62;
 
@@ -26,6 +27,7 @@ class Gallery extends Phaser.Scene {
     makePropTextures(this);
     makeEnemyAnims(this);
     makeFonts(this);
+    makePowerTextures(this);
     this.cameras.main.setBackgroundColor("#7cc8f0");
 
     let y = 6;
@@ -87,6 +89,24 @@ class Gallery extends Phaser.Scene {
     }
     this.add.sprite(W - 44, y + 72, "boss-fire-0").setOrigin(0.5, 1).play("boss-fire");
     this.text("the fire", W - 44, y + 73, "small", true);
+
+    // Powers, the Bullshitometer's needle, and the tricks it exposes.
+    y += 96;
+    this.text("POWERS", 6, y, "big");
+    y += 20;
+    const powers = [["item-pen", "pen"], ["item-spark", "spark"], ["item-dash", "dash"], ["item-bs", "BS-o-meter"], ["item-collectible", "mimic", "enemy-mimic-0"]];
+    x = 10;
+    powers.forEach(([key, label, alt]) => {
+      const img = this.add.image(x + 14, y + 14, key).setOrigin(0.5, 1);
+      if (alt) this.time.addEvent({ delay: 900, loop: true, callback: () => img.setTexture(img.texture.key === key ? alt : key) });
+      this.text(label, x + 14, y + 15, "small", true);
+      x += 56;
+    });
+    const needle = this.add.image(x + 14, y + 12, "hud-bs-0").setOrigin(0.5, 1);
+    let n = 0;
+    this.time.addEvent({ delay: 400, loop: true, callback: () => needle.setTexture(`hud-bs-${(n = (n + 1) % 5)}`) });
+    this.text("needle", x + 14, y + 15, "small", true);
+    this.add.sprite(x + 66, y + 10, "fx-spark-0").play("fx-spark");
   }
 
   text(str, x, y, which = "small", center = false) {
