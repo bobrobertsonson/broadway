@@ -12,9 +12,16 @@
 // Optional per map: signs: [{ col, text, style }] signs standing on the ground at that column;
 //  style "park" is a brown wooden park sign, otherwise a London street sign.
 //  boss arena: V valve  Z fire boss
+//  powers (one per level, src/powers.js): p pen  ^ magic spark  > dash  ! Bullshitometer
+//  % cracked brick (breaks from below, by spark or dash; never put one where only a
+//    ground pound could reach it)  ~ fake brick  _ fake ground (crumble when stood on;
+//    the Bullshitometer exposes them)  ? mimic (looks like a collectible, bites)
+// Optional per map: place: "<name>" loads src/places/<name>.js, which may define its
+//  own marker characters for that map only (see src/places/index.js).
 
 export const MAPS = {
   "1-1": {
+    place: "london",
     theme: "london",
     music: "london",
     // Her neighborhood (from Andrew), near the start of the level.
@@ -38,6 +45,7 @@ export const MAPS = {
     ],
   },
   "2-1": {
+    place: "minneapolis",
     theme: "minneapolis",
     music: "minneapolis",
     ice: true,
@@ -62,6 +70,7 @@ export const MAPS = {
     ],
   },
   "3-1": {
+    place: "chicago",
     theme: "chicago",
     music: "chicago",
     rows: [
@@ -83,6 +92,7 @@ export const MAPS = {
     ],
   },
   "4-1": {
+    place: "chinatown",
     theme: "chinatown",
     music: "chinatown",
     rows: [
@@ -104,6 +114,7 @@ export const MAPS = {
     ],
   },
   "5-1": {
+    place: "southamerica",
     theme: "mexico",
     music: "southamerica",
     segments: [{ col: 0, theme: "mexico", country: "Mexico" }, { col: 90, theme: "panama", country: "Panama" }, { col: 140, theme: "colombia", country: "Colombia" }, { col: 180, theme: "galapagos", country: "Ecuador: Galapagos" }, { col: 270, theme: "chile", country: "Chile" }, { col: 340, theme: "argentina", country: "Argentina" }, { col: 450, theme: "brazil", country: "Brazil" }],
@@ -131,6 +142,7 @@ export const MAPS = {
     ],
   },
   "6-1": {
+    place: "brooklyn",
     theme: "brooklyn",
     music: "brooklyn",
     rows: [
@@ -152,6 +164,7 @@ export const MAPS = {
     ],
   },
   "7-1": {
+    place: "building",
     theme: "building",
     music: "building",
     rows: [

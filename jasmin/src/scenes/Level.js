@@ -8,6 +8,7 @@ import { THEMES, makeEnvironmentTextures } from "../tiles.js";
 import { makePropTextures } from "../props.js";
 import { Player, PHYS } from "../player.js";
 import { Powers, POWER_ITEMS, TILE_CRACK, TILE_FAKE_BRICK, TILE_FAKE_TOP } from "../powers.js";
+import { PLACES } from "../places/index.js";
 import { Trail } from "../companions.js";
 import { makeEnemyAnims, spawnEnemy, updateEnemy, squash, ENEMY_CHARS } from "../enemies.js";
 import { Ghosts } from "../ghosts.js";
@@ -229,6 +230,10 @@ export class Level extends Phaser.Scene {
   buildObjects() {
     this.enemies = this.physics.add.group();
     this.powers = new Powers(this);
+    // The map's place module (src/places/): its own scenery, markers and mechanics.
+    const Place = PLACES[this.map.place];
+    this.place = Place ? new Place(this) : null;
+    const placeMarkers = this.place?.markers || {};
     this.penLines = this.physics.add.staticGroup();
     this.movers = this.physics.add.group({ allowGravity: false, immovable: true });
     this.items = [];
@@ -286,8 +291,10 @@ export class Level extends Phaser.Scene {
         else if (c === "C") this.addHut(wx, wy);
         else if (c === "Z") this.bossAt = { x: wx, y: wy };
         else if (c === "V") (this.valveSpots ||= []).push({ x: wx, y: wy });
+        else if (placeMarkers[c]) placeMarkers[c](wx, wy, x, y);
       }
     }
+    this.place?.create?.();
     if (this.ghosts && this.exitX) this.ghosts.setExit(this.exitX);
     if (this.bossAt) {
       this.boss = new Boss(this, this.bossAt.x, this.bossAt.y);
@@ -518,6 +525,7 @@ export class Level extends Phaser.Scene {
     }
 
     this.powers.update(dt);
+    this.place?.update?.(dt);
     this.checkItems();
     this.checkCheckpoints();
     this.revealHidden();
