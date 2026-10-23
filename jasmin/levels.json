@@ -375,16 +375,16 @@
           "id": "6-1",
           "setting": "Chocolate Factory Lofts: chocolate bar platforms, big loft windows. Isaac's school is part of the level: a backpack collectible and a school building in the background.",
           "startCaption": {
-            "text": "Back in New York. Brooklyn this time.",
-            "draft": true
+            "text": "Back in the city but across the river.",
+            "draft": false
           },
           "ayaJoinCaption": {
             "text": "Aya arrival. A baby revival.",
             "draft": false
           },
           "nubeJoinCaption": {
-            "text": "Nube. Part of the family.",
-            "draft": true
+            "text": "The newborn haze and clouds part and Nube arrives.",
+            "draft": false
           },
           "collectibles": [
             {
@@ -392,13 +392,13 @@
               "label": "First day of school",
               "caption": {
                 "text": "Isaac's first day of school.",
-                "draft": true
+                "draft": false
               }
             }
           ],
           "skill": {
-            "text": "A village",
-            "draft": true
+            "text": "A little village. Built.",
+            "draft": false
           }
         }
       ]
@@ -412,20 +412,20 @@
         {
           "id": "7-1",
           "startCaption": {
-            "text": "New building. What could go wrong?",
-            "draft": true
+            "text": "New year. New building. What could go wrong?",
+            "draft": false
           },
           "bossIntroCaption": {
-            "text": "Fire number three. Not on our watch.",
-            "draft": true
+            "text": "Fire number three. Not on our watch. (If you count the oven fire)",
+            "draft": false
           },
           "bossDefeatedCaption": {
-            "text": "Out. Everyone is safe.",
-            "draft": true
+            "text": "Out. Everyone is safe. Minor roof damage.",
+            "draft": false
           },
           "skill": {
             "text": "Grace under fire",
-            "draft": true
+            "draft": false
           }
         }
       ]
@@ -434,45 +434,45 @@
   "ending": {
     "inventoryTitle": {
       "text": "Everything you picked up along the way",
-      "draft": true
+      "draft": false
     },
     "fogCaption": {
       "text": "Unexplored. That's the best part.",
-      "draft": true
+      "draft": false
     },
     "namePrompt": {
-      "text": "Name your next world.",
-      "draft": true
+      "text": "Only you can decide what’s next! The world is your mollusk.",
+      "draft": false
     },
     "jenniferCaption": {
-      "text": "Jennifer stays an egg. Some things are better before you know what they are.",
-      "draft": true
+      "text": "Jennifer stays an egg. Some things are already perfect.",
+      "draft": false
     }
   },
   "credits": [
     {
       "text": "Super Jasmin World 3: A New Magic",
-      "draft": true
+      "draft": false
     },
     {
       "text": "Made for Jasmin, by Andrew.",
-      "draft": true
+      "draft": false
     },
     {
-      "text": "Starring Isaac, Aya, Nube, and Jennifer the egg.",
-      "draft": true
+      "text": "Co-starring Isaac, Aya, Nube, and Jennifer the egg.",
+      "draft": false
     },
     {
       "text": "Special guest: Tim, all the way from Seattle.",
       "draft": true
     },
     {
-      "text": "Rupert, happy in his new yard.",
-      "draft": true
+      "text": "Rupert, happy in his new home.",
+      "draft": false
     },
     {
-      "text": "Happy birthday.",
-      "draft": true
+      "text": "Happy birthday. I am so proud of your journey. I love you.",
+      "draft": false
     }
   ]
 }
