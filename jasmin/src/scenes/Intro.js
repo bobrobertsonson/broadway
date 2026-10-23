@@ -1,3 +1,4 @@
+import { fresh } from "./fresh.js";
 import { controls } from "../controls.js";
 import { startMusic, sfx } from "../audio.js";
 import { ui } from "../ui.js";
@@ -9,6 +10,10 @@ import { makePropTextures, mk } from "../props.js";
 // over the savanna at sunset, the caption appears, then the camera pans north.
 export class Intro extends Phaser.Scene {
   constructor() { super("Intro"); }
+
+  init() {
+    fresh(this);
+  }
 
   create() {
     ui.clearAll();

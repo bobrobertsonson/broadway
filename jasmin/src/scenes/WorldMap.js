@@ -1,3 +1,4 @@
+import { fresh } from "./fresh.js";
 import { controls } from "../controls.js";
 import { startMusic } from "../audio.js";
 import { ui } from "../ui.js";
@@ -28,6 +29,7 @@ export class WorldMap extends Phaser.Scene {
   constructor() { super("WorldMap"); }
 
   init(data) {
+    fresh(this);
     this.selectId = data?.select;
   }
 

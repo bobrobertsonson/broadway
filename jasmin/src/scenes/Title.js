@@ -1,3 +1,4 @@
+import { fresh } from "./fresh.js";
 import { controls } from "../controls.js";
 import { startMusic } from "../audio.js";
 import { ui } from "../ui.js";
@@ -9,6 +10,10 @@ import { makeLogoTexture, makeSparkleTextures } from "../logo.js";
 // Logo over a sky, Jasmin standing below it, "Tap to start" blinking.
 export class Title extends Phaser.Scene {
   constructor() { super("Title"); }
+
+  init() {
+    fresh(this);
+  }
 
   create() {
     ui.clearAll();

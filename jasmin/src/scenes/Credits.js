@@ -1,3 +1,4 @@
+import { fresh } from "./fresh.js";
 import { controls } from "../controls.js";
 import { startMusic } from "../audio.js";
 import { ui, clean } from "../ui.js";
@@ -9,6 +10,10 @@ import { makeLogoTexture } from "../logo.js";
 // End credits: the rabbit, happy in his new yard, while the lines roll by.
 export class Credits extends Phaser.Scene {
   constructor() { super("Credits"); }
+
+  init() {
+    fresh(this);
+  }
 
   create() {
     ui.clearAll();

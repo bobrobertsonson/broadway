@@ -1,3 +1,4 @@
+import { fresh } from "./fresh.js";
 import { controls } from "../controls.js";
 import { startMusic, sfx } from "../audio.js";
 import { ui } from "../ui.js";
@@ -11,6 +12,10 @@ import { PALETTE } from "../sprites.js";
 // 3) she names World 9 with the pen, Jennifer wobbles and stays an egg. Then credits.
 export class Ending extends Phaser.Scene {
   constructor() { super("Ending"); }
+
+  init() {
+    fresh(this);
+  }
 
   create() {
     ui.clearAll();

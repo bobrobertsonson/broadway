@@ -1105,8 +1105,26 @@ export function makeEnvironmentTextures(scene, theme, opts = {}) {
     P(3, y0 + 6, dk); P(4, y0 + 6, dk); P(4, y0 + 7, dk);
     P(11, y0 + 2, lt); P(12, y0 + 2, lt);
   };
-  mk('tile-ground', 16, 16, ({ R, P, w, h }) => { dirt(R, P, w, h, 0); });
+  // Indoors (interior style): solid ground reads as the building's cross-section,
+  // a plastered wall with a baseboard line and panel seams, under wood floorboards.
+  const wall = (R, P, y0) => {
+    const g = T.ground, dk = shade(g, -0.18), lt = shade(g, 0.12);
+    R(0, y0, 16, 16 - y0, g);
+    R(0, y0, 16, 1, dk);
+    R(3, y0 + 3, 10, 9 - y0 > 0 ? 9 - y0 + 3 : 0, lt);
+    R(3, y0 + 3, 10, 1, dk); R(3, y0 + 3, 1, Math.max(0, 9 - y0 + 3), dk);
+    R(0, 15, 16, 1, dk); P(15, y0 + 1, dk); P(0, 8, lt);
+  };
+  mk('tile-ground', 16, 16, ({ R, P, w, h }) => { if (T.bg === 'interior') wall(R, P, 0); else dirt(R, P, w, h, 0); });
   mk('tile-ground-top', 16, 16, ({ R, P, w, h }) => {
+    if (T.bg === 'interior') {
+      // wood floorboards on top of the wall cross-section
+      wall(R, P, 5);
+      const wd = '#a8794a', wdk = shade(wd, -0.3), wlt = shade(wd, 0.25);
+      R(0, 0, 16, 4, wd); R(0, 0, 16, 1, wlt); R(0, 4, 16, 1, wdk);
+      P(5, 1, wdk); P(5, 2, wdk); P(12, 2, wdk); P(12, 3, wdk); P(9, 1, wlt);
+      return;
+    }
     dirt(R, P, w, h, 0);
     const g = T.groundTop, gd = T.snow ? mix(g, '#8fb0d8', 0.65) : shade(g, -0.25), gl = T.snow ? '#ffffff' : shade(g, 0.28);
     R(0, 0, 16, T.snow ? 5 : 4, g);
@@ -1507,6 +1525,12 @@ export function makeEnvironmentTextures(scene, theme, opts = {}) {
       R(x - 4 * s, y + 4 * s - u, 22 * s, 1, sh);
       P(x + 5 * s, y - 6 * s, hi); P(x + 6 * s, y - 6 * s, hi);
     };
+    if (T.bg === 'interior') {
+      // indoors: ceiling lights on short stems instead of clouds
+      const lamp = shade(T.accent, -0.2), glow = '#fff6c8';
+      [[18, 0], [82, 0]].forEach(([x]) => { R(x, 0, 1, 6, lamp); R(x - 5, 6, 11, 3, lamp); R(x - 4, 9, 9, 1, glow); R(x - 2, 10, 5, 1, glow); });
+      return;
+    }
     cloud(10, 18, 1.4 | 0 || 1);
     cloud(68, 11, 1);
     cloud(100, 24, 1);

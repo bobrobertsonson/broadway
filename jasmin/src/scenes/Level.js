@@ -1,3 +1,4 @@
+import { fresh } from "./fresh.js";
 import { controls } from "../controls.js";
 import { sfx, startMusic } from "../audio.js";
 import { ui } from "../ui.js";
@@ -29,6 +30,7 @@ export class Level extends Phaser.Scene {
   constructor() { super("Level"); }
 
   init(data) {
+    fresh(this);
     this.levelId = data.id;
     const found = findLevel(data.id);
     this.world = found.world;
@@ -85,6 +87,7 @@ export class Level extends Phaser.Scene {
       this.scale.off("resize", this.onResize, this);
       ui.clearAll();
     });
+    this.events.off("charm-used");
     this.events.on("charm-used", () => this.refreshHud());
     this.input.on("pointerdown", (ptr) => { if (!ui.hitsButton(ptr)) this.tapped = true; });
     ui.showHome(true);
