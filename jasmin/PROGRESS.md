@@ -156,6 +156,11 @@ Left as is (minor): several patrol enemies reach the takeoff edge of a pit; the 
 Andrew reviews captions on a private page; answers are synced into `levels.json` with a script (approved keeps the text, rewrite replaces it, both set `draft: false`). First sync: 34 applied, 2 held for questions (London skill, South America start), 20 not reviewed yet. Two typos fixed while applying: "Where is all" became "Where it all", "deswrved" became "deserved". London outfit is "Double Jeans" (Andrew, in chat; overrides the page's "London leggings").
 Longer captions now stay up longer (about 45 ms per character), and captions drop below the ghost meter instead of covering it.
 
+## Minneapolis fixes (Andrew's playtest, Chrome on Mac)
+
+- Andrew's walk: on ice his speed hovered at the run/idle threshold, so the run cycle kept restarting on its first frame (frozen legs). Followers now keep running through brief slow frames. A jump in place no longer drags followers onto Jasmin (it used to make Andrew jump inside her), and huddled followers stand at her ground height instead of hanging on the tail of a fall. The path is reset when Andrew joins at the picnic (he briefly floated before).
+- "Level reset": falling in a pit returns to the last checkpoint, and the last one was col 114 with 75 icy tiles and a 2-tile gap before the flag. Added checkpoints at col 152 (mid gauntlet) and col 184 (just past the exit sign).
+
 ## Questions for Andrew
 
 1. Are the outfit colors right for each city? (`levels.json`, `palette` per world)

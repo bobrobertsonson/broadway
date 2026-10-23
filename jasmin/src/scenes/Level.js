@@ -921,6 +921,7 @@ export class Level extends Phaser.Scene {
       this.trail.setOutline(true);
       pc.sprite.destroy();
       if (!this.trail.has("andrew")) this.join("andrew", p.sprite.x - 14, p.sprite.y);
+      this.trail.reset();
       this.checkpoint = { x: pc.x, y: pc.y };
       startMusic("night");
       this.unfreeze();
