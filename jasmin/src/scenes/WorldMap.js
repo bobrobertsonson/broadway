@@ -36,7 +36,8 @@ export class WorldMap extends Phaser.Scene {
   create() {
     ui.clearAll();
     controls.showPad(true);
-    ui.showHome(false);
+    ui.showHome(true);
+    ui.onHome(() => this.toTitle());
     controls.release();
     makeEnvironmentTextures(this, "day");
     this.cameras.main.setBackgroundColor("#7cc8f0");
@@ -170,6 +171,18 @@ export class WorldMap extends Phaser.Scene {
     if (controls.pressed("right")) this.select(this.idx + 1);
     if (controls.pressed("action")) this.cycleOutfit();
     if (controls.confirmed() && !this.moving) this.play();
+    if (controls.pressed("back")) this.toTitle();
+  }
+
+  // Back (Esc, the pad's back button) or the home button: the title screen,
+  // where the jukebox lives once the game is beaten.
+  async toTitle() {
+    if (this.starting) return;
+    this.starting = true;
+    await ui.fade(true, 300);
+    ui.clearAll();
+    this.scene.start("Title", {});
+    ui.fade(false, 300);
   }
 
   async play() {
