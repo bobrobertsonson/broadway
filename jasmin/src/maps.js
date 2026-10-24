@@ -25,7 +25,7 @@ export const MAPS = {
   "1-1": {
     place: "london",
     theme: "london",
-    music: "london",
+    music: "helicopter",
     // Her neighborhood (from Andrew), near the start of the level.
     signs: [{ col: 7, text: "Ealing" }],
     rows: [

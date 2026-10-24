@@ -6,6 +6,7 @@
 
 import newSong from "./new-song.js";
 import bzrp53 from "./bzrp53.js";
+import helicopter from "./helicopter.js";
 
 export const SONGS = {
   // Chicago. Warpaint, from a MIDI Andrew found; vocal line as the lead, clean guitar as harmony.
@@ -13,4 +14,6 @@ export const SONGS = {
   // Shakira and Bizarrap. Melody and bass from Andrew's MIDI, plus a generated house beat
   // (the MIDI has no drums; Andrew picked it over a hip hop beat). South America.
   bzrp53,
+  // London. Bloc Party, from Andrew's MIDI (no vocal part): guitar 2's riff leads, guitar 1 harmony.
+  helicopter,
 };
