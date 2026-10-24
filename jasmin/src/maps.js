@@ -50,6 +50,8 @@ export const MAPS = {
     place: "minneapolis",
     theme: "minneapolis",
     music: "minneapolis",
+    // Starts when they meet at the lake (Andrew: "Boom, Boom, Boom, Boom!!" once its MIDI arrives).
+    meetMusic: "night",
     ice: true,
     // The picnic lake's name (from Andrew).
     signs: [{ col: 109, text: "Lake Minne-no-thanks", style: "park" }],

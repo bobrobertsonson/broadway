@@ -945,6 +945,9 @@ export class Level extends Phaser.Scene {
     const pc = this.picnic;
     pc.done = true;
     const p = this.player;
+    // The lake song starts the moment they meet and plays on through the night.
+    const meet = this.map.meetMusic || "night";
+    startMusic(meet);
     const finish = () => {
       this.night.setAlpha(0);
       this.setTheme("minneapolisNight");
@@ -955,7 +958,7 @@ export class Level extends Phaser.Scene {
       if (!this.trail.has("andrew")) this.join("andrew", p.sprite.x - 14, p.sprite.y);
       this.trail.reset();
       this.checkpoint = { x: pc.x, y: pc.y };
-      startMusic("night");
+      startMusic(meet);
       this.unfreeze();
     };
     this.startCut(finish);

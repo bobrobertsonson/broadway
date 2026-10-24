@@ -171,6 +171,7 @@ Longer captions now stay up longer (about 45 ms per character), and captions dro
 
 Pipeline for real songs: a MIDI file of the song goes through `tools/midi2song.mjs` (`--list` shows the parts; it picks lead, harmony, bass and drums, makes each one monophonic like a chip channel, and can cut to a range of bars). It writes `src/songs/<key>.js`; register it in `src/songs/index.js` and set a map's `music` to the key. Songs play on NES-style pulse waves (12.5% and 25% duty), a triangle bass and noise drums, and loop.
 Songs in the game so far: London plays "Helicopter" (Bloc Party; guitar riff as the lead, no vocal part in the MIDI); Chicago plays "New Song" (Warpaint); South America plays Shakira x Bizarrap, Vol. 53, with a generated house beat (`--beat house`; Andrew preferred it to the hip hop version). Jukebox page with every track live plus recorded previews; `tools/render-song.cjs` renders a song to WAV.
+Planned (waiting on MIDIs): the lake meeting and Minneapolis night "Boom, Boom, Boom, Boom!!" (Vengaboys; map `meetMusic`, starts when the picnic scene begins), NYC Chinatown "Ride On Time" (Black Box). Suggested to Andrew, not confirmed: Rasputin (boss), Daddy Cool (Brooklyn), Scatman (title and map), Le Freak (credits), C'est La Vie (ending).
 Why MIDI: Claude can't listen to audio and doesn't know these songs note for note, so a from-memory version would come out wrong. First request: "New Song" by Warpaint for Chicago. Waiting on a MIDI from Andrew.
 
 ## Second overnight: powers, bricks, richer cities (Andrew asleep)
