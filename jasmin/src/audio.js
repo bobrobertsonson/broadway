@@ -297,13 +297,18 @@ function songTick(c) {
   }
 }
 
+// Drum level for every song and track (Andrew: drums louder; was 1).
+const DRUMS = 1.8;
+
 // One percussion hit into the track's gain (so it fades with the track).
+// The kick has a short click on top: phone and TV speakers barely play its low sine.
 function drum(k, t, c) {
-  if (k === 'k') tone('sine', 150, 45, t, 0.14, 1, c.tg, c.oscs);
-  else if (k === 's') noise(t, 0.1, 0.5, 1800, 'bandpass', 0.8, c.tg);
-  else if (k === 'h') noise(t, 0.03, 0.25, 7000, 'highpass', 1, c.tg);
-  else if (k === 'm') noise(t, 0.05, 0.18, 5000, 'highpass', 1, c.tg);
-  else if (k === 'w') tone('square', 1250, 1150, t, 0.035, 0.22, c.tg, c.oscs);
+  const d = DRUMS;
+  if (k === 'k') { tone('sine', 150, 45, t, 0.14, 1 * d, c.tg, c.oscs); tone('square', 220, 70, t, 0.025, 0.12 * d, c.tg, c.oscs); }
+  else if (k === 's') { noise(t, 0.1, 0.5 * d, 1800, 'bandpass', 0.8, c.tg); tone('triangle', 230, 170, t, 0.06, 0.3 * d, c.tg, c.oscs); }
+  else if (k === 'h') noise(t, 0.03, 0.25 * d, 7000, 'highpass', 1, c.tg);
+  else if (k === 'm') noise(t, 0.05, 0.18 * d, 5000, 'highpass', 1, c.tg);
+  else if (k === 'w') tone('square', 1250, 1150, t, 0.035, 0.22 * d, c.tg, c.oscs);
 }
 
 export function stopMusic() {

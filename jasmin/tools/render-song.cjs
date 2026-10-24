@@ -22,7 +22,8 @@ const [key, secs, out] = [process.argv[2], Number(process.argv[3]), process.argv
       g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); o.connect(g); g.connect(bus); o.start(t); o.stop(t + dur + 0.02); };
     const noise = (t, dur, vol, freq, ftype, q) => { const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(); s.buffer = noiseBuf; f.type = ftype || 'lowpass'; f.frequency.value = freq; f.Q.value = q || 1;
       g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); s.connect(f); f.connect(g); g.connect(bus); s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.02); };
-    const drum = (k, t) => { if (k === 'k') tone('sine', 150, 45, t, 0.14, 1); else if (k === 's') noise(t, 0.1, 0.5, 1800, 'bandpass', 0.8); else if (k === 'h') noise(t, 0.03, 0.25, 7000, 'highpass', 1); else if (k === 'm') noise(t, 0.05, 0.18, 5000, 'highpass', 1); };
+    const d = 1.8; // keep in step with DRUMS in src/audio.js
+    const drum = (k, t) => { if (k === 'k') { tone('sine', 150, 45, t, 0.14, 1 * d); tone('square', 220, 70, t, 0.025, 0.12 * d); } else if (k === 's') { noise(t, 0.1, 0.5 * d, 1800, 'bandpass', 0.8); tone('triangle', 230, 170, t, 0.06, 0.3 * d); } else if (k === 'h') noise(t, 0.03, 0.25 * d, 7000, 'highpass', 1); else if (k === 'm') noise(t, 0.05, 0.18 * d, 5000, 'highpass', 1); };
     const spb = 60 / song.bpm;
     for (const v of song.voices) for (const e of (v.notes || v.hits)) {
       const t = 0.05 + e[0] * spb; if (t > secs - 0.2) continue;
