@@ -9,6 +9,11 @@ import bzrp53 from "./bzrp53.js";
 import helicopter from "./helicopter.js";
 import boom from "./boom.js";
 import ride from "./ride.js";
+import rasputin from "./rasputin.js";
+import daddycool from "./daddycool.js";
+import scatman from "./scatman.js";
+import lefreak from "./lefreak.js";
+import cestlavie from "./cestlavie.js";
 
 export const SONGS = {
   // Chicago. Warpaint, from a MIDI Andrew found; vocal line as the lead, clean guitar as harmony.
@@ -24,4 +29,10 @@ export const SONGS = {
   // NYC Chinatown, arriving in New York. Black Box, from Andrew's MIDI: the vocal line leads,
   // the house piano riff as harmony.
   ride,
+  // The rest from Andrew's MIDIs, in the slots Claude suggested (swap freely):
+  rasputin,   // fire boss (Boney M.)
+  daddycool,  // Brooklyn, Chocolate Factory (Boney M.)
+  scatman,    // title screen and world map (Scatman John)
+  lefreak,    // credits (CHIC)
+  cestlavie,  // ending: inventory, fog, naming World 9 (B*Witched)
 };

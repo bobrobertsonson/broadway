@@ -55,7 +55,7 @@ export class Title extends Phaser.Scene {
     const restart = () => this.scene.restart();
     this.scale.once("resize", restart);
     this.events.once("shutdown", () => this.scale.off("resize", restart));
-    startMusic("map");
+    startMusic("scatman");
   }
 
   update() {

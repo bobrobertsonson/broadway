@@ -41,7 +41,7 @@ export class Credits extends Phaser.Scene {
     this.lines = lines;
     this.i = 0;
     this.showNext();
-    startMusic("credits");
+    startMusic("lefreak");
     this.input.on("pointerdown", (ptr) => { if (!ui.hitsButton(ptr)) this.tapped = true; });
   }
 

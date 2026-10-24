@@ -62,7 +62,7 @@ export class WorldMap extends Phaser.Scene {
     this.events.once("shutdown", () => { this.scale.off("resize", this.layout, this); ui.clearAll(); });
     // A click also pulls keyboard focus back into the game (the page can lose it).
     this.input.on("pointerdown", (p) => { try { window.focus(); } catch {} if (!ui.hitsButton(p)) this.tap(p); });
-    startMusic("map");
+    startMusic("scatman");
     this.refreshText();
   }
 

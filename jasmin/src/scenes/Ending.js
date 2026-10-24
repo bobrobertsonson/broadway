@@ -27,7 +27,7 @@ export class Ending extends Phaser.Scene {
     makeEnvironmentTextures(this, "day");
     this.makeEgg();
     this.input.on("pointerdown", (ptr) => { if (!ui.hitsButton(ptr)) this.tapped = true; });
-    startMusic("credits");
+    startMusic("cestlavie");
     this.cameras.main.setBackgroundColor("#2b2d63");
     this.inventory();
   }
