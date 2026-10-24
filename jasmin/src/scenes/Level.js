@@ -1046,7 +1046,7 @@ export class Level extends Phaser.Scene {
       this.unfreeze();
     };
     this.startCut(finish);
-    startMusic("sendoff");
+    startMusic("proposal");
     this.cutTween({ targets: this.night, alpha: 0.5, duration: 1200 });
     p.sprite.setFlipX(false);
     if (m) {
