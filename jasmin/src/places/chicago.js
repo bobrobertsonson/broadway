@@ -354,14 +354,16 @@ export class Chicago {
     this.t += dt;
     const p = L.player, ps = p.sprite, pb = ps.body;
 
-    // Shuttles: set the position for this moment; velocity makes the arcade body carry her.
+    // Shuttles: placed exactly where they should be this frame, and a rider moves by the same
+    // amount. (Driving them by velocity let the physics clock and the frame clock drift apart,
+    // so the cars lurched back and forth every frame and flickered.)
     for (const sh of this.shuttles) {
       sh.t += dt;
       const want = sh.target(), s = sh.s;
-      const vx = (want - s.x) / Math.max(dt, 1e-3);
-      s.body.setVelocityX(vx);
+      const dx = want - s.x;
       const riding = Math.abs(pb.bottom - s.body.top) < 3 && pb.right > s.body.left && pb.left < s.body.right && pb.velocity.y >= 0;
-      if (riding && !p.dead && !p.dashT) ps.x += s.body.deltaX();
+      s.body.reset(want, s.y);
+      if (riding && !p.dead && !p.dashT) ps.x += dx;
     }
 
     // Lift bridges
