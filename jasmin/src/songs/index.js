@@ -14,6 +14,7 @@ import daddycool from "./daddycool.js";
 import scatman from "./scatman.js";
 import lefreak from "./lefreak.js";
 import cestlavie from "./cestlavie.js"; import whatelse from "./whatelse.js";
+import thunderstruck from "./thunderstruck.js"; import wannabe from "./wannabe.js"; import battlefield from "./battlefield.js"; import whatislove from "./whatislove.js";
 
 export const SONGS = {
   // Chicago. Warpaint, from a MIDI Andrew found; vocal line as the lead, clean guitar as harmony.
@@ -38,6 +39,8 @@ export const SONGS = {
   // Minneapolis before the lake (Andrew's pick). Röyksopp; vocal line leads, the pulsing
   // chord part splits into harmony (top) and bass (bottom), plus a generated house beat.
   whatelse,
+  // Andrew's latest four MIDIs.
+  thunderstruck, wannabe, battlefield, whatislove,
 };
 
 // The post-game jukebox, in story order. Real songs first, then the game's own
@@ -54,8 +57,12 @@ export const JUKEBOX = [
   { key: "bzrp53", title: "Bzrp Music Sessions, Vol. 53", artist: "Bizarrap and Shakira", where: "South America" },
   { key: "proposal", title: "Candlelight", artist: "Original", where: "Argentina" },
   { key: "daddycool", artist: "Boney M.", where: "Brooklyn" },
-  { key: "building", title: "The New Building", artist: "Original", where: "the new building" },
+  { key: "thunderstruck", artist: "AC/DC", where: "the new building" },
   { key: "rasputin", artist: "Boney M.", where: "the fire boss" },
   { key: "cestlavie", artist: "B*Witched", where: "the ending" },
   { key: "lefreak", artist: "CHIC", where: "the credits" },
+  // Bonus tracks: in the jukebox only, until Andrew picks a place for them.
+  { key: "wannabe", artist: "Spice Girls", bonus: true },
+  { key: "battlefield", artist: "Pat Benatar", bonus: true },
+  { key: "whatislove", artist: "Haddaway", bonus: true },
 ];

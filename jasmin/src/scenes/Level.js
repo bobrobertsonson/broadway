@@ -422,7 +422,7 @@ export class Level extends Phaser.Scene {
         row = this.rowsN - 1;
         for (let r = 0; r < this.rowsN; r++) if ("#=-".includes(this.cell(sg.col, r))) { row = r; break; }
       }
-      this.add.image(sg.col * T + 8, row * T, key).setOrigin(0.5, 1).setDepth(1);
+      this.add.image(sg.col * T + 8 + (sg.dx || 0), row * T, key).setOrigin(0.5, 1).setDepth(1);
     }
   }
 
