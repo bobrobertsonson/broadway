@@ -122,7 +122,7 @@ export const MAPS = {
   "5-1": {
     place: "southamerica",
     theme: "mexico",
-    music: "southamerica",
+    music: "bzrp53",
     // Real public place names only.
     signs: [{ col: 98, text: "El Valle" }, { col: 200, text: "Galapagos", style: "park" }, { col: 289, text: "Valparaiso" }],
     segments: [{ col: 0, theme: "mexico", country: "Mexico" }, { col: 96, theme: "panama", country: "Panama" }, { col: 151, theme: "colombia", country: "Colombia" }, { col: 196, theme: "galapagos", country: "Ecuador: Galapagos" }, { col: 291, theme: "chile", country: "Chile" }, { col: 381, theme: "argentina", country: "Argentina" }, { col: 506, theme: "brazil", country: "Brazil" }],
