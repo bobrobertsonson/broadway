@@ -63,6 +63,7 @@ const SMALL = {
   m: "2:XXXX.,X.X.X,X.X.X,X.X.X,X.X.X",
   n: "2:XXX.,X..X,X..X,X..X,X..X",
   o: "2:.XX.,X..X,X..X,X..X,.XX.",
+  "ö": "X..X,....,.XX.,X..X,X..X,X..X,.XX.",
   p: "2:XXX.,X..X,X..X,X..X,XXX.,X...,X...",
   q: "2:.XXX,X..X,X..X,X..X,.XXX,...X,...X",
   r: "2:X.XX,XX..,X...,X...,X...",

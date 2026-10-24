@@ -49,7 +49,7 @@ export const MAPS = {
   "2-1": {
     place: "minneapolis",
     theme: "minneapolis",
-    music: "minneapolis",
+    music: "whatelse", // Röyksopp, What Else Is There? (Andrew's pick)
     // Starts when they meet at the lake and plays through the night (Andrew's pick).
     meetMusic: "boom",
     ice: true,

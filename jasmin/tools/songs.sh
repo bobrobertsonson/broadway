@@ -2,7 +2,7 @@
 # Rebuilds every real song in src/songs/ from Andrew's MIDI files, with the exact
 # part choices and cuts used in the game. The MIDIs are not in the repo.
 # usage: sh tools/songs.sh <folder with the .mid files>
-# (file names: boom bzrp53 cestlavie daddycool helicopter lefreak new-song rasputin ride scatman)
+# (file names: boom bzrp53 cestlavie daddycool helicopter lefreak new-song rasputin ride scatman whatelse)
 set -e
 # Le Freak and C'est La Vie get --gain: their parts are sparser, so they played quieter than the rest.
 M="${1:?folder with the MIDI files}"
@@ -23,3 +23,5 @@ c rasputin --title "Rasputin" --lead 1,3 --harm 4 --bass 7
 c scatman --title "Scatman (Ski-Ba-Bop-Ba-Dop-Bop)" --lead 4,3 --harm 2 --bass 6 --cut 19-42
 c lefreak --title "Le Freak" --lead 4,6,5,7 --harm 3 --bass 2 --harm-vol 0.42 --harm-wave pulse25 --gain 1.4
 c cestlavie --title "C'est La Vie" --lead 13,12,15 --harm 2 --harm-shift -12 --bass 1 --gain 1.18
+# Minneapolis. Two parts only (melody, pulsing chords): the chords give harmony (top) and bass (bottom).
+c whatelse --title "What Else Is There?" --lead 2 --lead-shift 12 --harm 1 --bass 1 --bass-shift -12 --beat house

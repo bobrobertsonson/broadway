@@ -13,7 +13,7 @@ import rasputin from "./rasputin.js";
 import daddycool from "./daddycool.js";
 import scatman from "./scatman.js";
 import lefreak from "./lefreak.js";
-import cestlavie from "./cestlavie.js";
+import cestlavie from "./cestlavie.js"; import whatelse from "./whatelse.js";
 
 export const SONGS = {
   // Chicago. Warpaint, from a MIDI Andrew found; vocal line as the lead, clean guitar as harmony.
@@ -35,6 +35,9 @@ export const SONGS = {
   scatman,    // title screen and world map (Scatman John)
   lefreak,    // credits (CHIC)
   cestlavie,  // ending: inventory, fog, naming World 9 (B*Witched)
+  // Minneapolis before the lake (Andrew's pick). Röyksopp; vocal line leads, the pulsing
+  // chord part splits into harmony (top) and bass (bottom), plus a generated house beat.
+  whatelse,
 };
 
 // The post-game jukebox, in story order. Real songs first, then the game's own
@@ -43,7 +46,7 @@ export const JUKEBOX = [
   { key: "scatman", artist: "Scatman John", where: "the title screen and the map" },
   { key: "credits", title: "Nairobi", artist: "Original", where: "the very beginning" },
   { key: "helicopter", artist: "Bloc Party", where: "London" },
-  { key: "minneapolis", title: "Minneapolis", artist: "Original", where: "Minneapolis, before the lake" },
+  { key: "whatelse", artist: "Röyksopp", where: "Minneapolis, before the lake" },
   { key: "boom", artist: "Vengaboys", where: "meeting at the lake" },
   { key: "new-song", artist: "Warpaint", where: "Chicago" },
   { key: "ride", artist: "Black Box", where: "New York, Chinatown" },
