@@ -100,7 +100,7 @@ export const MAPS = {
   "4-1": {
     place: "chinatown",
     theme: "chinatown",
-    music: "chinatown",
+    music: "ride",
     // Streets of lower Manhattan; Henry St is the street the dumpling shop is on.
     signs: [{ col: 3, text: "Canal St" }, { col: 27, text: "Mott St" }, { col: 97, text: "Henry St" }],
     rows: [

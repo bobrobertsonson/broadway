@@ -8,6 +8,7 @@ import newSong from "./new-song.js";
 import bzrp53 from "./bzrp53.js";
 import helicopter from "./helicopter.js";
 import boom from "./boom.js";
+import ride from "./ride.js";
 
 export const SONGS = {
   // Chicago. Warpaint, from a MIDI Andrew found; vocal line as the lead, clean guitar as harmony.
@@ -20,4 +21,7 @@ export const SONGS = {
   // Meeting at the lake and Minneapolis at night. Vengaboys, from Andrew's MIDI: the vocal line
   // leads, the chorus synth hook fills its gaps, synth-brass riff as harmony.
   boom,
+  // NYC Chinatown, arriving in New York. Black Box, from Andrew's MIDI: the vocal line leads,
+  // the house piano riff as harmony.
+  ride,
 };
