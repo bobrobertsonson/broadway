@@ -12,6 +12,12 @@
 //                                highest part = lead, lowest = bass, next busiest = harmony)
 //   --no-harm  --no-drums        leave a voice out
 //   --bars A-B                   keep only bars A..B (1-based, inclusive), e.g. a verse and chorus
+//   --cut A-B[,C-D]              remove bars from the finished song (1-based bars of the output, as the
+//                                game plays it after --bars and the leading-silence trim), e.g. an
+//                                instrumental stretch the MIDI has no melody for
+//   --lead-shift N --harm-shift N --bass-shift N   shift one voice by N semitones (e.g. -12 to keep a
+//                                bright chord part under the melody)
+//   --gain G                     overall level of the song (default 1), to match the other songs
 //   --transpose N                shift every pitched note by N semitones
 //   --bpm N                      override the tempo
 //   --lead-wave W --harm-wave W --bass-wave W   pulse12 pulse25 square triangle sawtooth
@@ -130,8 +136,8 @@ const from = b0 ? (b0 - 1) * beatsPerBar : 0;
 const to = b1 ? b1 * beatsPerBar : Infinity;
 const transpose = Number(opt("transpose", 0));
 
-function mono(part, top, lo, hi) {
-  const notes = part.notes.filter((n) => n.start >= from && n.start < to).map((n) => ({ ...n, start: n.start - from, m: n.m + transpose }));
+function mono(part, top, lo, hi, shift = 0) {
+  const notes = part.notes.filter((n) => n.start >= from && n.start < to).map((n) => ({ ...n, start: n.start - from, m: n.m + transpose + shift }));
   const byStart = new Map();
   for (const n of notes) {
     const k = q(n.start);
@@ -158,9 +164,9 @@ function drumHits(part) {
 }
 
 const voices = [];
-if (lead) voices.push({ role: "lead", wave: opt("lead-wave", "pulse25"), vol: Number(opt("lead-vol", 0.32)), notes: mono(lead, true, 60, 88) });
-if (harm) voices.push({ role: "harm", wave: opt("harm-wave", "pulse12"), vol: Number(opt("harm-vol", 0.18)), notes: mono(harm, true, 52, 81) });
-if (bass) voices.push({ role: "bass", wave: opt("bass-wave", "triangle"), vol: Number(opt("bass-vol", 0.75)), notes: mono(bass, false, 31, 55) });
+if (lead) voices.push({ role: "lead", wave: opt("lead-wave", "pulse25"), vol: Number(opt("lead-vol", 0.32)), notes: mono(lead, true, 60, 88, Number(opt("lead-shift", 0))) });
+if (harm) voices.push({ role: "harm", wave: opt("harm-wave", "pulse12"), vol: Number(opt("harm-vol", 0.18)), notes: mono(harm, true, 52, 81, Number(opt("harm-shift", 0))) });
+if (bass) voices.push({ role: "bass", wave: opt("bass-wave", "triangle"), vol: Number(opt("bass-vol", 0.75)), notes: mono(bass, false, 31, 55, Number(opt("bass-shift", 0))) });
 if (drums) voices.push({ role: "drums", vol: 1, hits: drumHits(drums) });
 
 // --beat house|dembow|hiphop: a generated beat for MIDIs without drums, from the first note to the end.
@@ -183,9 +189,23 @@ const firstBeat = Math.min(...voices.flatMap((v) => (v.notes || v.hits).map((e) 
 const lead0 = Math.floor(firstBeat / beatsPerBar) * beatsPerBar;
 if (lead0 > 0) for (const v of voices) for (const e of v.notes || v.hits) e[0] = q(e[0] - lead0);
 
+// --cut: drop whole bars of the output and close the gap (latest range first so earlier bars keep their numbers).
+const cuts = String(opt("cut", "")).split(",").filter(Boolean).map((r) => r.split("-").map(Number))
+  .map(([a, b]) => [(a - 1) * beatsPerBar, (b || a) * beatsPerBar]).sort((x, y) => y[0] - x[0]);
+for (const [c0, c1] of cuts) {
+  for (const v of voices) {
+    const key = v.notes ? "notes" : "hits";
+    v[key] = v[key].filter((e) => e[0] < c0 || e[0] >= c1).map((e) => {
+      if (e[0] >= c1) return [q(e[0] - (c1 - c0)), ...e.slice(1)];
+      if (v.notes && e[0] + e[1] > c0) return [e[0], q(c0 - e[0]), e[2]];
+      return e;
+    });
+  }
+}
+
 const last = Math.max(0, ...voices.flatMap((v) => (v.notes || v.hits).map((e) => e[0] + (e[1] > 0 ? e[1] : 0))));
 const loopBeats = Math.max(beatsPerBar, Math.ceil(last / beatsPerBar) * beatsPerBar);
-const song = { title: opt("title", key), bpm, loopBeats, voices };
+const song = { title: opt("title", key), bpm, loopBeats, ...(opt("gain") ? { gain: Number(opt("gain")) } : {}), voices };
 
 const out = path.join(path.dirname(new URL(import.meta.url).pathname), "..", "src", "songs", `${key}.js`);
 const body = JSON.stringify(song).replace(/\],\[/g, "],\n[");

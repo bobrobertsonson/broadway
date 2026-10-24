@@ -11,7 +11,7 @@ const [key, secs, out] = [process.argv[2], Number(process.argv[3]), process.argv
   const data = await p.evaluate(async ([key, secs]) => {
     const song = (await import(`./src/songs/${key}.js`)).default;
     const sr = 32000, ctx = new OfflineAudioContext(1, Math.ceil(sr * secs), sr);
-    const bus = ctx.createGain(); bus.gain.value = 0.16; bus.connect(ctx.destination);
+    const bus = ctx.createGain(); bus.gain.value = 0.16 * (song.gain || 1); bus.connect(ctx.destination);
     const noiseBuf = ctx.createBuffer(1, sr, sr); const nd = noiseBuf.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
     const hz = (m) => 440 * Math.pow(2, (m - 69) / 12);
     const pulses = {};

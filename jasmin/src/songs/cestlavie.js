@@ -1,6 +1,6 @@
 // C'est La Vie: chiptune arrangement made with tools/midi2song.mjs from cestlavie.mid.
 // Parts: lead #13+12, harmony #2, bass #1, drums #10.
-export default {"title":"C'est La Vie","bpm":109,"loopBeats":316,"voices":[{"role":"lead","wave":"pulse25","vol":0.32,"notes":[[4,1.5,71],
+export default {"title":"C'est La Vie","bpm":109,"loopBeats":316,"gain":1.18,"voices":[{"role":"lead","wave":"pulse25","vol":0.32,"notes":[[4,1.5,71],
 [5.5,0.3333333333333333,72],
 [8,1.5,71],
 [9.5,0.3333333333333333,69],

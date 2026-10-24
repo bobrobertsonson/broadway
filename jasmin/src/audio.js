@@ -324,6 +324,7 @@ export function startMusic(track) {
     if (song) {
       const c = { name: track, song, oscs: new Set(), tg: ctx.createGain(), t0: ctx.currentTime + 0.08,
         voices: song.voices.map((v) => ({ ...v, i: 0 })) };
+      c.tg.gain.value = song.gain || 1; // evens out loudness between songs
       c.tg.connect(musBus);
       cur = c;
       tick();

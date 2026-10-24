@@ -1,6 +1,6 @@
 // Le Freak: chiptune arrangement made with tools/midi2song.mjs from lefreak.mid.
 // Parts: lead #4+6+5+7, harmony #3, bass #2, drums #10.
-export default {"title":"Le Freak","bpm":120,"loopBeats":580,"voices":[{"role":"lead","wave":"pulse25","vol":0.32,"notes":[[2.1666666666666665,0.16666666666666666,65],
+export default {"title":"Le Freak","bpm":120,"loopBeats":580,"gain":1.4,"voices":[{"role":"lead","wave":"pulse25","vol":0.32,"notes":[[2.1666666666666665,0.16666666666666666,65],
 [2.6666666666666665,0.20833333333333334,67],
 [6.166666666666667,0.25,67],
 [6.666666666666667,0.2916666666666667,72],
