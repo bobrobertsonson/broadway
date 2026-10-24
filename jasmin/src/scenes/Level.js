@@ -414,8 +414,14 @@ export class Level extends Phaser.Scene {
         }
         tex.refresh();
       }
-      let row = this.rowsN - 1;
-      for (let r = 0; r < this.rowsN; r++) if ("#=-".includes(this.cell(sg.col, r))) { row = r; break; }
+      // At street level: the top of the ground block that reaches the bottom of the map,
+      // not a fire escape or platform overhead (else the first solid tile from the top).
+      let row = this.rowsN;
+      while (row > 0 && "#=%~_".includes(this.cell(sg.col, row - 1))) row--;
+      if (row === this.rowsN) {
+        row = this.rowsN - 1;
+        for (let r = 0; r < this.rowsN; r++) if ("#=-".includes(this.cell(sg.col, r))) { row = r; break; }
+      }
       this.add.image(sg.col * T + 8, row * T, key).setOrigin(0.5, 1).setDepth(1);
     }
   }

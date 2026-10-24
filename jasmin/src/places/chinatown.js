@@ -1,7 +1,7 @@
 // NYC Chinatown: place module (see src/places/index.js).
 // Strings of lanterns that light up when a spark passes, shop awnings that bounce her,
 // steam updrafts from street vents, pigeons, fire escape rails and ladders, and generic
-// storefronts (DUMPLINGS, BAKERY, TEA, FRUIT).
+// storefronts (Jin Mei Dumpling, BAKERY, TEA, FRUIT).
 //
 // Markers (this map only):
 //   s / q  a lantern string from its left end (s) to its right end (q), same row
@@ -52,22 +52,31 @@ export class Chinatown {
       R(1, 9, 6, 1, "#6a5a40"); R(3, 10, 2, 1, "#6a5a40"); P(3, 11, "#4a3a28"); P(4, 11, "#6a5a40");
     });
 
-    // A shopfront: dark frame, warm window, door, a lettered sign board.
-    const front = (key, label, board, boardText, glass, door) => M(key, 60, 52, ({ R, P, ctx }) => {
-      R(2, 10, 56, 42, "#3a2a30"); R(2, 10, 56, 2, "#5a3a40");
-      R(5, 15, 50, 3, "#2a1a20");
-      R(8, 22, 26, 24, glass); R(8, 22, 26, 1, "#ffffff"); R(20, 22, 1, 24, "#3a2a30"); R(8, 34, 26, 1, "#3a2a30");
-      for (let i = 0; i < 4; i++) R(10 + i * 6, 38 + (i % 2), 4, 3, "#fff4e0");
-      R(38, 24, 14, 28, door); R(38, 24, 14, 1, "#2a1a20"); R(40, 28, 10, 12, glass); R(48, 38, 2, 2, "#ffd23c");
+    // A shopfront: dark frame, warm window, door, a lettered sign board. `W` widens it for
+    // a long name; `icon(R, P, x)` draws a small picture after the label.
+    const front = (key, label, board, boardText, glass, door, W = 60, icon = null) => M(key, W, 52, ({ R, P, ctx }) => {
+      R(2, 10, W - 4, 42, "#3a2a30"); R(2, 10, W - 4, 2, "#5a3a40");
+      R(5, 15, W - 10, 3, "#2a1a20");
+      const gw = W - 34, dx = W - 22;
+      R(8, 22, gw, 24, glass); R(8, 22, gw, 1, "#ffffff"); R(8 + Math.floor(gw / 2), 22, 1, 24, "#3a2a30"); R(8, 34, gw, 1, "#3a2a30");
+      for (let i = 0; i < Math.floor(gw / 6); i++) R(10 + i * 6, 38 + (i % 2), 4, 3, "#fff4e0");
+      R(dx, 24, 14, 28, door); R(dx, 24, 14, 1, "#2a1a20"); R(dx + 2, 28, 10, 12, glass); R(dx + 10, 38, 2, 2, "#ffd23c");
       // sign board
-      R(4, 0, 52, 11, INK); R(5, 1, 50, 9, board);
-      const w = measure(label);
-      drawPlain(ctx, label, Math.round(30 - w / 2), 2, boardText);
+      R(4, 0, W - 8, 11, INK); R(5, 1, W - 10, 9, board);
+      const w = measure(label) + (icon ? 12 : 0);
+      const x0 = Math.round(W / 2 - w / 2);
+      drawPlain(ctx, label, x0, 2, boardText);
+      if (icon) icon(R, P, x0 + w - 9);
       // little lanterns on the board
-      R(1, 3, 3, 4, "#e8383c"); R(56, 3, 3, 4, "#e8383c"); P(2, 2, "#ffd23c"); P(57, 2, "#ffd23c");
-      R(2, 51, 56, 1, "#1a1018");
+      R(1, 3, 3, 4, "#e8383c"); R(W - 4, 3, 3, 4, "#e8383c"); P(2, 2, "#ffd23c"); P(W - 3, 2, "#ffd23c");
+      R(2, 51, W - 4, 1, "#1a1018");
     });
-    front("ct-dumpling", "DUMPLINGS", "#e8383c", "#ffe27a", "#ffd88a", "#7a3a28");
+    // A pleated dumpling, 9 x 6.
+    const dumpling = (R, P, x) => {
+      R(x + 2, 2, 5, 1, "#fff4e0"); R(x + 1, 3, 7, 1, "#fff4e0"); R(x, 4, 9, 2, "#f4e4c4"); R(x + 1, 6, 7, 1, "#d8c098");
+      P(x + 2, 3, "#d8c098"); P(x + 4, 2, "#d8c098"); P(x + 6, 3, "#d8c098"); P(x + 4, 1, "#fff4e0");
+    };
+    front("ct-dumpling", "Jin Mei Dumpling", "#e8383c", "#ffe27a", "#ffd88a", "#7a3a28", 92, dumpling);
     front("ct-bakery", "BAKERY", "#ff8fb0", "#6a1a38", "#ffe8c0", "#5a3a48");
     front("ct-tea", "TEA", "#2f8a5a", "#f4f0c8", "#d8ecb0", "#3a4a3a");
 
