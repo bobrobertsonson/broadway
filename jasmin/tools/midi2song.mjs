@@ -7,7 +7,8 @@
 //       writes src/songs/new-song.js; then register it in src/songs/index.js
 //
 // Options:
-//   --lead N --harm N --bass N   pick parts by the number shown in --list (default: automatic:
+//   --lead N --harm N --bass N   pick parts by the number shown in --list ("3,12" = part 3, with part 12
+//                                filling its silences); default automatic:
 //                                highest part = lead, lowest = bass, next busiest = harmony)
 //   --no-harm  --no-drums        leave a voice out
 //   --bars A-B                   keep only bars A..B (1-based, inclusive), e.g. a verse and chorus
@@ -15,6 +16,7 @@
 //   --bpm N                      override the tempo
 //   --lead-wave W --harm-wave W --bass-wave W   pulse12 pulse25 square triangle sawtooth
 //   --beat house|dembow|hiphop   add a generated beat when the MIDI has no drum part
+//   --lead-vol V --harm-vol V --bass-vol V   voice volumes (defaults 0.32, 0.18, 0.75)
 //
 // Each voice is made monophonic like a real chip channel: on chords the lead and harmony
 // keep the top note and the bass keeps the bottom one, and a new note cuts the previous.
@@ -96,7 +98,21 @@ const q = (x) => Math.round(x * 48) / 48;
 
 // ---------- choose voices ----------
 const melodic = list.filter((x) => !x.drums && x.notes.length >= 8);
-const pick = (name) => { const n = Number(opt(name, 0)); return n ? list.find((x) => x.n === n) : null; };
+// A part pick may list several parts in priority order ("3,12"): the first part plays,
+// and each later part fills in only where the earlier ones are silent.
+const pick = (name) => {
+  const ns = String(opt(name, "")).split(",").map(Number).filter(Boolean);
+  const ps = ns.map((n) => list.find((x) => x.n === n)).filter(Boolean);
+  if (ps.length < 2) return ps[0] || null;
+  const notes = [...ps[0].notes];
+  for (const extra of ps.slice(1)) {
+    for (const n of extra.notes) {
+      const busy = notes.some((o) => o.start < n.start + n.len && n.start < o.start + o.len);
+      if (!busy) notes.push(n);
+    }
+  }
+  return { ...ps[0], n: ns.join("+"), notes };
+};
 let lead = pick("lead"), bass = pick("bass"), harm = pick("harm");
 const byPitch = [...melodic].sort((a, b) => b.avg - a.avg);
 // Lead: a part named like a melody wins; otherwise favor high, busy, single-note lines over chords.
@@ -142,9 +158,9 @@ function drumHits(part) {
 }
 
 const voices = [];
-if (lead) voices.push({ role: "lead", wave: opt("lead-wave", "pulse25"), vol: 0.32, notes: mono(lead, true, 60, 88) });
-if (harm) voices.push({ role: "harm", wave: opt("harm-wave", "pulse12"), vol: 0.18, notes: mono(harm, true, 52, 81) });
-if (bass) voices.push({ role: "bass", wave: opt("bass-wave", "triangle"), vol: 0.75, notes: mono(bass, false, 31, 55) });
+if (lead) voices.push({ role: "lead", wave: opt("lead-wave", "pulse25"), vol: Number(opt("lead-vol", 0.32)), notes: mono(lead, true, 60, 88) });
+if (harm) voices.push({ role: "harm", wave: opt("harm-wave", "pulse12"), vol: Number(opt("harm-vol", 0.18)), notes: mono(harm, true, 52, 81) });
+if (bass) voices.push({ role: "bass", wave: opt("bass-wave", "triangle"), vol: Number(opt("bass-vol", 0.75)), notes: mono(bass, false, 31, 55) });
 if (drums) voices.push({ role: "drums", vol: 1, hits: drumHits(drums) });
 
 // --beat house|dembow|hiphop: a generated beat for MIDIs without drums, from the first note to the end.
@@ -161,6 +177,11 @@ if (beat && !drums) {
   for (let b0 = Math.floor(first / beatsPerBar) * beatsPerBar; b0 < end; b0 += beatsPerBar) for (const [o, k] of bar) hits.push([q(b0 + o), k]);
   voices.push({ role: "drums", vol: 1, hits });
 }
+
+// Drop whole empty bars at the start, so a song never opens on silence.
+const firstBeat = Math.min(...voices.flatMap((v) => (v.notes || v.hits).map((e) => e[0])));
+const lead0 = Math.floor(firstBeat / beatsPerBar) * beatsPerBar;
+if (lead0 > 0) for (const v of voices) for (const e of v.notes || v.hits) e[0] = q(e[0] - lead0);
 
 const last = Math.max(0, ...voices.flatMap((v) => (v.notes || v.hits).map((e) => e[0] + (e[1] > 0 ? e[1] : 0))));
 const loopBeats = Math.max(beatsPerBar, Math.ceil(last / beatsPerBar) * beatsPerBar);

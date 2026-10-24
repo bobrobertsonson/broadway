@@ -7,6 +7,7 @@
 import newSong from "./new-song.js";
 import bzrp53 from "./bzrp53.js";
 import helicopter from "./helicopter.js";
+import boom from "./boom.js";
 
 export const SONGS = {
   // Chicago. Warpaint, from a MIDI Andrew found; vocal line as the lead, clean guitar as harmony.
@@ -16,4 +17,7 @@ export const SONGS = {
   bzrp53,
   // London. Bloc Party, from Andrew's MIDI (no vocal part): guitar 2's riff leads, guitar 1 harmony.
   helicopter,
+  // Meeting at the lake and Minneapolis at night. Vengaboys, from Andrew's MIDI: the vocal line
+  // leads, the chorus synth hook fills its gaps, synth-brass riff as harmony.
+  boom,
 };
