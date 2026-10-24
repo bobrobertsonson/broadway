@@ -605,11 +605,41 @@ BG.chicago = {
 BG.chinatown = {
   far(a, S) {
     const { RW, PW, DW, LW } = a;
+    // The Brooklyn and Manhattan bridges over the East River, hazy behind the tenements.
+    const haze = mix(S.fc, S.sk, 0.45), hi = mix(haze, S.sk, 0.4), gap = shade(haze, -0.4);
+    const DECK = 66;
+    // Main cable: from tower top to tower top with a sag, and down to the deck past each tower.
+    const cables = (t0, t1, top, ends) => {
+      const span = t1 - t0;
+      for (let k = 0; k <= span; k++) {
+        const y = Math.round(top + (DECK - 4 - top) * 0.85 * Math.sin(Math.PI * k / span));
+        PW(t0 + k, y, haze);
+        if (k % 4 === 2 && y < DECK) RW(t0 + k, y + 1, 1, DECK - y - 1, hi); // suspenders
+      }
+      for (const [tx, dir] of [[t0, -1], [t1, 1]]) for (let k = 0; k <= ends; k++) PW(tx + dir * k, Math.round(top + (DECK - top) * (k / ends) ** 1.4), haze);
+      RW(t0 - ends, DECK, span + ends * 2, 2, haze); RW(t0 - ends, DECK, span + ends * 2, 1, hi);
+    };
+    // Brooklyn Bridge: granite towers with two pointed Gothic arches each.
+    const stone = (tx) => {
+      RW(tx - 7, 18, 15, DECK - 18 + 6, haze); RW(tx - 8, 18, 17, 2, hi); RW(tx - 7, 22, 15, 1, hi);
+      for (const ax of [tx - 5, tx + 2]) {
+        RW(ax, 30, 4, 18, gap); RW(ax + 1, 28, 2, 2, gap); // tall opening with a pointed top
+      }
+    };
+    // Manhattan Bridge: steel towers, X-braced, with little finials on top.
+    const steel = (tx) => {
+      for (const lx of [tx - 5, tx + 4]) { RW(lx, 14, 2, DECK - 14 + 6, haze); PW(lx, 12, hi); PW(lx + 1, 13, haze); RW(lx, 11, 2, 1, haze); }
+      RW(tx - 5, 14, 11, 2, haze);
+      for (let y = 20; y < DECK - 4; y += 10) { LW(tx - 3, y, tx + 3, y + 8, haze); LW(tx + 3, y, tx - 3, y + 8, haze); RW(tx - 5, y, 11, 1, haze); }
+    };
+    cables(40, 104, 20, 30); stone(40); stone(104);
+    cables(164, 226, 16, 30); steel(164); steel(226);
     const bw = [20, 16, 22, 18, 24, 16, 20, 22, 18, 24, 20, 16, 20];
     const sum = bw.reduce((p, c) => p + c, 0); bw[bw.length - 1] += 256 - sum;
     let x = 0;
     bw.forEach((w, i) => {
-      const hh = 34 + Math.floor(S.r(i, 4, 3) * 34);
+      // Lower than they used to be so the bridge towers show above the rooftops.
+      const hh = 26 + Math.floor(S.r(i, 4, 3) * 26);
       const c = [S.fc, S.fc2, mix(S.fc, S.fc2, 0.5)][i % 3];
       RW(x, 96 - hh, w - 1, hh, c); RW(x, 96 - hh, w - 1, 1, shade(c, 0.2));
       for (let wy = 96 - hh + 4; wy < 92; wy += 5) for (let wx = x + 2; wx < x + w - 2; wx += 4) {
