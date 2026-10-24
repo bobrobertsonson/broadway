@@ -9,7 +9,8 @@ M="${1:?folder with the MIDI files}"
 cd "$(dirname "$0")/.."
 c() { node tools/midi2song.mjs "$M/$1.mid" "$@" | head -1; }
 
-c helicopter --title "Helicopter" --lead 2 --harm 1 --harm-shift -12 --bass 4
+# The guitar fills the vocal gaps (two 8-bar guitar breaks), and doubles an octave down as harmony.
+c helicopter --title "Helicopter" --lead 2,1 --harm 1 --harm-shift -12 --bass 4
 c boom --title "Boom, Boom, Boom, Boom!!" --lead 3,12 --harm 8,4 --harm-shift -12 --bass 1 --harm-vol 0.3
 # Vocal line with the clean guitar filling its gaps (the guitar used to double it as harmony).
 c new-song --title "New Song" --lead 5,3 --harm 4 --bass 1
@@ -21,4 +22,4 @@ c rasputin --title "Rasputin" --lead 1,3 --harm 4 --bass 7
 # The MIDI has no melody for the scat verse (bass and drums only): cut from the loop.
 c scatman --title "Scatman (Ski-Ba-Bop-Ba-Dop-Bop)" --lead 4,3 --harm 2 --bass 6 --cut 19-42
 c lefreak --title "Le Freak" --lead 4,6,5,7 --harm 3 --bass 2 --harm-vol 0.42 --harm-wave pulse25 --gain 1.4
-c cestlavie --title "C'est La Vie" --lead 13,12 --harm 2 --bass 1 --gain 1.18
+c cestlavie --title "C'est La Vie" --lead 13,12,15 --harm 2 --harm-shift -12 --bass 1 --gain 1.18
