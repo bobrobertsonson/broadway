@@ -114,7 +114,7 @@ export class Jukebox extends Phaser.Scene {
 
   refresh() {
     const e = this.entry();
-    ui.banner(e.title, `${e.artist}, ${e.where}`, "", "top");
+    ui.banner(e.title, e.artist, `Plays in the game: ${e.where}`, "top");
     this.hint();
   }
 
