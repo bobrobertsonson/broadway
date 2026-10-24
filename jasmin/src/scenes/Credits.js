@@ -64,7 +64,7 @@ export class Credits extends Phaser.Scene {
   showNext() {
     if (this.i >= this.lines.length) {
       this.finished = true;
-      ui.banner("The end", "", `${controls.hint("confirm")} to return to the map`);
+      ui.banner("The end", "", `${controls.hint("confirm")} to return to the title`);
       return;
     }
     const line = this.lines[this.i++];
@@ -92,7 +92,7 @@ export class Credits extends Phaser.Scene {
     controls.update();
     if ((controls.confirmed() || this.tapped) && this.finished && !this.leaving) {
       this.leaving = true;
-      ui.fade(true, 400).then(() => { ui.clearAll(); this.scene.start("WorldMap", {}); ui.fade(false, 400); });
+      ui.fade(true, 400).then(() => { ui.clearAll(); this.scene.start("Title", { unlocked: true }); ui.fade(false, 400); });
     }
     this.tapped = false;
   }

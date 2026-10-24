@@ -11,8 +11,9 @@ import { makeLogoTexture, makeSparkleTextures } from "../logo.js";
 export class Title extends Phaser.Scene {
   constructor() { super("Title"); }
 
-  init() {
+  init(data) {
     fresh(this);
+    this.unlocked = data?.unlocked;
   }
 
   create() {
@@ -49,17 +50,32 @@ export class Title extends Phaser.Scene {
     this.add.sprite(width / 2, height - 16, key).setOrigin(0.5, 1).play(animKey(key, "idle"));
 
     const full = document.fullscreenElement || document.webkitFullscreenElement;
-    ui.banner("", "", controls.isTouch ? "Tap to start" : "Press Start", "bottom");
+    // After the game is beaten: a choice between playing and the jukebox.
+    this.menu = game.save.beaten ? ["Play", "Jukebox"] : null;
+    this.sel = 0;
+    if (this.menu && this.unlocked) ui.caption("New", "The jukebox is open: every song in the game", 6000);
+    if (this.menu) this.drawMenu();
+    else ui.banner("", "", controls.isTouch ? "Tap to start" : "Press Start", "bottom");
     if (!controls.isTouch && !full) ui.setHud([{ text: "F for full screen", tip: true }]);
-    this.input.on("pointerdown", (ptr) => { if (!ui.hitsButton(ptr)) this.start(); });
+    this.input.on("pointerdown", (ptr) => {
+      if (ui.hitsButton(ptr)) return;
+      if (this.menu) this.sel = ptr.x < width / 2 ? 0 : 1;
+      this.start();
+    });
     const restart = () => this.scene.restart();
     this.scale.once("resize", restart);
     this.events.once("shutdown", () => this.scale.off("resize", restart));
     startMusic("scatman");
   }
 
+  drawMenu() {
+    const { width, height } = this.scale;
+    this.menu.forEach((m, i) => ui.label(`menu${i}`, i === this.sel ? `> ${m} <` : m, width / 2 + (i ? 45 : -45), height - 3, i === this.sel ? "sel" : ""));
+  }
+
   update() {
     controls.update();
+    if (this.menu && (controls.pressed("left") || controls.pressed("right"))) { this.sel = 1 - this.sel; this.drawMenu(); }
     if (controls.confirmed()) this.start();
   }
 
@@ -68,6 +84,8 @@ export class Title extends Phaser.Scene {
     this.starting = true;
     await ui.fade(true, 300);
     ui.hideBanner();
+    ui.clearLabels();
+    if (this.menu && this.sel === 1) { this.scene.start("Jukebox", {}); ui.fade(false, 300); return; }
     // First time: the Nairobi intro. After that: the map.
     const introDone = game.save.done.includes("0-1");
     this.scene.start(introDone && isUnlocked("1-1") ? "WorldMap" : "Intro", {});

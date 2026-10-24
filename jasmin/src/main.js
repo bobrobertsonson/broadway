@@ -8,6 +8,7 @@ import { Level } from "./scenes/Level.js";
 import { Credits } from "./scenes/Credits.js";
 import { Intro } from "./scenes/Intro.js";
 import { Ending } from "./scenes/Ending.js";
+import { Jukebox } from "./scenes/Jukebox.js";
 import { UI } from "./scenes/UI.js";
 import { state as uiState } from "./ui.js";
 
@@ -41,7 +42,7 @@ const config = {
   input: { activePointers: 3, gamepad: true },
   fps: { target: 60 },
   // UI is last so the text overlay renders above every other scene.
-  scene: [Boot, Title, Intro, WorldMap, Level, Ending, Credits, UI],
+  scene: [Boot, Title, Intro, WorldMap, Level, Ending, Credits, Jukebox, UI],
 };
 
 const phaser = new Phaser.Game(config);

@@ -357,3 +357,12 @@ export function musicState() {
 export function trackList() {
   return [...Object.keys(SONGS).map((k) => ({ key: k, title: SONGS[k].title, song: true })), ...Object.keys(TRACKS).map((k) => ({ key: k, title: k, song: false }))];
 }
+
+// Tempo and loop length (seconds; null for the original tracks, which loop short
+// patterns) of a track, for the jukebox.
+export function trackInfo(key) {
+  const s = SONGS[key], d = TRACKS[key];
+  if (s) return { bpm: s.bpm, title: s.title, secs: (s.loopBeats * 60) / s.bpm };
+  if (d) return { bpm: d.bpm, title: key, secs: null };
+  return null;
+}

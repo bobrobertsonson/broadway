@@ -36,3 +36,22 @@ export const SONGS = {
   lefreak,    // credits (CHIC)
   cestlavie,  // ending: inventory, fog, naming World 9 (B*Witched)
 };
+
+// The post-game jukebox, in story order. Real songs first, then the game's own
+// tracks that still play somewhere. `where` is shown on screen.
+export const JUKEBOX = [
+  { key: "scatman", artist: "Scatman John", where: "Title screen and map" },
+  { key: "credits", title: "Nairobi", artist: "Original", where: "The beginning" },
+  { key: "helicopter", artist: "Bloc Party", where: "London" },
+  { key: "minneapolis", title: "Minneapolis", artist: "Original", where: "Minneapolis" },
+  { key: "boom", artist: "Vengaboys", where: "Meeting at the lake" },
+  { key: "new-song", artist: "Warpaint", where: "Chicago" },
+  { key: "ride", artist: "Black Box", where: "New York" },
+  { key: "bzrp53", title: "Bzrp Music Sessions, Vol. 53", artist: "Bizarrap and Shakira", where: "South America" },
+  { key: "sendoff", title: "Send-off", artist: "Original", where: "Saying goodbye to Rupert" },
+  { key: "daddycool", artist: "Boney M.", where: "Brooklyn" },
+  { key: "building", title: "The New Building", artist: "Original", where: "The new building" },
+  { key: "rasputin", artist: "Boney M.", where: "The fire boss" },
+  { key: "cestlavie", artist: "B*Witched", where: "The ending" },
+  { key: "lefreak", artist: "CHIC", where: "The credits" },
+];

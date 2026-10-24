@@ -9,7 +9,7 @@ export const game = {
   save: null,
 };
 
-const DEFAULT_SAVE = { done: [], outfit: "black", outfitsUnlocked: ["black"], lastLevel: null, world9: "" };
+const DEFAULT_SAVE = { done: [], outfit: "black", outfitsUnlocked: ["black"], lastLevel: null, world9: "", beaten: false };
 
 export function loadSave() {
   try {

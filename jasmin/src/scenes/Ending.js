@@ -208,6 +208,9 @@ export class Ending extends Phaser.Scene {
 
   finish() {
     ui.hideCaption();
+    // Finishing the game unlocks the jukebox on the title screen.
+    game.save.beaten = true;
+    writeSave();
     ui.fade(true, 600).then(() => {
       ui.clearAll();
       this.scene.start("Credits", {});
