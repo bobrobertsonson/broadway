@@ -428,7 +428,8 @@ export class Southamerica {
       const ts = L.add.tileSprite(c0 * T, row * T, (c1 - c0) * T, 14, "sa-papel").setOrigin(0, 0).setDepth(3);
       this.papel.push({ ts, ph: this.papel.length * 1.7 });
     };
-    bannerAt(4, 31, 8); bannerAt(44, 76, 7); bannerAt(78, 96, 8);
+    // Rows 9-10: higher up they ran through the HUD at phone size.
+    bannerAt(4, 31, 10); bannerAt(44, 76, 9); bannerAt(78, 96, 10);
     [[12, 0], [24, 1], [46, 2], [53, 0], [69, 2], [82, 0], [90, 1]].forEach(([c, v]) => this.at(`sa-wall-${v}`, c - 1, 0.6, 8));
     [6, 17, 21, 29, 47, 57, 73, 78, 88].forEach((c) => this.at("sa-agave", c, 1));
     [11, 52, 67, 93].forEach((c) => this.at("sa-agave2", c, 1));

@@ -162,9 +162,33 @@ export class Level extends Phaser.Scene {
     this.layer.forEachTile((tile) => {
       if (tile.index === TILE.oneway) tile.setCollision(false, false, true, false);
     });
+    this.shadePits();
     this.waterImgs = this.water.map((w) => this.add.image(w.x * T, w.y * T, "tile-water").setOrigin(0).setDepth(12).setAlpha(0.75));
     this.physics.world.setBounds(0, -200, this.mapW, this.mapH + 400);
     this.physics.world.checkCollision.down = false;
+  }
+
+  // Pits would show the sky's bottom color, which in sunset or brick-toned levels
+  // reads as solid floor. A dark void behind the tiles makes every hole look like one.
+  shadePits() {
+    const solid = (x, y) => "#=%~_".includes(this.cell(x, y));
+    // Top of the solid block that reaches the bottom of the map (rowsN if none).
+    const groundTop = (x) => { let r = this.rowsN; while (r > 0 && solid(x, r - 1)) r--; return r; };
+    const isPit = (x) => !solid(x, this.rowsN - 1) && !this.water.some((w) => w.x === x);
+    const g = this.add.graphics().setDepth(1);
+    for (let x = 0; x < this.colsN; x++) {
+      if (!isPit(x)) continue;
+      let b = x;
+      while (b + 1 < this.colsN && isPit(b + 1)) b++;
+      const edges = [x - 1, b + 1].filter((c) => c >= 0 && c < this.colsN).map(groundTop).filter((r) => r < this.rowsN);
+      if (edges.length) {
+        const top = Math.min(...edges) * T + 3, w = (b - x + 1) * T;
+        g.fillGradientStyle(0x141012, 0x141012, 0x141012, 0x141012, 0.45, 0.45, 0.92, 0.92);
+        g.fillRect(x * T, top, w, 18);
+        g.fillStyle(0x141012, 0.92).fillRect(x * T, top + 18, w, this.mapH + 64 - top);
+      }
+      x = b;
+    }
   }
 
   buildBackground() {
