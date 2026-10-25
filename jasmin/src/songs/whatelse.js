@@ -1,6 +1,6 @@
 // What Else Is There?: chiptune arrangement made with tools/midi2song.mjs from whatelse.mid.
 // Parts: lead #2, harmony #1, bass #1, drums -.
-export default {"title":"What Else Is There?","bpm":110,"loopBeats":236,"voices":[{"role":"lead","wave":"pulse25","vol":0.32,"notes":[[1.5,0.5,73],
+export default {"title":"What Else Is There?","bpm":110,"loopBeats":236,"src":[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60],"voices":[{"role":"lead","wave":"pulse25","vol":0.32,"notes":[[1.5,0.5,73],
 [2,0.5,80],
 [2.5,0.5,80],
 [3,0.5,76],

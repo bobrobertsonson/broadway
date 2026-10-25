@@ -1,6 +1,6 @@
 // Scatman (Ski-Ba-Bop-Ba-Dop-Bop): chiptune arrangement made with tools/midi2song.mjs from scatman.mid.
 // Parts: lead #4+3, harmony #2, bass #6, drums #8.
-export default {"title":"Scatman (Ski-Ba-Bop-Ba-Dop-Bop)","bpm":136,"loopBeats":288,"voices":[{"role":"lead","wave":"pulse25","vol":0.32,"notes":[[2.3333333333333335,0.3541666666666667,65],
+export default {"title":"Scatman (Ski-Ba-Bop-Ba-Dop-Bop)","bpm":136,"loopBeats":288,"src":[82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177],"voices":[{"role":"lead","wave":"pulse25","vol":0.32,"notes":[[2.3333333333333335,0.3541666666666667,65],
 [2.8333333333333335,0.3125,65],
 [3.3333333333333335,0.5,68],
 [4.333333333333333,0.9166666666666666,65],

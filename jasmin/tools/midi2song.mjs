@@ -17,6 +17,7 @@
 //                                instrumental stretch the MIDI has no melody for
 //   --lead-shift N --harm-shift N --bass-shift N   shift one voice by N semitones (e.g. -12 to keep a
 //                                bright chord part under the melody)
+//   --out DIR                    write the song module to DIR instead of src/songs/
 //   --gain G                     overall level of the song (default 1), to match the other songs
 //   --transpose N                shift every pitched note by N semitones
 //   --bpm N                      override the tempo
@@ -188,11 +189,15 @@ if (beat && !drums) {
 const firstBeat = Math.min(...voices.flatMap((v) => (v.notes || v.hits).map((e) => e[0])));
 const lead0 = Math.floor(firstBeat / beatsPerBar) * beatsPerBar;
 if (lead0 > 0) for (const v of voices) for (const e of v.notes || v.hits) e[0] = q(e[0] - lead0);
+// Which MIDI bar (1-based) each output bar came from, kept as song.src for the song editor page.
+const fromBar = Math.round(from / beatsPerBar);
+let srcBars = Array.from({ length: 4096 }, (_, i) => fromBar + i + 1).slice(Math.round(lead0 / beatsPerBar));
 
 // --cut: drop whole bars of the output and close the gap (latest range first so earlier bars keep their numbers).
 const cuts = String(opt("cut", "")).split(",").filter(Boolean).map((r) => r.split("-").map(Number))
   .map(([a, b]) => [(a - 1) * beatsPerBar, (b || a) * beatsPerBar]).sort((x, y) => y[0] - x[0]);
 for (const [c0, c1] of cuts) {
+  srcBars.splice(Math.round(c0 / beatsPerBar), Math.round((c1 - c0) / beatsPerBar));
   for (const v of voices) {
     const key = v.notes ? "notes" : "hits";
     v[key] = v[key].filter((e) => e[0] < c0 || e[0] >= c1).map((e) => {
@@ -205,9 +210,9 @@ for (const [c0, c1] of cuts) {
 
 const last = Math.max(0, ...voices.flatMap((v) => (v.notes || v.hits).map((e) => e[0] + (e[1] > 0 ? e[1] : 0))));
 const loopBeats = Math.max(beatsPerBar, Math.ceil(last / beatsPerBar) * beatsPerBar);
-const song = { title: opt("title", key), bpm, loopBeats, ...(opt("gain") ? { gain: Number(opt("gain")) } : {}), voices };
+const song = { title: opt("title", key), bpm, loopBeats, ...(opt("gain") ? { gain: Number(opt("gain")) } : {}), src: srcBars.slice(0, Math.round(loopBeats / beatsPerBar)), voices };
 
-const out = path.join(path.dirname(new URL(import.meta.url).pathname), "..", "src", "songs", `${key}.js`);
+const out = opt("out") ? path.join(opt("out"), `${key}.js`) : path.join(path.dirname(new URL(import.meta.url).pathname), "..", "src", "songs", `${key}.js`);
 const body = JSON.stringify(song).replace(/\],\[/g, "],\n[");
 fs.writeFileSync(out, `// ${song.title}: chiptune arrangement made with tools/midi2song.mjs from ${path.basename(file)}.\n// Parts: lead ${lead ? `#${lead.n}` : "-"}, harmony ${harm ? `#${harm.n}` : "-"}, bass ${bass ? `#${bass.n}` : "-"}, drums ${drums ? `#${drums.n}` : "-"}.\nexport default ${body};\n`);
 console.log(`wrote ${out}: ${bpm} bpm, ${loopBeats / beatsPerBar} bars, ${voices.map((v) => `${v.role} ${(v.notes || v.hits).length}`).join(", ")}`);
