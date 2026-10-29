@@ -55,7 +55,7 @@ export const JUKEBOX = [
   { key: "ride", artist: "Black Box", where: "New York, Chinatown" },
   { key: "sendoff", title: "Send-off", artist: "Original", where: "saying goodbye to Rupert" },
   { key: "bzrp53", title: "Bzrp Music Sessions, Vol. 53", artist: "Bizarrap and Shakira", where: "South America" },
-  { key: "proposal", title: "Candlelight", artist: "Original", where: "Argentina" },
+  { key: "whatislove", artist: "Haddaway", where: "the proposal in Argentina" },
   { key: "daddycool", artist: "Boney M.", where: "Brooklyn" },
   { key: "thunderstruck", artist: "AC/DC", where: "the new building" },
   { key: "rasputin", artist: "Boney M.", where: "the fire boss" },
@@ -64,5 +64,4 @@ export const JUKEBOX = [
   // Bonus tracks: in the jukebox only, until Andrew picks a place for them.
   { key: "wannabe", artist: "Spice Girls", bonus: true },
   { key: "battlefield", artist: "Pat Benatar", bonus: true },
-  { key: "whatislove", artist: "Haddaway", bonus: true },
 ];

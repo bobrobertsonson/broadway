@@ -1052,7 +1052,7 @@ export class Level extends Phaser.Scene {
       this.unfreeze();
     };
     this.startCut(finish);
-    startMusic("proposal");
+    startMusic("whatislove"); // Andrew: the proposal uses one of the bonus songs; it opens on the bare "What is love?" vocal
     this.cutTween({ targets: this.night, alpha: 0.5, duration: 1200 });
     p.sprite.setFlipX(false);
     if (m) {

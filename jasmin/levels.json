@@ -276,8 +276,8 @@
         {
           "id": "5-1",
           "startCaption": {
-            "text": "One year. Seven countries. One baby.",
-            "draft": true
+            "text": "One year, eleven countries, one baby, a million grey hairs.",
+            "draft": false
           },
           "segments": [
             {
@@ -461,10 +461,6 @@
     {
       "text": "Co-starring Isaac, Aya, Nube, and Jennifer the egg.",
       "draft": false
-    },
-    {
-      "text": "Special guest: Tim, all the way from Seattle.",
-      "draft": true
     },
     {
       "text": "Rupert, happy in his new home.",

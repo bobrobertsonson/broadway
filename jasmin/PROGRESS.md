@@ -265,6 +265,7 @@ Colors still come from each outfit's palette (new slots: C2 for a second color, 
 **Songs:** Scatman has Andrew's cuts from the song cutter (bars 56-60 and 70-84 out). Shakira saved with no cuts (unchanged).
 
 **Still Andrew's call (the game works as is):**
-- Five lines still marked draft, shown as written: London skill "An eye for style", outfit names "Chicago look" and "New York look", South America start "One year. Seven countries. One baby.", credits "Special guest: Tim, all the way from Seattle."
-- Where Wannabe, Love Is a Battlefield and What Is Love go (jukebox bonus tracks for now).
-- A real song for the Argentina proposal (original "Candlelight" for now).
+- Three lines still marked draft, shown as written: London skill "An eye for style", outfit names "Chicago look" and "New York look".
+- Where Wannabe and Love Is a Battlefield go (jukebox bonus tracks for now).
+
+**Andrew's answers (Oct 29):** the Argentina proposal plays What Is Love (one of the unused songs; Claude's pick, it opens on the bare vocal). Tim is no longer named anywhere: the credits line is gone, he is only seen on screen in the Galapagos. South America opens with "One year, eleven countries, one baby, a million grey hairs."
