@@ -31,7 +31,11 @@ Progress is saved in the browser. Reset: run `localStorage.clear()` in the brows
 
 ## Playing on a TV from a Mac (HDMI + controller)
 
-**Easiest: double-click `Play on TV.command`** (in the game folder). It serves the game from the folder and opens Google Chrome full screen with sound allowed, so the controller works straight away with no key press. Quit with Cmd+Q. Chrome opens on the Mac's main display, so first make the TV the main display: System Settings > Displays > Arrange, then drag the menu bar onto the TV. It needs Python 3 or Node.js on the Mac, or set `ONLINE_URL` inside the file to the game's GitHub Pages address. If macOS says it can't open the file, right-click it > Open once.
+**Easiest: double-click `Play on TV.command`** (in the game folder). It opens `Super Jasmin World 3.html` (the whole game in one file) in Google Chrome full screen with sound allowed, so the controller works straight away with no key press. Nothing to install: no Python, no Node, no internet. Quit with Cmd+Q. Chrome opens on the Mac's main display, so first make the TV the main display: System Settings > Displays > Arrange, then drag the menu bar onto the TV. If macOS says it can't open the file, right-click it > Open once.
+
+**Even simpler:** double-click `Super Jasmin World 3.html` itself. It opens in the default browser (Chrome is best); press F for full screen and click once so sound can start.
+
+The single file is built from the source: after changing anything in `src/` or `levels.json`, run `node tools/build-single.mjs` to rebuild it.
 
 Setup, once, in this order:
 

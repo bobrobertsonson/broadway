@@ -7,7 +7,10 @@ export class Boot extends Phaser.Scene {
   constructor() { super("Boot"); }
 
   preload() {
-    this.load.json("content", "levels.json");
+    // The single-file build ("Super Jasmin World 3.html") embeds levels.json, since a page
+    // opened from Finder (file://) can't fetch it.
+    if (window.__LEVELS) this.cache.json.add("content", window.__LEVELS);
+    else this.load.json("content", "levels.json");
     preloadArtOverrides(this);
   }
 

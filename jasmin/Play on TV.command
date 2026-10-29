@@ -1,35 +1,38 @@
 #!/bin/bash
 # Super Jasmin World 3: A New Magic, Mac launcher.
-# Double-click this file in Finder. It serves the game from this folder and opens it in
-# Google Chrome full screen (kiosk mode) with sound allowed, so no key press or click is
-# needed before the controller works. Quit with Cmd+Q.
+# Double-click this file in Finder. It opens Super Jasmin World 3.html (the whole game in one
+# file, next to this one) in Google Chrome full screen (kiosk mode) with sound allowed, so no
+# key press or click is needed before the controller works. Nothing to install. Quit with Cmd+Q.
 #
 # Chrome opens on the Mac's *main* display. To play on the TV, make the TV the main
 # display first: System Settings > Displays > Arrange, drag the menu bar onto the TV.
 
 cd "$(dirname "$0")" || exit 1
-PORT=8765
-URL="http://localhost:$PORT/"
-# Optional: the GitHub Pages address of the game, used if no local server can start.
-ONLINE_URL=""
-
 SERVER_PID=""
-# Use python3 only if it is a real install (Apple's /usr/bin/python3 stub pops up an
-# installer when the developer tools are missing).
-if command -v python3 >/dev/null 2>&1 && { [ "$(command -v python3)" != "/usr/bin/python3" ] || xcode-select -p >/dev/null 2>&1; }; then
-  python3 -m http.server "$PORT" --bind 127.0.0.1 >/dev/null 2>&1 &
-  SERVER_PID=$!
-elif command -v npx >/dev/null 2>&1; then
-  npx --yes http-server -p "$PORT" -a 127.0.0.1 -c-1 -s &
-  SERVER_PID=$!
-elif [ -n "$ONLINE_URL" ]; then
-  URL="$ONLINE_URL"
-else
-  osascript -e 'display alert "Cannot start the game" message "Install Python 3 or Node.js, or set ONLINE_URL in Play on TV.command to the GitHub Pages address."'
-  exit 1
-fi
 trap '[ -n "$SERVER_PID" ] && kill "$SERVER_PID" 2>/dev/null' EXIT
-sleep 1
+
+# The single-file build opens straight from disk: no web server, nothing to install.
+SINGLE="Super Jasmin World 3.html"
+if [ -f "$SINGLE" ]; then
+  URL="file://$(pwd | sed 's/ /%20/g')/$(echo "$SINGLE" | sed 's/ /%20/g')"
+else
+  # Fallback: serve the folder (needs Python 3 or Node.js).
+  PORT=8765
+  URL="http://localhost:$PORT/"
+  # Use python3 only if it is a real install (Apple's /usr/bin/python3 stub pops up an
+  # installer when the developer tools are missing).
+  if command -v python3 >/dev/null 2>&1 && { [ "$(command -v python3)" != "/usr/bin/python3" ] || xcode-select -p >/dev/null 2>&1; }; then
+    python3 -m http.server "$PORT" --bind 127.0.0.1 >/dev/null 2>&1 &
+    SERVER_PID=$!
+  elif command -v npx >/dev/null 2>&1; then
+    npx --yes http-server -p "$PORT" -a 127.0.0.1 -c-1 -s &
+    SERVER_PID=$!
+  else
+    osascript -e 'display alert "Cannot start the game" message "Super Jasmin World 3.html is missing from this folder."'
+    exit 1
+  fi
+  sleep 1
+fi
 
 CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 if [ -x "$CHROME" ]; then
