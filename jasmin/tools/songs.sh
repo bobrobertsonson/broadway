@@ -19,8 +19,8 @@ c ride --title "Ride On Time" --lead 11,6 --harm 3,4 --harm-shift -12 --bass 1 -
 c bzrp53 --title "Shakira: Bzrp Music Sessions, Vol. 53" --lead 1 --bass 2 --no-harm --beat house
 c daddycool --title "Daddy Cool" --lead 1,3 --lead-shift 12 --harm 5 --harm-shift -12 --bass 7 --bars 8-108
 c rasputin --title "Rasputin" --lead 1,3 --harm 4 --bass 7
-# The MIDI has no melody for the scat verse (bass and drums only): cut from the loop.
-c scatman --title "Scatman (Ski-Ba-Bop-Ba-Dop-Bop)" --lead 4,3 --harm 2 --bass 6 --cut 19-42
+# The MIDI has no melody for the scat verse (bass and drums only): cut from the loop. 56-60 and 70-84: Andrew's cuts (song cutter page).
+c scatman --title "Scatman (Ski-Ba-Bop-Ba-Dop-Bop)" --lead 4,3 --harm 2 --bass 6 --cut 19-42,56-60,70-84
 c lefreak --title "Le Freak" --lead 4,6,5,7 --harm 3 --bass 2 --harm-vol 0.42 --harm-wave pulse25 --gain 1.4
 c cestlavie --title "C'est La Vie" --lead 13,12,15 --harm 2 --harm-shift -12 --bass 1 --gain 1.18
 # Minneapolis. Two parts only (melody, pulsing chords): the chords give harmony (top) and bass (bottom).
