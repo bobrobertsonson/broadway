@@ -198,8 +198,10 @@ export class UI extends Phaser.Scene {
   rowsBlock(rows) {
     const cont = this.add.container(0, 0);
     const lefts = rows.map(([a]) => this.text(a, "small", GOLD));
-    const rights = rows.map(([, b]) => this.text(b));
     const lw = Math.max(...lefts.map((t) => t.width)) + 8;
+    // A long right-hand line wraps into balanced lines so the block stays on screen (TV is 320 px wide).
+    const maxR = Math.max(60, this.W - 2 * Math.max(8, this.safe.x) - lw);
+    const rights = rows.map(([, b]) => this.text(balanceLines(b, maxR)));
     const rw = Math.max(...rights.map((t) => t.width));
     let y = 0;
     rows.forEach((_, i) => {
