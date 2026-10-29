@@ -15,7 +15,7 @@ const [key, secs, out] = [process.argv[2], Number(process.argv[3]), process.argv
     const noiseBuf = ctx.createBuffer(1, sr, sr); const nd = noiseBuf.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
     const hz = (m) => 440 * Math.pow(2, (m - 69) / 12);
     const pulses = {};
-    const wave = (o, type) => { if (type.startsWith('pulse')) { if (!pulses[type]) { const d = type === 'pulse12' ? 0.125 : 0.25, n = 48, re = new Float32Array(n), im = new Float32Array(n); for (let k = 1; k < n; k++) re[k] = (2 / (k * Math.PI)) * Math.sin(k * Math.PI * d); pulses[type] = ctx.createPeriodicWave(re, im); } o.setPeriodicWave(pulses[type]); } else o.type = type; };
+    const wave = (o, type) => { /* keep the bass in step with wave() in src/audio.js */ if (type === 'bass') { if (!pulses.bass) { const n = 13, re = new Float32Array(n), im = new Float32Array(n); for (let k = 1; k < n; k++) { const tri = k % 2 ? 8 / (Math.PI * Math.PI * k * k) * (((k - 1) / 2) % 2 ? -1 : 1) : 0; im[k] = tri + (k > 1 ? 0.35 / k : 0); } pulses.bass = ctx.createPeriodicWave(re, im); } o.setPeriodicWave(pulses.bass); return; } if (type.startsWith('pulse')) { if (!pulses[type]) { const d = type === 'pulse12' ? 0.125 : 0.25, n = 48, re = new Float32Array(n), im = new Float32Array(n); for (let k = 1; k < n; k++) re[k] = (2 / (k * Math.PI)) * Math.sin(k * Math.PI * d); pulses[type] = ctx.createPeriodicWave(re, im); } o.setPeriodicWave(pulses[type]); } else o.type = type; };
     const held = (type, f, t, dur, vol) => { const o = ctx.createOscillator(), g = ctx.createGain(); wave(o, type); o.frequency.setValueAtTime(f, t); const end = t + Math.max(0.04, dur);
       g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + 0.006); g.gain.setValueAtTime(vol * 0.8, Math.max(t + 0.007, end - 0.03)); g.gain.linearRampToValueAtTime(0.0001, end); o.connect(g); g.connect(bus); o.start(t); o.stop(end + 0.02); };
     const tone = (type, f0, f1, t, dur, vol) => { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.setValueAtTime(f0, t); if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
@@ -27,7 +27,7 @@ const [key, secs, out] = [process.argv[2], Number(process.argv[3]), process.argv
     const spb = 60 / song.bpm;
     for (const v of song.voices) for (const e of (v.notes || v.hits)) {
       const t = 0.05 + e[0] * spb; if (t > secs - 0.2) continue;
-      if (v.hits) drum(e[1], t); else held(v.wave || 'square', hz(e[2]), t, e[1] * spb * 0.95, v.vol ?? 0.4);
+      if (v.hits) drum(e[1], t); else held(v.role === 'bass' && v.wave === 'triangle' ? 'bass' : v.wave || 'square', hz(e[2]), t, e[1] * spb * 0.95, v.vol ?? 0.4);
     }
     const buf = await ctx.startRendering();
     const ch = buf.getChannelData(0); let peak = 0; for (const x of ch) peak = Math.max(peak, Math.abs(x));

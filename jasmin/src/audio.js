@@ -42,7 +42,7 @@ export function setMuted(m) {
 // One enveloped oscillator. f1 != f0 sweeps exponentially. `set` collects it for cleanup.
 function tone(type, f0, f1, t, dur, vol, dest, set) {
   const o = ctx.createOscillator(), g = ctx.createGain();
-  o.type = type;
+  wave(o, type);
   o.frequency.setValueAtTime(f0, t);
   if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
   g.gain.setValueAtTime(0.0001, t);
@@ -233,7 +233,7 @@ function tick() {
       const i = c.i % c.mel.length, t = c.next, d = c.def;
       const m = c.mel[i], b = c.bass[i];
       if (m) tone(d.wave, hz(m.m), hz(m.m), t, Math.max(0.06, m.len * c.step * 0.92), d.mv, c.tg, c.oscs);
-      if (b) tone(d.bw || 'triangle', hz(b.m), hz(b.m), t, Math.max(0.06, b.len * c.step * 0.9), d.bv ?? 0.9, c.tg, c.oscs);
+      if (b) tone(d.bw || 'bass', hz(b.m), hz(b.m), t, Math.max(0.06, b.len * c.step * 0.9), d.bv ?? 0.9, c.tg, c.oscs);
       const h = c.harm && c.harm[i % c.harm.length];
       if (h) tone(d.hw || 'triangle', hz(h.m), hz(h.m), t, Math.max(0.06, h.len * c.step * 0.92), d.hv ?? 0.4, c.tg, c.oscs);
       const k = c.drum && c.drum[i % c.drum.length];
@@ -255,6 +255,19 @@ function wave(o, type) {
       pulses[type] = ctx.createPeriodicWave(re, im);
     }
     o.setPeriodicWave(pulses[type]);
+  } else if (type === 'bass') {
+    // The bass voice: a triangle body (odd harmonics, 1/k^2) plus a soft sawtooth's upper
+    // harmonics (2nd to 12th), so the notes still carry on TV and laptop speakers, which
+    // barely play the fundamental of a low triangle.
+    if (!pulses.bass) {
+      const n = 13, re = new Float32Array(n), im = new Float32Array(n);
+      for (let k = 1; k < n; k++) {
+        const tri = k % 2 ? 8 / (Math.PI * Math.PI * k * k) * (((k - 1) / 2) % 2 ? -1 : 1) : 0;
+        im[k] = tri + (k > 1 ? BASS_BRIGHT / k : 0);
+      }
+      pulses.bass = ctx.createPeriodicWave(re, im);
+    }
+    o.setPeriodicWave(pulses.bass);
   } else o.type = type;
 }
 
@@ -284,7 +297,7 @@ function songTick(c) {
         if (t >= horizon) { pending = true; break; }
         if (t > now - 0.05) {
           if (v.hits) drum(e[1], t, c);
-          else held(v.wave || 'square', hz(e[2]), t, e[1] * spb * 0.95, v.vol ?? 0.4, c.tg, c.oscs);
+          else held(v.role === 'bass' && v.wave === 'triangle' ? 'bass' : v.wave || 'square', hz(e[2]), t, e[1] * spb * 0.95, v.vol ?? 0.4, c.tg, c.oscs);
         }
         v.i++;
       }
@@ -296,6 +309,9 @@ function songTick(c) {
     for (const v of c.voices) v.i = 0;
   }
 }
+
+// Upper-harmonic strength of the bass voice (Andrew: bass more audible; 0 = plain triangle).
+const BASS_BRIGHT = 0.35;
 
 // Drum level for every song and track (Andrew: drums louder; was 1).
 const DRUMS = 1.8;
