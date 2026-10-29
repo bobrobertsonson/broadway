@@ -153,8 +153,8 @@
       "title": "Chicago",
       "outfit": {
         "name": {
-          "text": "Chicago look",
-          "draft": true
+          "text": "Chicago Chic",
+          "draft": false
         },
         "palette": {
           "C": "#1f8a8a",

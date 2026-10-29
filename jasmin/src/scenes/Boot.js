@@ -19,7 +19,7 @@ export class Boot extends Phaser.Scene {
     game.outfits = collectOutfits(game.content);
     loadSave();
     // Outfits renamed after saves already existed.
-    const RENAMED = { "London look": "Double Jeans" };
+    const RENAMED = { "London look": "Double Jeans", "Chicago look": "Chicago Chic" };
     game.save.outfitsUnlocked = game.save.outfitsUnlocked.map((n) => RENAMED[n] || n);
     game.save.outfit = RENAMED[game.save.outfit] || game.save.outfit;
     if (!game.outfits[game.save.outfit]) game.save.outfit = "black";
