@@ -203,8 +203,8 @@
       "title": "NYC Chinatown",
       "outfit": {
         "name": {
-          "text": "New York look",
-          "draft": true
+          "text": "Manhattan Mode",
+          "draft": false
         },
         "palette": {
           "C": "#a33b5e",
