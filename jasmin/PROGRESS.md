@@ -247,3 +247,24 @@ Colors still come from each outfit's palette (new slots: C2 for a second color, 
 4. Should the "Nairobi" intro show anything of her as a baby? Right now it's a star settling over the savanna. I didn't want to invent that.
 5. Do you want a real Kenney tileset dropped in, or keep the drawn placeholders?
 6. All 56 captions are still drafts. Which should I change before you approve them?
+
+## Finish line (Oct 29, Andrew asleep)
+
+**How she plays it:** download the repo (branch `jasmin-game`) as a zip, open the `jasmin` folder on the Mac, double-click `Play on TV.command` (or `Super Jasmin World 3.html` itself). `Super Jasmin World 3.html` is the whole game in one 2.7 MB file (Phaser, code, levels, styles, songs), built by `node tools/build-single.mjs`. It opens from Finder (file://), offline, with no web server, Python or Node. The launcher opens it in Chrome kiosk mode with sound allowed, so the controller works with no key press. Rebuild the file after any change to `src/` or `levels.json`.
+
+**Checked on the single file** (headless Chromium, 1920x1080, simulated controllers):
+- Xbox pad: title, intro, map, London; stick and d-pad move; A jumps, holding A glides with the hat; Start pauses (and the stick does nothing while paused) and resumes; B from pause goes to the map; B on the map goes to the title.
+- X fires every power: pen (draws a platform), Bullshitometer, dash, spark.
+- World 9 naming with the pad's letter grid: typed and saved.
+- PlayStation pad: Play / Jukebox menu on the title, the jukebox (choose, stop, back), hints use ✕ / ○.
+- Window blur pauses; F goes full screen; the mouse pointer hides when idle.
+- Full scripted run: title, Nairobi, every level, the fire boss, the ending, the credits, back to the title (jukebox unlocked). Zero errors.
+
+**Not checked:** a real Bluetooth controller on a real Mac and TV. Do one full test run on the actual setup before the 30th.
+
+**Songs:** Scatman has Andrew's cuts from the song cutter (bars 56-60 and 70-84 out). Shakira saved with no cuts (unchanged).
+
+**Still Andrew's call (the game works as is):**
+- Five lines still marked draft, shown as written: London skill "An eye for style", outfit names "Chicago look" and "New York look", South America start "One year. Seven countries. One baby.", credits "Special guest: Tim, all the way from Seattle."
+- Where Wannabe, Love Is a Battlefield and What Is Love go (jukebox bonus tracks for now).
+- A real song for the Argentina proposal (original "Candlelight" for now).
