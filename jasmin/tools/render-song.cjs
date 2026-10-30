@@ -4,11 +4,14 @@
 const { chromium } = require('/opt/node22/lib/node_modules/playwright');
 const fs = require('fs');
 const [key, secs, out] = [process.argv[2], Number(process.argv[3]), process.argv[4]];
+// RENDER_GAIN=n: scale every song by the same amount instead of normalizing each to its peak,
+// so renders keep the game's relative loudness (for previews that should match each other).
+const fixed = Number(process.env.RENDER_GAIN || 0);
 (async () => {
   const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   const p = await b.newPage();
   await p.goto('http://localhost:8124/gallery.html');
-  const data = await p.evaluate(async ([key, secs]) => {
+  const data = await p.evaluate(async ([key, secs, fixed]) => {
     const song = (await import(`./src/songs/${key}.js`)).default;
     const sr = 32000, ctx = new OfflineAudioContext(1, Math.ceil(sr * secs), sr);
     const bus = ctx.createGain(); bus.gain.value = 0.16 * (song.gain || 1); bus.connect(ctx.destination);
@@ -31,10 +34,10 @@ const [key, secs, out] = [process.argv[2], Number(process.argv[3]), process.argv
     }
     const buf = await ctx.startRendering();
     const ch = buf.getChannelData(0); let peak = 0; for (const x of ch) peak = Math.max(peak, Math.abs(x));
-    const gain = 0.89 / (peak || 1), pcm = new Int16Array(ch.length);
+    const gain = fixed ? fixed : 0.89 / (peak || 1), pcm = new Int16Array(ch.length);
     for (let i = 0; i < ch.length; i++) pcm[i] = Math.max(-32767, Math.min(32767, ch[i] * gain * 32767));
     return { sr, pcm: Array.from(new Uint8Array(pcm.buffer)), peak };
-  }, [key, secs]);
+  }, [key, secs, fixed]);
   const pcm = Buffer.from(data.pcm), h = Buffer.alloc(44);
   h.write('RIFF', 0); h.writeUInt32LE(36 + pcm.length, 4); h.write('WAVE', 8); h.write('fmt ', 12); h.writeUInt32LE(16, 16); h.writeUInt16LE(1, 20); h.writeUInt16LE(1, 22);
   h.writeUInt32LE(data.sr, 24); h.writeUInt32LE(data.sr * 2, 28); h.writeUInt16LE(2, 32); h.writeUInt16LE(16, 34); h.write('data', 36); h.writeUInt32LE(pcm.length, 40);
