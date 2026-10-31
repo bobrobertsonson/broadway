@@ -882,7 +882,10 @@ export class Level extends Phaser.Scene {
       this.tweens.pauseAll();
       this.anims.pauseAll();
       this.time.paused = true;
-      ui.banner("Paused", this.powers?.describe() || "", controls.hint("pause"), "dim");
+      // A small controller readout, for sorting out pads that number their buttons differently.
+      const lp = controls.lastPad;
+      const pad = lp ? ` · Controller: ${lp.id.replace(/\s*\(.*$/, "").slice(0, 32)}, ${lp.mapping || "non-standard"} layout, last button ${lp.button}` : "";
+      ui.banner("Paused", (this.powers?.describe() || "") + pad, controls.hint("pause"), "dim");
     } else {
       this.physics.resume();
       this.tweens.resumeAll();

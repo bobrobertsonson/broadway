@@ -120,8 +120,10 @@ export class Powers {
 
   use() {
     const L = this.L, p = L.player;
-    if (!this.kind || p.dead || p.locked || this.cool > 0) return;
-    if (this.kind === "pen") return L.usePen();
+    if (p.dead || p.locked || this.cool > 0) return;
+    // Say so, so a press never looks like a broken button.
+    if (!this.kind) { L.say(p.sprite, "No power yet.", 1200); this.cool = 0.6; return; }
+    if (this.kind === "pen") { if (L.penUses <= 0) { L.say(p.sprite, "Out of ink.", 1200); this.cool = 0.6; return; } return L.usePen(); }
     if (this.kind === "spark") return this.throwSpark();
     if (this.kind === "dash") {
       if (p.dash()) { this.cool = DASH_COOLDOWN; sfx.dash(); }

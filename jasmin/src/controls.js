@@ -135,14 +135,18 @@ function pollGamepads() {
     padHeld.stickU ||= axis("stickU", -y);
     padHeld.stickD ||= axis("stickD", y);
     padHeld.jump ||= pad.A;
-    padHeld.action ||= pad.X;
+    // Power: the left face button, and also the top one and either shoulder, so it works even on
+    // pads (some 8BitDo modes) whose buttons aren't numbered in the standard order.
+    padHeld.action ||= [2, 3, 4, 5, 6, 7].some((i) => pad.buttons[i]?.pressed);
     padHeld.back ||= pad.B;
-    padHeld.start ||= !!pad.buttons[START]?.pressed;
+    padHeld.start ||= !!pad.buttons[START]?.pressed || (pad.pad?.mapping !== "standard" && !!pad.buttons[11]?.pressed);
   }
   let active = false;
   for (const pad of plugin.getAll()) {
     if (!pad?.connected) continue;
-    if (pad.buttons.some((btn) => btn.pressed) || Math.abs(pad.leftStick.x) > STICK_ON || Math.abs(pad.leftStick.y) > STICK_ON) {
+    const down = pad.buttons.findIndex((btn) => btn.pressed);
+    if (down >= 0) controls.lastPad = { button: down, id: pad.id, mapping: pad.pad?.mapping || "" };
+    if (down >= 0 || Math.abs(pad.leftStick.x) > STICK_ON || Math.abs(pad.leftStick.y) > STICK_ON) {
       active = true;
       controls.padType = padFamily(pad.id);
     }
