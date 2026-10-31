@@ -25,6 +25,8 @@ const PAD_LABELS = {
 };
 
 function padFamily(id = "") {
+  // 8BitDo pads have Nintendo-style labels printed on them (B bottom, A right), whatever mode they're in.
+  if (/8bitdo|2dc8/i.test(id)) return "nintendo";
   if (/xbox|045e/i.test(id)) return "xbox";
   if (/054c|dualsense|dualshock|playstation|^wireless controller/i.test(id)) return "playstation";
   if (/057e|nintendo|pro controller|joy-con/i.test(id)) return "nintendo";
