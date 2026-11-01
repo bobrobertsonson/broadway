@@ -2,7 +2,7 @@ import { fresh } from "./fresh.js";
 import { controls } from "../controls.js";
 import { startMusic } from "../audio.js";
 import { ui } from "../ui.js";
-import { game, isUnlocked } from "../state.js";
+import { game, isUnlocked, resetSave } from "../state.js";
 import { charKey, animKey } from "../art.js";
 import { makeEnvironmentTextures } from "../tiles.js";
 import { makeLogoTexture, makeSparkleTextures } from "../logo.js";
@@ -50,16 +50,21 @@ export class Title extends Phaser.Scene {
     this.add.sprite(width / 2, height - 16, key).setOrigin(0.5, 1).play(animKey(key, "idle"));
 
     const full = document.fullscreenElement || document.webkitFullscreenElement;
-    // After the game is beaten: a choice between playing and the jukebox.
-    this.menu = game.save.beaten ? ["Play", "Jukebox"] : null;
+    // With progress saved: Continue or New game (and the jukebox once the game is beaten).
+    const progress = game.save.done.length > 0 || game.save.beaten;
+    this.menu = progress ? ["Continue", "New game", ...(game.save.beaten ? ["Jukebox"] : [])] : null;
     this.sel = 0;
+    this.confirmNew = false;
     if (this.menu && this.unlocked) ui.caption("New", "The jukebox is open: every song in the game", 6000);
     if (this.menu) this.drawMenu();
     else ui.banner("", "", controls.isTouch ? "Tap to start" : "Press Start", "bottom");
     if (!controls.isTouch && !full) ui.setHud([{ text: "F for full screen", tip: true }]);
     this.input.on("pointerdown", (ptr) => {
       if (ui.hitsButton(ptr)) return;
-      if (this.menu) this.sel = ptr.x < width / 2 ? 0 : 1;
+      if (this.menu) {
+        const i = Math.max(0, Math.min(this.menu.length - 1, Math.floor(ptr.x / (width / this.menu.length))));
+        if (i !== this.sel) { this.sel = i; this.confirmNew = false; this.drawMenu(); }
+      }
       this.start();
     });
     const restart = () => this.scene.restart();
@@ -70,22 +75,35 @@ export class Title extends Phaser.Scene {
 
   drawMenu() {
     const { width, height } = this.scale;
-    this.menu.forEach((m, i) => ui.label(`menu${i}`, i === this.sel ? `> ${m} <` : m, width / 2 + (i ? 45 : -45), height - 3, i === this.sel ? "sel" : ""));
+    const n = this.menu.length, gap = n > 2 ? 86 : 90;
+    this.menu.forEach((m, i) => {
+      const text = m === "New game" && this.confirmNew ? "Erase progress?" : m;
+      ui.label(`menu${i}`, i === this.sel ? `> ${text} <` : text, width / 2 + (i - (n - 1) / 2) * gap, height - 3, i === this.sel ? "sel" : "");
+    });
   }
 
   update() {
     controls.update();
-    if (this.menu && (controls.pressed("left") || controls.pressed("right"))) { this.sel = 1 - this.sel; this.drawMenu(); }
+    if (this.menu && (controls.pressed("left") || controls.pressed("right"))) {
+      const n = this.menu.length;
+      this.sel = (this.sel + (controls.pressed("right") ? 1 : -1) + n) % n;
+      this.confirmNew = false;
+      this.drawMenu();
+    }
     if (controls.confirmed()) this.start();
   }
 
   async start() {
     if (this.starting) return;
+    const pick = this.menu?.[this.sel];
+    // New game asks once ("Erase progress?"), then starts over from Nairobi.
+    if (pick === "New game" && !this.confirmNew) { this.confirmNew = true; this.drawMenu(); return; }
     this.starting = true;
     await ui.fade(true, 300);
     ui.hideBanner();
     ui.clearLabels();
-    if (this.menu && this.sel === 1) { this.scene.start("Jukebox", {}); ui.fade(false, 300); return; }
+    if (pick === "Jukebox") { this.scene.start("Jukebox", {}); ui.fade(false, 300); return; }
+    if (pick === "New game") { resetSave(); this.scene.start("Intro", {}); ui.fade(false, 300); return; }
     // First time: the Nairobi intro. After that: the map.
     const introDone = game.save.done.includes("0-1");
     this.scene.start(introDone && isUnlocked("1-1") ? "WorldMap" : "Intro", {});

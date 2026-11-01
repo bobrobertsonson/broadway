@@ -22,6 +22,12 @@ export function loadSave() {
   return game.save;
 }
 
+// Start over: forget every level, outfit, World 9 name and the jukebox unlock (the mute setting stays).
+export function resetSave() {
+  try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem("jg-world9"); } catch {}
+  return loadSave();
+}
+
 export function writeSave() {
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(game.save)); } catch {}
 }
